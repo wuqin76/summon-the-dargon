@@ -14,11 +14,45 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #FF9933 0%, #FFFFFF 50%, #138808 100%);
+            background-attachment: fixed;
             color: #ffffff;
             min-height: 100vh;
             padding: 0;
             overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 印度风格装饰背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(255, 153, 51, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(19, 136, 8, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* 漂浮的莲花装饰 */
+        body::after {
+            content: '🪷';
+            position: fixed;
+            font-size: 40px;
+            animation: floatFlower 20s infinite linear;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        @keyframes floatFlower {
+            0% { top: -50px; left: 10%; transform: rotate(0deg); }
+            50% { left: 90%; transform: rotate(180deg); }
+            100% { top: 100vh; left: 10%; transform: rotate(360deg); }
         }
 
         .container {
@@ -26,15 +60,39 @@
             margin: 0 auto;
             padding: 0;
             padding-bottom: 20px;
+            position: relative;
+            z-index: 2;
         }
 
-        /* 炫酷顶部抽奖区域 */
+        /* 印度风格顶部抽奖区域 */
         .spin-hero {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 50%, #c44569 100%);
+            background: linear-gradient(135deg, #FF9933 0%, #FF6B35 50%, #F7931E 100%);
             padding: 30px 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 40px rgba(255, 153, 51, 0.6),
+                        0 0 100px rgba(255, 107, 53, 0.3);
+            border-bottom: 5px solid #138808;
+        }
+        
+        /* 曼陀罗图案装饰 */
+        .spin-hero::after {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, transparent 30%, rgba(255, 255, 255, 0.1) 30%, transparent 31%),
+                        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: rotateMandala 30s infinite linear;
+            pointer-events: none;
+        }
+        
+        @keyframes rotateMandala {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .spin-hero::before {
@@ -66,11 +124,36 @@
 
         .spin-title {
             text-align: center;
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
             margin-bottom: 10px;
-            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(255, 153, 51, 0.6);
             animation: pulse 2s ease-in-out infinite;
+            color: #FFFFFF;
+            position: relative;
+        }
+        
+        .spin-title::before,
+        .spin-title::after {
+            content: '✦';
+            position: absolute;
+            font-size: 24px;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+        
+        .spin-title::before {
+            left: 10px;
+        }
+        
+        .spin-title::after {
+            right: 10px;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.5; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
         }
 
         @keyframes pulse {
@@ -144,13 +227,21 @@
             width: 550px;
             height: 550px;
             transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 153, 51, 0.4) 0%, rgba(247, 147, 30, 0.2) 50%, transparent 70%);
             animation: glowPulse 2s ease-in-out infinite;
         }
 
         @keyframes glowPulse {
-            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            0%, 100% { 
+                opacity: 0.6; 
+                transform: translate(-50%, -50%) scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.1);
+                filter: brightness(1.3);
+            }
         }
 
         .wheel {
@@ -159,9 +250,25 @@
             position: relative;
             border-radius: 50%;
             overflow: hidden;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 15px 50px rgba(0, 0, 0, 0.5), 
+                0 0 60px rgba(255, 153, 51, 0.6),
+                0 0 100px rgba(247, 147, 30, 0.4),
+                inset 0 0 30px rgba(255, 255, 255, 0.2),
+                inset 0 0 50px rgba(255, 153, 51, 0.1);
             transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
-            border: 5px solid rgba(255, 215, 0, 0.5);
+            border: 8px solid #FFD700;
+            border-image: linear-gradient(45deg, #FFD700, #FF9933, #FFD700, #FF9933) 1;
+            animation: wheelGlow 3s ease-in-out infinite;
+        }
+        
+        @keyframes wheelGlow {
+            0%, 100% { 
+                filter: brightness(1) drop-shadow(0 0 20px rgba(255, 153, 51, 0.5));
+            }
+            50% { 
+                filter: brightness(1.2) drop-shadow(0 0 40px rgba(255, 153, 51, 0.8));
+            }
         }
 
         .wheel-inner {
@@ -196,64 +303,65 @@
             font-size: 28px;
         }
 
+        /* 印度风格扇区配色 - 鲜艳明亮 */
         .sector:nth-child(1) {
             transform: rotate(0deg);
-            background: linear-gradient(135deg, #ff6b6b, #ff8787);
+            background: linear-gradient(135deg, #FF6347, #FF4500);
         }
 
         .sector:nth-child(2) {
             transform: rotate(30deg);
-            background: linear-gradient(135deg, #4ecdc4, #6ee7df);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
         }
 
         .sector:nth-child(3) {
             transform: rotate(60deg);
-            background: linear-gradient(135deg, #ffe66d, #fff394);
+            background: linear-gradient(135deg, #FF9933, #FF7F00);
         }
 
         .sector:nth-child(4) {
             transform: rotate(90deg);
-            background: linear-gradient(135deg, #a8e6cf, #c1f0dc);
+            background: linear-gradient(135deg, #32CD32, #228B22);
         }
 
         .sector:nth-child(5) {
             transform: rotate(120deg);
-            background: linear-gradient(135deg, #ff8b94, #ffaaa5);
+            background: linear-gradient(135deg, #FF69B4, #FF1493);
         }
 
         .sector:nth-child(6) {
             transform: rotate(150deg);
-            background: linear-gradient(135deg, #ffd3b6, #ffe4cc);
+            background: linear-gradient(135deg, #FFD700, #FFEC8B);
         }
 
         .sector:nth-child(7) {
             transform: rotate(180deg);
-            background: linear-gradient(135deg, #c7ceea, #dde1f5);
+            background: linear-gradient(135deg, #00CED1, #20B2AA);
         }
 
         .sector:nth-child(8) {
             transform: rotate(210deg);
-            background: linear-gradient(135deg, #a0ced9, #b8dce5);
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
         }
 
         .sector:nth-child(9) {
             transform: rotate(240deg);
-            background: linear-gradient(135deg, #ff9ff3, #feca57);
+            background: linear-gradient(135deg, #9370DB, #8A2BE2);
         }
 
         .sector:nth-child(10) {
             transform: rotate(270deg);
-            background: linear-gradient(135deg, #48dbfb, #0abde3);
+            background: linear-gradient(135deg, #FF4500, #DC143C);
         }
 
         .sector:nth-child(11) {
             transform: rotate(300deg);
-            background: linear-gradient(135deg, #ee5a6f, #c44569);
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
         }
 
         .sector:nth-child(12) {
             transform: rotate(330deg);
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            background: linear-gradient(135deg, #32CD32, #3CB371);
         }
 
         .sector:nth-child(3) span,
@@ -268,36 +376,82 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #FFD700, #FF9933, #FFD700);
+            background-size: 200% 200%;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.3);
+            font-size: 56px;
+            box-shadow: 
+                0 5px 20px rgba(0, 0, 0, 0.4), 
+                0 0 30px rgba(255, 153, 51, 0.6),
+                inset 0 2px 10px rgba(255, 255, 255, 0.4),
+                inset 0 -2px 10px rgba(255, 153, 51, 0.3);
+            border: 4px solid #FFFFFF;
             z-index: 10;
+            animation: centerGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes centerGlow {
+            0%, 100% { 
+                background-position: 0% 50%;
+                box-shadow: 
+                    0 5px 20px rgba(0, 0, 0, 0.4), 
+                    0 0 30px rgba(255, 153, 51, 0.6),
+                    inset 0 2px 10px rgba(255, 255, 255, 0.4);
+            }
+            50% { 
+                background-position: 100% 50%;
+                box-shadow: 
+                    0 5px 20px rgba(0, 0, 0, 0.4), 
+                    0 0 50px rgba(255, 153, 51, 0.9),
+                    inset 0 2px 10px rgba(255, 255, 255, 0.6);
+            }
         }
 
         .pointer {
             position: absolute;
-            top: -30px;
+            top: -35px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 30px solid transparent;
-            border-right: 30px solid transparent;
-            border-top: 60px solid #ffd700;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-top: 70px solid #FF9933;
             z-index: 11;
-            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.4));
+            filter: drop-shadow(0 5px 15px rgba(255, 153, 51, 0.8)) drop-shadow(0 0 20px rgba(255, 153, 51, 0.6));
             animation: pointerBounce 1s ease-in-out infinite;
+        }
+        
+        .pointer::after {
+            content: '';
+            position: absolute;
+            top: -70px;
+            left: -35px;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, rgba(255, 153, 51, 0.3) 0%, transparent 70%);
+            animation: pointerGlow 1.5s ease-in-out infinite;
         }
 
         @keyframes pointerBounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+            0%, 100% { 
+                transform: translateX(-50%) translateY(0);
+                filter: drop-shadow(0 5px 15px rgba(255, 153, 51, 0.8));
+            }
+            50% { 
+                transform: translateX(-50%) translateY(-8px);
+                filter: drop-shadow(0 8px 20px rgba(255, 153, 51, 1));
+            }
+        }
+        
+        @keyframes pointerGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
 
         .spin-btn {
@@ -305,16 +459,20 @@
             width: 90%;
             max-width: 350px;
             margin: 0 auto 20px;
-            padding: 20px 40px;
-            background: linear-gradient(135deg, #ffd700, #ffed4e, #ffd700);
+            padding: 22px 45px;
+            background: linear-gradient(135deg, #FF9933 0%, #FFD700 50%, #FF9933 100%);
             background-size: 200% 100%;
-            border: none;
+            border: 4px solid #FFFFFF;
             border-radius: 50px;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            color: #333;
+            color: #FFFFFF;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
+            box-shadow: 
+                0 10px 30px rgba(255, 153, 51, 0.6),
+                0 0 40px rgba(255, 153, 51, 0.4),
+                inset 0 2px 10px rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
             animation: btnShine 3s ease-in-out infinite;
         }
@@ -989,15 +1147,62 @@
             margin-top: 15px;
             font-style: italic;
         }
+        
+        /* 印度装饰元素 - 排灯节灯笼 */
+        .diya-decoration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .diya {
+            font-size: 28px;
+            animation: diyaGlow 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(255, 153, 51, 0.8));
+        }
+        
+        .diya:nth-child(2) { animation-delay: 0.3s; }
+        .diya:nth-child(3) { animation-delay: 0.6s; }
+        .diya:nth-child(4) { animation-delay: 0.9s; }
+        .diya:nth-child(5) { animation-delay: 1.2s; }
+        
+        @keyframes diyaGlow {
+            0%, 100% { 
+                opacity: 0.7; 
+                transform: translateY(0) scale(1);
+                filter: drop-shadow(0 0 10px rgba(255, 153, 51, 0.6));
+            }
+            50% { 
+                opacity: 1; 
+                transform: translateY(-5px) scale(1.1);
+                filter: drop-shadow(0 0 20px rgba(255, 153, 51, 1));
+            }
+        }
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <!-- 排灯节灯笼装饰 -->
+    <div class="diya-decoration">
+        <span class="diya">🪔</span>
+        <span class="diya">🪔</span>
+        <span class="diya">🪔</span>
+        <span class="diya">🪔</span>
+        <span class="diya">🪔</span>
+    </div>
+    
+    <div class="container indian-border">
         <!-- 炫酷抽奖区域 -->
             <div class="spin-hero">
                 <div class="spin-hero-content">
-                    <div class="spin-title">🎰 幸运转盘 - 赢取大奖 🎰</div>
+                    <div class="spin-title">🎰 भाग्य चक्र - बड़ा इनाम जीतें 🎰</div>
                     <div class="invite-tip">
                         ✨ 首次邀请好友即可获得一次抽奖机会 ✨
                         <button class="invite-btn" onclick="showInviteLink()">
