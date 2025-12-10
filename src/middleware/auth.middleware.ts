@@ -48,7 +48,7 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
 
         // 记录 Bot Token 的前几个字符（用于调试）
         const tokenPrefix = config.telegram.botToken.substring(0, 10);
-        logger.info('Verifying with bot token starting with:', tokenPrefix);
+        logger.info('Verifying with bot token starting with: ' + tokenPrefix);
 
         // 计算密钥
         const secretKey = crypto
