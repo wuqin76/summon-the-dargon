@@ -8,12 +8,13 @@ const router = Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 // 任务奖励配置
+// 前4个任务给抽奖机会(标记为-1),后续任务直接给能量
 const TASK_REWARDS = [
-    88.00000,  // 初始抽奖奖励
-    5.00000,   // 任务1
-    4.00000,   // 任务2
-    2.00000,   // 任务3
-    0.70000,   // 任务4 (必须付费)
+    88.00000,  // 初始抽奖奖励(第1次抽奖固定88)
+    -1,        // 任务1: 给1次抽奖机会(第2次抽奖固定5)
+    -1,        // 任务2: 给1次抽奖机会(第3次抽奖固定4)
+    -1,        // 任务3: 给1次抽奖机会(第4次抽奖固定2)
+    -1,        // 任务4: 必须付费,给1次抽奖机会(固定0.7)
     0.20000,   // 任务5
     0.07000,   // 任务6
     0.00609,   // 任务7
@@ -201,17 +202,28 @@ export async function updateTaskProgressV2(
         if (progress >= currentTask.required) {
             // 任务完成，发放奖励
             const reward = TASK_REWARDS[taskIndex];
-            const newTotalProgress = totalProgress + reward;
+            const newTotalProgress = totalProgress + (reward > 0 ? reward : 0);
             const newCompletedTasks = completedTasks + 1;
             const newTaskIndex = taskIndex + 1;
 
-            // 更新用户余额
-            await db.query(`
-                UPDATE users
-                SET balance = balance + $1,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = $2
-            `, [reward, userId]);
+            // 如果奖励是-1,表示给抽奖机会而不是直接加余额
+            if (reward === -1) {
+                // 给用户增加抽奖次数
+                await db.query(`
+                    UPDATE users
+                    SET available_spins = available_spins + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $1
+                `, [userId]);
+            } else {
+                // 直接更新用户余额
+                await db.query(`
+                    UPDATE users
+                    SET balance = balance + $1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = $2
+                `, [reward, userId]);
+            }
 
             // 更新任务进度
             await db.query(`

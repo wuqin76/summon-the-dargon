@@ -132,8 +132,8 @@
         /* 转盘容器 */
         .wheel-container {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 500px;
+            height: 500px;
             margin: 0 auto 30px;
         }
 
@@ -141,8 +141,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 440px;
-            height: 440px;
+            width: 550px;
+            height: 550px;
             transform: translate(-50%, -50%);
             background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
             animation: glowPulse 2s ease-in-out infinite;
@@ -189,11 +189,11 @@
 
         .sector span {
             display: block;
-            transform: rotate(-22.5deg);
+            transform: rotate(-15deg);
             text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
-            margin-left: 50px;
-            margin-top: -65px;
-            font-size: 26px;
+            margin-left: 60px;
+            margin-top: -80px;
+            font-size: 28px;
         }
 
         .sector:nth-child(1) {
@@ -202,13 +202,58 @@
         }
 
         .sector:nth-child(2) {
-            transform: rotate(45deg);
+            transform: rotate(30deg);
             background: linear-gradient(135deg, #4ecdc4, #6ee7df);
         }
 
         .sector:nth-child(3) {
-            transform: rotate(90deg);
+            transform: rotate(60deg);
             background: linear-gradient(135deg, #ffe66d, #fff394);
+        }
+
+        .sector:nth-child(4) {
+            transform: rotate(90deg);
+            background: linear-gradient(135deg, #a8e6cf, #c1f0dc);
+        }
+
+        .sector:nth-child(5) {
+            transform: rotate(120deg);
+            background: linear-gradient(135deg, #ff8b94, #ffaaa5);
+        }
+
+        .sector:nth-child(6) {
+            transform: rotate(150deg);
+            background: linear-gradient(135deg, #ffd3b6, #ffe4cc);
+        }
+
+        .sector:nth-child(7) {
+            transform: rotate(180deg);
+            background: linear-gradient(135deg, #c7ceea, #dde1f5);
+        }
+
+        .sector:nth-child(8) {
+            transform: rotate(210deg);
+            background: linear-gradient(135deg, #a0ced9, #b8dce5);
+        }
+
+        .sector:nth-child(9) {
+            transform: rotate(240deg);
+            background: linear-gradient(135deg, #ff9ff3, #feca57);
+        }
+
+        .sector:nth-child(10) {
+            transform: rotate(270deg);
+            background: linear-gradient(135deg, #48dbfb, #0abde3);
+        }
+
+        .sector:nth-child(11) {
+            transform: rotate(300deg);
+            background: linear-gradient(135deg, #ee5a6f, #c44569);
+        }
+
+        .sector:nth-child(12) {
+            transform: rotate(330deg);
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
         }
 
         .sector:nth-child(3) span,
@@ -216,31 +261,6 @@
         .sector:nth-child(6) span {
             color: #333;
             text-shadow: 0 2px 6px rgba(255, 255, 255, 0.8);
-        }
-
-        .sector:nth-child(4) {
-            transform: rotate(135deg);
-            background: linear-gradient(135deg, #a8e6cf, #c1f0dc);
-        }
-
-        .sector:nth-child(5) {
-            transform: rotate(180deg);
-            background: linear-gradient(135deg, #ff8b94, #ffaaa5);
-        }
-
-        .sector:nth-child(6) {
-            transform: rotate(225deg);
-            background: linear-gradient(135deg, #ffd3b6, #ffe4cc);
-        }
-
-        .sector:nth-child(7) {
-            transform: rotate(270deg);
-            background: linear-gradient(135deg, #c7ceea, #dde1f5);
-        }
-
-        .sector:nth-child(8) {
-            transform: rotate(315deg);
-            background: linear-gradient(135deg, #a0ced9, #b8dce5);
         }
 
         .wheel-center {
@@ -990,14 +1010,18 @@
                         <div class="pointer"></div>
                         <div class="wheel" id="wheel">
                             <div class="wheel-inner">
-                                <div class="sector"><span>8888</span></div>
-                                <div class="sector"><span>888</span></div>
-                                <div class="sector"><span>88</span></div>
-                                <div class="sector"><span>8</span></div>
-                                <div class="sector"><span>3</span></div>
-                                <div class="sector"><span>1</span></div>
-                                <div class="sector"><span>0.5</span></div>
-                                <div class="sector"><span>0.1</span></div>
+                                <div class="sector"><span>₹8888</span></div>
+                                <div class="sector"><span>₹888</span></div>
+                                <div class="sector"><span>₹188</span></div>
+                                <div class="sector"><span>₹88</span></div>
+                                <div class="sector"><span>₹18</span></div>
+                                <div class="sector"><span>₹8</span></div>
+                                <div class="sector"><span>₹3</span></div>
+                                <div class="sector"><span>₹1</span></div>
+                                <div class="sector"><span>₹0.5</span></div>
+                                <div class="sector"><span>₹0.7</span></div>
+                                <div class="sector"><span>₹5</span></div>
+                                <div class="sector"><span>₹0.1</span></div>
                             </div>
                             <div class="wheel-center">🎁</div>
                         </div>
@@ -1064,7 +1088,7 @@
                     <ul class="mode-features">
                         <li>完整游戏体验</li>
                         <li>通关后获得抽奖机会</li>
-                        <li>最高可赢 8888 USDT</li>
+                        <li>最高可赢 ₹8888 卢比</li>
                         <li>多档奖金等你拿</li>
                         <li>公平公正，区块链验证</li>
                     </ul>
@@ -1081,7 +1105,7 @@
                 <p>
                     <strong>免费模式：</strong>可以无限次游玩体验游戏，但不能参与抽奖。<br><br>
                     <strong>付费模式：</strong>支付 10 USDT 后，成功通关即可获得一次抽奖机会，
-                    有机会赢取 0.1 - 8888 USDT 不等的奖励！
+                    有机会赢取 ₹0.1 - ₹8888 不等的奖励,还有神秘随机金额，快来试试手气！
                 </p>
             </div>
         </div>
@@ -1134,13 +1158,13 @@
         <div class="task-modal-content">
             <div class="task-modal-header">
                 <h2>📋 当前任务</h2>
-                <p>完成任务获得能量，累积100U即可提现</p>
+                <p>完成任务获得能量，累积 ₹100 卢比即可提现</p>
             </div>
 
             <div class="task-info-box">
                 <div class="task-info-item">
                     <span class="task-info-label">当前进度</span>
-                    <span class="task-info-value" id="taskTotalProgress">0 / 100 U</span>
+                    <span class="task-info-value" id="taskTotalProgress">₹0 / ₹100</span>
                 </div>
                 <div class="task-info-item">
                     <span class="task-info-label">已完成任务</span>
@@ -1360,7 +1384,7 @@
             const percentage = Math.min((balance / 100) * 100, 100);
             
             energyBar.style.width = percentage + '%';
-            energyValue.textContent = `${balance.toFixed(2)} / 100 U`;
+            energyValue.textContent = `₹${balance.toFixed(2)} / ₹100`;
             
             // 根据余额显示不同提示
             if (balance >= 100) {
@@ -1371,9 +1395,9 @@
                 taskBtn.onclick = showWithdrawModal;
             } else if (balance > 0) {
                 const remaining = (100 - balance).toFixed(2);
-                energyTip.innerHTML = `💪 再获得 ${remaining}U 即可提现！继续完成任务和邀请好友吧`;
+                energyTip.innerHTML = `💪 再获得 ₹${remaining} 即可提现！继续完成任务和邀请好友吧`;
             } else {
-                energyTip.innerHTML = '✨ 完成付费游玩抽奖获得88U，完成任务获取更多奖励！';
+                energyTip.innerHTML = '✨ 完成付费游玩抽奖获得 ₹88 卢比，完成任务获取更多奖励！';
             }
         }
 

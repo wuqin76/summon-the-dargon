@@ -69,8 +69,15 @@ export class SpinService {
                 throw new Error('User is banned');
             }
 
-            // 4. 生成随机数并决定奖项
-            const { award, sectorIndex, randomValue, serverNonce } = this.determineAward();
+            // 4. 获取用户抽奖次数,决定预设奖项
+            const spinCountResult = await client.query(
+                'SELECT COUNT(*) as spin_count FROM spins WHERE user_id = $1 AND status != $2',
+                [userId, 'cancelled']
+            );
+            const spinCount = parseInt(spinCountResult.rows[0].spin_count);
+            
+            // 根据抽奖次数决定奖项(预设结果)
+            const { award, sectorIndex, randomValue, serverNonce } = this.determineAward(spinCount);
 
             logger.info('Spin award determined', {
                 userId,
@@ -158,46 +165,67 @@ export class SpinService {
     }
 
     /**
-     * 确定奖项（核心概率算法）
+     * 确定奖项（根据抽奖次数预设结果）
      */
-    private determineAward(): {
+    private determineAward(spinCount: number): {
         award: number;
         sectorIndex: number;
         randomValue: number;
         serverNonce: string;
     } {
         const probabilities = config.spin.probabilities;
-
-        // 生成随机数 (0-999999) 以获得百万级精度
-        const randomValue = randomInt(0, 1_000_000);
-        const normalizedRandom = randomValue / 1_000_000;
-
-        // 生成服务器 nonce（用于审计）
         const serverNonce = randomBytes(16).toString('hex');
+        const randomValue = randomInt(0, 1_000_000);
 
-        // 根据累积概率选择奖项
-        let cumulativeProbability = 0;
+        // 预设结果映射 (抽奖次数 -> 固定奖励金额)
+        const presetAwards: { [key: number]: number } = {
+            0: 88,    // 第1次抽奖: 88₹
+            1: 5,     // 第2次抽奖: 5₹ (任务1完成)
+            2: 4,     // 第3次抽奖: 4₹ (任务2完成)
+            3: 2,     // 第4次抽奖: 2₹ (任务3完成)
+            4: 0.7    // 第5次抽奖: 0.7₹ (付费任务完成)
+        };
+
         let selectedIndex = 0;
+        let finalAward = 88; // 默认88
 
-        for (let i = 0; i < probabilities.length; i++) {
-            cumulativeProbability += probabilities[i].probability;
-            if (normalizedRandom < cumulativeProbability) {
-                selectedIndex = i;
-                break;
+        // 如果是预设的抽奖次数,使用固定结果
+        if (spinCount in presetAwards) {
+            finalAward = presetAwards[spinCount];
+            
+            // 找到对应的扇区索引
+            for (let i = 0; i < probabilities.length; i++) {
+                if (probabilities[i].value === finalAward) {
+                    selectedIndex = i;
+                    break;
+                }
             }
+        } else {
+            // 后续抽奖使用原有概率系统(目前全部设为0,所以会使用第一个有概率的)
+            const normalizedRandom = randomValue / 1_000_000;
+            let cumulativeProbability = 0;
+
+            for (let i = 0; i < probabilities.length; i++) {
+                cumulativeProbability += probabilities[i].probability;
+                if (normalizedRandom < cumulativeProbability) {
+                    selectedIndex = i;
+                    break;
+                }
+            }
+            
+            finalAward = probabilities[selectedIndex].value;
         }
 
-        const selectedPrize = probabilities[selectedIndex];
-
         logger.debug('Award determination', {
+            spinCount,
             randomValue,
-            normalizedRandom,
             selectedIndex,
-            award: selectedPrize.value,
+            award: finalAward,
+            isPreset: spinCount in presetAwards,
         });
 
         return {
-            award: selectedPrize.value,
+            award: finalAward,
             sectorIndex: selectedIndex,
             randomValue,
             serverNonce,

@@ -55,14 +55,18 @@ export const config = {
     spin: {
         largePrizeThreshold: parseFloat(process.env.LARGE_PRIZE_THRESHOLD || '888'),
         probabilities: JSON.parse(process.env.SPIN_PROBABILITIES || JSON.stringify([
-            { value: 8888, probability: 0, label: '8888 USDT' },
-            { value: 888, probability: 0, label: '888 USDT' },
-            { value: 88, probability: 1.0, label: '88 USDT' },  // 100%概率
-            { value: 8, probability: 0, label: '8 USDT' },
-            { value: 3, probability: 0, label: '3 USDT' },
-            { value: 1, probability: 0, label: '1 USDT' },
-            { value: 0.5, probability: 0, label: '0.5 USDT' },
-            { value: 0.1, probability: 0, label: '0.1 USDT' },
+            { value: 8888, probability: 0, label: '₹8888' },
+            { value: 888, probability: 0, label: '₹888' },
+            { value: 188, probability: 0, label: '₹188' },
+            { value: 88, probability: 1.0, label: '₹88' },  // 100%概率
+            { value: 18, probability: 0, label: '₹18' },
+            { value: 8, probability: 0, label: '₹8' },
+            { value: 3, probability: 0, label: '₹3' },
+            { value: 1, probability: 0, label: '₹1' },
+            { value: 0.5, probability: 0, label: '₹0.5' },
+            { value: 0.7, probability: 0, label: '₹0.7' },  // 付费任务固定奖励
+            { value: 5, probability: 0, label: '₹5' },  // 任务1固定奖励
+            { value: 0.1, probability: 0, label: '₹0.1' },
         ])) as SpinProbability[],
     },
 

@@ -61,3 +61,6 @@ private_keys/
 # CSV exports
 exports/*.csv
 !exports/.gitkeep
+
+# Duplicate game files
+SummonTheDragon/
