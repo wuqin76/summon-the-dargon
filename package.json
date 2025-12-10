@@ -12,7 +12,9 @@
     "seed": "ts-node src/database/seed.ts",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "verify-config": "node scripts/verify-config.js",
+    "check": "node scripts/verify-config.js"
   },
   "keywords": [
     "telegram",
