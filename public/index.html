@@ -1683,11 +1683,11 @@
                 
                 if (!initData) {
                     console.error('❌ 没有 initData');
-                    throw new Error('无法获取 Telegram 数据');
+                    throw new Error('无法获取 Telegram 数据，请确保在 Telegram 内打开应用');
                 }
                 
                 console.log('initData 长度:', initData.length);
-                console.log('发送登录请求...');
+                console.log('发送登录请求到:', `${API_BASE}/auth/login`);
                 
                 const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
@@ -1697,19 +1697,27 @@
                 
                 console.log('登录响应状态:', response.status);
                 
+                if (!response.ok) {
+                    console.error('❌ 登录请求失败，状态码:', response.status);
+                    throw new Error(`登录请求失败 (${response.status})`);
+                }
+                
                 const data = await response.json();
                 console.log('登录响应数据:', data);
                 
-                if (data.success) {
+                if (data.success && data.data && data.data.token) {
                     authToken = data.data.token;
                     localStorage.setItem('authToken', authToken);
-                    console.log('✅ 登录成功');
+                    console.log('✅ 登录成功，token已保存');
                 } else {
-                    console.error('❌ 登录失败:', data.error);
-                    throw new Error(data.error || '登录失败');
+                    console.error('❌ 登录失败:', data.error || data.message);
+                    throw new Error(data.error || data.message || '登录失败，未返回有效token');
                 }
             } catch (error) {
                 console.error('❌ 登录错误:', error);
+                // 清除可能存在的无效token
+                authToken = null;
+                localStorage.removeItem('authToken');
                 throw error;
             }
         }
@@ -1927,6 +1935,8 @@
 
         // 显示邀请链接
         async function showInviteLink() {
+            console.log('🔔 showInviteLink() 函数被调用');
+            
             const modal = document.getElementById('inviteModal');
             const inviteLinkInput = document.getElementById('inviteLink');
             const inviteCountEl = document.getElementById('inviteCount');
@@ -1937,6 +1947,7 @@
                 console.log('isDevelopment:', isDevelopment);
                 console.log('tg.initData:', tg.initData ? '存在' : '不存在');
                 console.log('authToken:', authToken);
+                console.log('Modal element:', modal ? '找到' : '未找到');
 
                 // 检查是否在 Telegram 环境中
                 if (isDevelopment) {
@@ -1944,11 +1955,24 @@
                     return;
                 }
 
-                // 登录
+                // 显示加载提示
+                tg.showPopup({
+                    title: '加载中',
+                    message: '正在获取邀请信息...',
+                    buttons: []
+                });
+
+                // 尝试登录（如果还没有有效的 token）
                 if (!authToken || authToken === 'dev-token') {
-                    await login();
-                    if (!authToken || authToken === 'dev-token') {
-                        throw new Error('登录失败，请重试');
+                    console.log('需要登录，开始登录流程...');
+                    try {
+                        await login();
+                        console.log('登录完成，token:', authToken ? '已设置' : '未设置');
+                    } catch (loginError) {
+                        console.error('登录失败:', loginError);
+                        tg.close();
+                        tg.showAlert('登录失败，请重新打开应用再试');
+                        return;
                     }
                 }
 
@@ -1961,9 +1985,25 @@
                 
                 console.log('API响应状态:', response.status);
                 
+                // 关闭加载提示
+                tg.close();
+                
                 if (!response.ok) {
                     if (response.status === 401) {
-                        throw new Error('身份验证失败，请重新打开应用');
+                        // 清除无效的 token，尝试重新登录
+                        console.log('Token无效，清除并重新登录...');
+                        authToken = null;
+                        localStorage.removeItem('authToken');
+                        
+                        try {
+                            await login();
+                            // 重新尝试获取邀请信息
+                            return await showInviteLink();
+                        } catch (retryError) {
+                            console.error('重新登录失败:', retryError);
+                            tg.showAlert('身份验证失败，请关闭应用后重新打开再试');
+                            return;
+                        }
                     }
                     throw new Error(`服务器错误: ${response.status}`);
                 }
@@ -1981,13 +2021,13 @@
                     inviteRewardEl.textContent = data.data.invite_rewards || 0;
                     
                     modal.classList.add('show');
-                    console.log('邀请弹窗已显示');
+                    console.log('✅ 邀请弹窗已显示');
                 } else {
                     throw new Error(data.error || '获取邀请信息失败');
                 }
             } catch (error) {
                 console.error('❌ 邀请链接错误:', error);
-                alert('获取邀请链接失败: ' + error.message);
+                tg.showAlert('获取邀请链接失败，请稍后再试\n\n错误: ' + error.message);
             }
         }
 
@@ -2109,8 +2149,24 @@
 
         // 初始化
         async function init() {
+            console.log('=== 应用初始化 ===');
+            console.log('isDevelopment:', isDevelopment);
+            console.log('tg.initData存在:', !!tg.initData);
+            
             if (isDevelopment) {
-                console.log('Development mode');
+                console.log('⚠️ Development mode - 在浏览器中打开');
+            } else {
+                console.log('✅ Telegram 环境');
+                
+                // 尝试自动登录
+                try {
+                    console.log('开始自动登录...');
+                    await login();
+                    console.log('✅ 自动登录成功');
+                } catch (error) {
+                    console.error('❌ 自动登录失败:', error);
+                    // 登录失败不阻止页面加载，用户操作时会重试
+                }
             }
             
             // 检查邀请码
@@ -2118,6 +2174,8 @@
             
             // 加载能量条数据
             await checkTaskProgress();
+            
+            console.log('=== 初始化完成 ===');
         }
 
         init();
