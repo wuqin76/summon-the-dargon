@@ -1,0 +1,145 @@
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { config } from '../config';
+import { logger } from '../utils/logger';
+import crypto from 'crypto';
+
+interface TelegramUser {
+    id: number;
+    first_name?: string;
+    last_name?: string;
+    username?: string;
+    photo_url?: string;
+    auth_date: number;
+    hash: string;
+}
+
+/**
+ * 验证 Telegram Web App 数据
+ */
+export function verifyTelegramWebAppData(initData: string): TelegramUser | null {
+    try {
+        const params = new URLSearchParams(initData);
+        const hash = params.get('hash');
+        params.delete('hash');
+
+        if (!hash) {
+            return null;
+        }
+
+        // 按字典序排序参数
+        const dataCheckString = Array.from(params.entries())
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n');
+
+        // 计算密钥
+        const secretKey = crypto
+            .createHmac('sha256', 'WebAppData')
+            .update(config.telegram.botToken)
+            .digest();
+
+        // 计算哈希
+        const calculatedHash = crypto
+            .createHmac('sha256', secretKey)
+            .update(dataCheckString)
+            .digest('hex');
+
+        if (calculatedHash !== hash) {
+            logger.warn('Telegram data verification failed - hash mismatch');
+            return null;
+        }
+
+        // 检查时间戳（5分钟内有效）
+        const authDate = parseInt(params.get('auth_date') || '0', 10);
+        const now = Math.floor(Date.now() / 1000);
+        if (now - authDate > 300) {
+            logger.warn('Telegram data verification failed - expired');
+            return null;
+        }
+
+        // 解析用户数据
+        const userParam = params.get('user');
+        if (!userParam) {
+            return null;
+        }
+
+        const user = JSON.parse(userParam);
+        return {
+            ...user,
+            auth_date: authDate,
+            hash,
+        };
+    } catch (error: any) {
+        logger.error('Error verifying Telegram data', { error: error.message });
+        return null;
+    }
+}
+
+/**
+ * 认证中间件
+ */
+export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            res.status(401).json({ error: 'No token provided' });
+            return;
+        }
+
+        const token = authHeader.substring(7);
+
+        try {
+            const decoded = jwt.verify(token, config.security.jwtSecret) as any;
+            (req as any).user = decoded;
+            next();
+        } catch (error) {
+            res.status(401).json({ error: 'Invalid token' });
+            return;
+        }
+    } catch (error: any) {
+        logger.error('Auth middleware error', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+/**
+ * 管理员中间件
+ */
+export async function adminMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        const user = (req as any).user;
+
+        if (!user) {
+            res.status(401).json({ error: 'Not authenticated' });
+            return;
+        }
+
+        // 检查是否是管理员
+        if (!config.telegram.adminIds.includes(user.telegramId)) {
+            res.status(403).json({ error: 'Access denied' });
+            return;
+        }
+
+        next();
+    } catch (error: any) {
+        logger.error('Admin middleware error', { error: error.message });
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+/**
+ * 生成 JWT Token
+ */
+export function generateToken(user: any): string {
+    return jwt.sign(
+        {
+            id: user.id,
+            telegramId: user.telegram_id,
+            username: user.username,
+        },
+        config.security.jwtSecret,
+        { expiresIn: config.security.jwtExpiresIn } as jwt.SignOptions
+    );
+}
