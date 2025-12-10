@@ -11,7 +11,7 @@ interface SpinProbability {
 export const config = {
     env: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT || '3000', 10),
-    host: process.env.HOST || '0.0.0.0',
+    host: '0.0.0.0', // Railway 不支持 IPv6，强制使用 0.0.0.0
 
     database: {
         url: process.env.DATABASE_URL || 'postgresql://localhost:5432/dragon_game',
