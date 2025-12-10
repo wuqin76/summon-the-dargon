@@ -1,13 +1,10 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "rewrites": [
     {
-      "src": "dist/server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "source": "/api/:path*",
+      "destination": "/api"
     }
   ],
   "routes": [
@@ -16,23 +13,12 @@
       "dest": "/public/game/$1"
     },
     {
-      "src": "/(.*\\.(css|js|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "src": "/(.*\\.(css|js|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|html))",
       "dest": "/public/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/dist/server.js"
     },
     {
       "src": "/",
       "dest": "/public/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/server.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

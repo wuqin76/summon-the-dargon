@@ -270,31 +270,31 @@
             transform: translateY(0);
         }
 
-        /* 转盘容器 - 响应式适配 */
+        /* 转盘容器 - 响应式适配（更大） */
         .wheel-container {
             position: relative;
-            width: 90vw;
-            max-width: 500px;
-            height: 90vw;
-            max-height: 500px;
+            width: 92vw;
+            max-width: 550px;
+            height: 92vw;
+            max-height: 550px;
             margin: 0 auto 30px;
         }
         
         @media (max-width: 768px) {
             .wheel-container {
-                width: 85vw;
-                height: 85vw;
-                max-width: 400px;
-                max-height: 400px;
+                width: 90vw;
+                height: 90vw;
+                max-width: 450px;
+                max-height: 450px;
             }
         }
         
         @media (max-width: 480px) {
             .wheel-container {
-                width: 90vw;
-                height: 90vw;
-                max-width: 350px;
-                max-height: 350px;
+                width: 92vw;
+                height: 92vw;
+                max-width: 380px;
+                max-height: 380px;
             }
         }
 
@@ -376,18 +376,29 @@
             display: block;
             transform: rotate(-15deg);
             text-shadow: 
-                0 2px 8px rgba(0, 0, 0, 0.8),
-                0 0 15px rgba(255, 255, 255, 0.5);
-            margin-left: clamp(40px, 12vw, 65px);
-            margin-top: clamp(-60px, -16vw, -85px);
-            font-size: clamp(18px, 5.5vw, 30px);
+                0 3px 10px rgba(0, 0, 0, 0.9),
+                0 0 20px rgba(255, 255, 255, 0.6),
+                0 0 5px rgba(0, 0, 0, 0.8);
+            margin-left: clamp(50px, 13vw, 75px);
+            margin-top: clamp(-75px, -18vw, -100px);
+            font-size: clamp(20px, 6vw, 34px);
             font-weight: 900;
+            letter-spacing: 1px;
+        }
+        
+        @media (max-width: 768px) {
+            .sector span {
+                margin-left: clamp(45px, 12vw, 68px);
+                margin-top: clamp(-70px, -17vw, -92px);
+                font-size: clamp(19px, 5.8vw, 30px);
+            }
         }
         
         @media (max-width: 480px) {
             .sector span {
-                margin-left: clamp(35px, 11vw, 55px);
-                margin-top: clamp(-55px, -14vw, -75px);
+                margin-left: clamp(42px, 11.5vw, 62px);
+                margin-top: clamp(-65px, -16vw, -85px);
+                font-size: clamp(18px, 5.5vw, 28px);
             }
         }
 
@@ -464,30 +475,38 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: clamp(90px, 22vw, 130px);
-            height: clamp(90px, 22vw, 130px);
+            width: clamp(95px, 20vw, 140px);
+            height: clamp(95px, 20vw, 140px);
             background: linear-gradient(135deg, #FFD700, #FF9933, #FFD700);
             background-size: 200% 200%;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(40px, 11vw, 60px);
+            font-size: clamp(45px, 10vw, 65px);
             box-shadow: 
-                0 8px 25px rgba(0, 0, 0, 0.5), 
-                0 0 40px rgba(255, 153, 51, 0.8),
-                0 0 70px rgba(255, 215, 0, 0.4),
-                inset 0 3px 15px rgba(255, 255, 255, 0.5),
-                inset 0 -3px 15px rgba(255, 153, 51, 0.4);
-            border: clamp(3px, 0.8vw, 5px) solid #FFFFFF;
+                0 10px 30px rgba(0, 0, 0, 0.6), 
+                0 0 50px rgba(255, 153, 51, 0.9),
+                0 0 80px rgba(255, 215, 0, 0.5),
+                inset 0 4px 18px rgba(255, 255, 255, 0.6),
+                inset 0 -4px 18px rgba(255, 153, 51, 0.5);
+            border: clamp(4px, 1vw, 6px) solid #FFFFFF;
             z-index: 10;
             animation: centerGlow 2s ease-in-out infinite;
         }
         
+        @media (max-width: 768px) {
+            .wheel-center {
+                width: clamp(88px, 19vw, 125px);
+                height: clamp(88px, 19vw, 125px);
+            }
+        }
+        
         @media (max-width: 480px) {
             .wheel-center {
-                width: clamp(75px, 20vw, 110px);
-                height: clamp(75px, 20vw, 110px);
+                width: clamp(80px, 18vw, 115px);
+                height: clamp(80px, 18vw, 115px);
+                font-size: clamp(40px, 9.5vw, 58px);
             }
         }
         
