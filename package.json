@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node scripts/add-ip-columns.js && node dist/server.js",
+    "start:simple": "node dist/server.js",
     "migrate": "ts-node src/database/migrate.ts",
     "migrate:railway": "node scripts/migrate-railway.js",
+    "migrate:add-ip": "node scripts/add-ip-columns.js",
     "seed": "ts-node src/database/seed.ts",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
