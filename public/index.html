@@ -1669,25 +1669,48 @@
         // 登录
         async function login() {
             try {
+                console.log('=== 登录调试 ===');
+                console.log('isDevelopment:', isDevelopment);
+                
                 if (isDevelopment) {
-                    console.log('开发模式：跳过登录');
+                    console.log('⚠️ 开发模式：无法登录（不在 Telegram 环境）');
                     authToken = 'dev-token';
                     return;
                 }
 
+                console.log('获取 Telegram initData...');
                 const initData = tg.initData;
+                
+                if (!initData) {
+                    console.error('❌ 没有 initData');
+                    throw new Error('无法获取 Telegram 数据');
+                }
+                
+                console.log('initData 长度:', initData.length);
+                console.log('发送登录请求...');
+                
                 const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ initData }),
                 });
+                
+                console.log('登录响应状态:', response.status);
+                
                 const data = await response.json();
+                console.log('登录响应数据:', data);
+                
                 if (data.success) {
                     authToken = data.data.token;
                     localStorage.setItem('authToken', authToken);
+                    console.log('✅ 登录成功');
+                } else {
+                    console.error('❌ 登录失败:', data.error);
+                    throw new Error(data.error || '登录失败');
                 }
             } catch (error) {
-                console.error('登录错误:', error);
+                console.error('❌ 登录错误:', error);
+                throw error;
             }
         }
 
@@ -1910,21 +1933,47 @@
             const inviteRewardEl = document.getElementById('inviteReward');
 
             try {
+                console.log('=== 邀请功能调试 ===');
+                console.log('isDevelopment:', isDevelopment);
+                console.log('tg.initData:', tg.initData ? '存在' : '不存在');
+                console.log('authToken:', authToken);
+
+                // 检查是否在 Telegram 环境中
+                if (isDevelopment) {
+                    alert('⚠️ 请在 Telegram 内打开应用\n\n当前在浏览器中打开，无法使用邀请功能。\n\n正确步骤：\n1. 打开 Telegram 应用\n2. 搜索 @summondargon_bot\n3. 点击菜单按钮\n4. 在 Telegram 内打开应用');
+                    return;
+                }
+
                 // 登录
                 if (!authToken || authToken === 'dev-token') {
                     await login();
+                    if (!authToken || authToken === 'dev-token') {
+                        throw new Error('登录失败，请重试');
+                    }
                 }
 
+                console.log('开始获取邀请信息...');
+                
                 // 获取邀请信息
                 const response = await fetch(`${API_BASE}/invite/info`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
+                console.log('API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('身份验证失败，请重新打开应用');
+                    }
+                    throw new Error(`服务器错误: ${response.status}`);
+                }
+                
                 const data = await response.json();
+                console.log('API响应数据:', data);
                 
                 if (data.success) {
                     const inviteCode = data.data.invite_code;
-                    const botUsername = data.data.bot_username || 'YourBot';
+                    const botUsername = data.data.bot_username || 'summondargon_bot';
                     const inviteLink = `https://t.me/${botUsername}?start=${inviteCode}`;
                     
                     inviteLinkInput.value = inviteLink;
@@ -1932,11 +1981,12 @@
                     inviteRewardEl.textContent = data.data.invite_rewards || 0;
                     
                     modal.classList.add('show');
+                    console.log('邀请弹窗已显示');
                 } else {
                     throw new Error(data.error || '获取邀请信息失败');
                 }
             } catch (error) {
-                console.error('邀请链接错误:', error);
+                console.error('❌ 邀请链接错误:', error);
                 alert('获取邀请链接失败: ' + error.message);
             }
         }
