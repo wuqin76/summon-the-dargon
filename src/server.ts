@@ -105,30 +105,32 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     });
 });
 
-// Start server
-const PORT = config.port;
-const HOST = config.host;
+// Start server (仅在非 Serverless 环境下启动)
+if (process.env.VERCEL !== '1') {
+    const PORT = config.port;
+    const HOST = config.host;
 
-app.listen(PORT, HOST, () => {
-    logger.info(`Server started`, {
-        env: config.env,
-        host: HOST,
-        port: PORT,
-        url: `http://${HOST}:${PORT}`,
+    app.listen(PORT, HOST, () => {
+        logger.info(`Server started`, {
+            env: config.env,
+            host: HOST,
+            port: PORT,
+            url: `http://${HOST}:${PORT}`,
+        });
     });
-});
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-    logger.info('SIGTERM received, shutting down gracefully');
-    await db.end();
-    process.exit(0);
-});
+    // Graceful shutdown
+    process.on('SIGTERM', async () => {
+        logger.info('SIGTERM received, shutting down gracefully');
+        await db.end();
+        process.exit(0);
+    });
 
-process.on('SIGINT', async () => {
-    logger.info('SIGINT received, shutting down gracefully');
-    await db.end();
-    process.exit(0);
-});
+    process.on('SIGINT', async () => {
+        logger.info('SIGINT received, shutting down gracefully');
+        await db.end();
+        process.exit(0);
+    });
+}
 
 export default app;
