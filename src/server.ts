@@ -19,6 +19,9 @@ import inviteRoutes from './routes/invite.routes';       // 邀请系统
 
 const app: Application = express();
 
+// Trust Railway proxy
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: {
