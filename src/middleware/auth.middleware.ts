@@ -19,11 +19,18 @@ interface TelegramUser {
  */
 export function verifyTelegramWebAppData(initData: string): TelegramUser | null {
     try {
+        // 开发模式：跳过验证
+        if (process.env.NODE_ENV === 'development' && !initData) {
+            logger.info('Development mode: skipping Telegram verification');
+            return null;
+        }
+
         const params = new URLSearchParams(initData);
         const hash = params.get('hash');
         params.delete('hash');
 
         if (!hash) {
+            logger.warn('Telegram verification failed: no hash provided');
             return null;
         }
 
@@ -46,15 +53,25 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
             .digest('hex');
 
         if (calculatedHash !== hash) {
-            logger.warn('Telegram data verification failed - hash mismatch');
+            logger.warn('Telegram data verification failed - hash mismatch', {
+                expected: calculatedHash,
+                received: hash,
+                dataCheckString: dataCheckString.substring(0, 100)
+            });
             return null;
         }
 
         // 检查时间戳（5分钟内有效）
         const authDate = parseInt(params.get('auth_date') || '0', 10);
         const now = Math.floor(Date.now() / 1000);
-        if (now - authDate > 300) {
-            logger.warn('Telegram data verification failed - expired');
+        const timeDiff = now - authDate;
+        if (timeDiff > 300) {
+            logger.warn('Telegram data verification failed - expired', {
+                authDate,
+                now,
+                timeDiff,
+                maxAge: 300
+            });
             return null;
         }
 
