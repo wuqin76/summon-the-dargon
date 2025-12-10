@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "migrate": "ts-node src/database/migrate.ts",
+    "migrate:railway": "node scripts/migrate-railway.js",
     "seed": "ts-node src/database/seed.ts",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
