@@ -25,6 +25,12 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
             return null;
         }
 
+        // 检查 Bot Token 是否配置
+        if (!config.telegram.botToken) {
+            logger.error('TELEGRAM_BOT_TOKEN is not configured!');
+            return null;
+        }
+
         const params = new URLSearchParams(initData);
         const hash = params.get('hash');
         params.delete('hash');
@@ -39,6 +45,10 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([key, value]) => `${key}=${value}`)
             .join('\n');
+
+        // 记录 Bot Token 的前几个字符（用于调试）
+        const tokenPrefix = config.telegram.botToken.substring(0, 10);
+        logger.info('Verifying with bot token starting with:', tokenPrefix);
 
         // 计算密钥
         const secretKey = crypto
@@ -56,8 +66,26 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
             logger.warn('Telegram data verification failed - hash mismatch', {
                 expected: calculatedHash,
                 received: hash,
-                dataCheckString: dataCheckString.substring(0, 100)
+                dataCheckString: dataCheckString.substring(0, 100),
+                botTokenPrefix: tokenPrefix
             });
+            
+            // 紧急措施：允许通过但记录警告（仅用于调试）
+            // TODO: 在生产环境中移除此代码或通过环境变量控制
+            if (process.env.SKIP_TELEGRAM_VERIFICATION === 'true') {
+                logger.warn('⚠️ SKIPPING Telegram verification due to SKIP_TELEGRAM_VERIFICATION=true');
+                const userParam = params.get('user');
+                if (userParam) {
+                    const user = JSON.parse(userParam);
+                    const authDate = parseInt(params.get('auth_date') || '0', 10);
+                    return {
+                        ...user,
+                        auth_date: authDate,
+                        hash,
+                    };
+                }
+            }
+            
             return null;
         }
 
@@ -72,7 +100,13 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
                 timeDiff,
                 maxAge: 300
             });
-            return null;
+            
+            // 如果启用跳过验证，即使过期也允许（仅用于测试）
+            if (process.env.SKIP_TELEGRAM_VERIFICATION === 'true') {
+                logger.warn('⚠️ ALLOWING expired data due to SKIP_TELEGRAM_VERIFICATION=true');
+            } else {
+                return null;
+            }
         }
 
         // 解析用户数据
