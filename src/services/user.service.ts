@@ -109,11 +109,16 @@ export class UserService {
             [inviterId, inviteeId, inviteCode, inviteeTelegramId, 'completed', ipAddress]
         );
 
-        // 更新邀请人统计
+        // 更新邀请人统计：增加邀请数量和抽奖次数
         await client.query(
-            'UPDATE users SET total_invites = total_invites + 1 WHERE id = $1',
+            `UPDATE users SET 
+                total_invited = total_invited + 1,
+                available_spins = available_spins + 1
+            WHERE id = $1`,
             [inviterId]
         );
+        
+        logger.info('✅ 邀请奖励已发放', { inviterId, inviteeId, reward: '1次抽奖机会' });
 
         // 检查是否是首次有效邀请
         const inviteCountResult = await client.query(
@@ -190,8 +195,15 @@ export class UserService {
      * 获取用户统计
      */
     async getUserStats(userId: string): Promise<any> {
+        // 直接从 users 表获取统计信息
         const result = await db.query(
-            'SELECT * FROM user_stats WHERE id = $1',
+            `SELECT 
+                total_invited,
+                total_paid_plays,
+                total_free_plays,
+                available_spins,
+                balance
+            FROM users WHERE id = $1`,
             [userId]
         );
 
