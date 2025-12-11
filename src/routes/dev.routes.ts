@@ -8,8 +8,8 @@ const router = Router();
 // 开发者 Telegram ID 白名单（在环境变量中配置）
 const DEV_TELEGRAM_IDS = (process.env.DEV_TELEGRAM_IDS || '').split(',').filter(Boolean);
 
-// ⚠️⚠️⚠️ 临时硬编码：内部测试用，正式上线前必须删除！⚠️⚠️⚠️
-const DEV_MODE_FOR_ALL = true;  // 强制开启，不依赖环境变量
+// 开发者模式全局开关（从环境变量读取）
+const DEV_MODE_FOR_ALL = process.env.DEV_MODE_FOR_ALL === 'true';
 
 // 启动时输出调试信息
 logger.info('🛠️ 开发者模式配置', { 
@@ -17,7 +17,7 @@ logger.info('🛠️ 开发者模式配置', {
     parsed: DEV_TELEGRAM_IDS,
     count: DEV_TELEGRAM_IDS.length,
     devModeForAll: DEV_MODE_FOR_ALL,
-    hardcoded: true  // 标记为硬编码
+    fromEnv: true
 });
 
 /**
@@ -53,7 +53,7 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
         }
 
         // 授予测试权限
-        const client = await db.connect();
+        const client = await db.getClient();
         try {
             await client.query('BEGIN');
             
@@ -120,7 +120,7 @@ router.post('/add-spins', authMiddleware, async (req: Request, res: Response) =>
             });
         }
 
-        const client = await db.connect();
+        const client = await db.getClient();
         try {
             await client.query('BEGIN');
             

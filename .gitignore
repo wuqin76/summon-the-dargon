@@ -4,8 +4,6 @@ package-lock.json
 yarn.lock
 
 # Build outputs
-# Note: dist/ is commented out for Render deployment
-# Render builds on their servers, so we don't need to commit dist/
 dist/
 build/
 *.tsbuildinfo
@@ -14,6 +12,8 @@ build/
 .env
 .env.local
 .env.*.local
+.env.test
+.env.production
 
 # Logs
 logs/
@@ -28,9 +28,10 @@ pids/
 *.seed
 *.pid.lock
 
-# Coverage
+# Testing & Coverage
 coverage/
 .nyc_output/
+*.test.js
 
 # IDEs
 .vscode/
@@ -43,10 +44,15 @@ coverage/
 # OS
 Thumbs.db
 
-# Temp files
+# Temp files & Backups
 tmp/
 temp/
 *.tmp
+*.bak
+*~
+
+# Redundant directories
+SummonTheDragon/
 
 # Database
 *.db

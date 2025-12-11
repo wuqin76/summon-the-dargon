@@ -70,17 +70,16 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
                 botTokenPrefix: tokenPrefix
             });
             
-            // 紧急措施：允许通过但记录警告（仅用于调试）
-            // TODO: 在生产环境中移除此代码或通过环境变量控制
+            // 开发模式跳过验证（仅用于测试环境）
             const skipVerification = process.env.SKIP_TELEGRAM_VERIFICATION === 'true' || process.env.NODE_ENV === 'development';
             if (skipVerification) {
-                logger.warn('⚠️ SKIPPING Telegram verification (dev mode or SKIP_TELEGRAM_VERIFICATION=true)');
+                logger.warn('⚠️ SKIPPING Telegram verification (dev mode)');
                 const userParam = params.get('user');
                 if (userParam) {
                     try {
                         const user = JSON.parse(userParam);
                         const authDate = parseInt(params.get('auth_date') || '0', 10);
-                        logger.info('✅ Bypassed verification, user data:', { id: user.id, username: user.username });
+                        logger.info('✅ Bypassed verification, user:', user.id);
                         return {
                             ...user,
                             auth_date: authDate,

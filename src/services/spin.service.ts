@@ -278,8 +278,8 @@ export class SpinService {
             spinId,
         });
 
-        // TODO: 实现 Telegram 或邮件通知给管理员
-        // await telegramBot.sendMessage(config.telegram.alertChatId, ...)
+        // 管理员通知功能（待实现）
+        // 示例: await telegramBot.sendMessage(config.telegram.alertChatId, ...)
     }
 
     /**
