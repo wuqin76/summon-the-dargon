@@ -55,11 +55,9 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
         // 授予测试权限
         await db.query(`
             UPDATE users SET 
-                game_balance = 150,
-                total_spins = 10,
-                total_invites = 3,
-                valid_invites = 2,
-                withdrawal_eligible = true,
+                balance = 150,
+                available_spins = 10,
+                total_invited = 3,
                 updated_at = NOW()
             WHERE id = $1
         `, [userId]);
@@ -70,11 +68,9 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
             success: true,
             message: '✅ 测试权限已授予',
             data: {
-                game_balance: 150,
-                total_spins: 10,
-                total_invites: 3,
-                valid_invites: 2,
-                withdrawal_eligible: true,
+                balance: 150,
+                available_spins: 10,
+                total_invited: 3,
             },
         });
 
@@ -106,11 +102,9 @@ router.post('/reset-account', authMiddleware, async (req: Request, res: Response
         // 重置账号
         await db.query(`
             UPDATE users SET 
-                game_balance = 0,
-                total_spins = 0,
-                total_invites = 0,
-                valid_invites = 0,
-                withdrawal_eligible = false,
+                balance = 0,
+                available_spins = 0,
+                total_invited = 0,
                 updated_at = NOW()
             WHERE id = $1
         `, [userId]);
@@ -147,6 +141,22 @@ router.post('/complete-all-tasks', authMiddleware, async (req: Request, res: Res
             });
         }
 
+        // 任务系统可能不存在，先检查表是否存在
+        const checkTableResult = await db.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'tasks'
+            );
+        `);
+        
+        if (!checkTableResult.rows[0].exists) {
+            return res.json({
+                success: true,
+                message: '✅ 任务系统尚未启用',
+                data: { completedTasks: 0 },
+            });
+        }
+        
         // 获取所有任务
         const tasksResult = await db.query('SELECT id FROM tasks WHERE is_active = true');
         
