@@ -384,6 +384,29 @@ export class PayoutService {
 
         return result.rows;
     }
+
+    /**
+     * 获取提现排行榜（公开数据）
+     */
+    async getPayoutLeaderboard(limit: number = 50): Promise<any[]> {
+        const result = await db.query(
+            `SELECT 
+                pr.user_id,
+                pr.amount,
+                pr.status,
+                pr.requested_at as created_at,
+                u.telegram_username,
+                u.telegram_first_name
+            FROM payout_requests pr
+            LEFT JOIN users u ON pr.user_id = u.id
+            WHERE pr.status IN ('pending', 'approved', 'paid')
+            ORDER BY pr.amount DESC, pr.requested_at DESC
+            LIMIT $1`,
+            [limit]
+        );
+
+        return result.rows;
+    }
 }
 
 export const payoutService = new PayoutService();

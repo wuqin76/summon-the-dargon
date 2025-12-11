@@ -69,4 +69,28 @@ router.get('/history', authMiddleware, async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * GET /api/payout/leaderboard
+ * 获取提现排行榜（公开数据）
+ */
+router.get('/leaderboard', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 50;
+        
+        const leaderboard = await payoutService.getPayoutLeaderboard(limit);
+
+        res.json({
+            success: true,
+            data: leaderboard,
+        });
+
+    } catch (error: any) {
+        logger.error('Get payout leaderboard error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 export default router;
