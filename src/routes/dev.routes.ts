@@ -8,11 +8,20 @@ const router = Router();
 // 开发者 Telegram ID 白名单（在环境变量中配置）
 const DEV_TELEGRAM_IDS = (process.env.DEV_TELEGRAM_IDS || '').split(',').filter(Boolean);
 
+// 启动时输出调试信息
+logger.info('开发者模式配置', { 
+    env: process.env.DEV_TELEGRAM_IDS,
+    parsed: DEV_TELEGRAM_IDS,
+    count: DEV_TELEGRAM_IDS.length 
+});
+
 /**
  * 检查是否为开发者
  */
 function isDevUser(telegramId: string): boolean {
-    return DEV_TELEGRAM_IDS.includes(telegramId);
+    const result = DEV_TELEGRAM_IDS.includes(telegramId);
+    logger.info('开发者权限检查', { telegramId, whitelist: DEV_TELEGRAM_IDS, isDev: result });
+    return result;
 }
 
 /**

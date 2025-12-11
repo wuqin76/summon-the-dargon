@@ -2293,20 +2293,37 @@
         // 检查开发者权限
         async function checkDevAccess() {
             try {
+                console.log('🔍 检查开发者权限...');
+                console.log('API_BASE:', API_BASE);
+                console.log('authToken:', authToken ? '存在' : '不存在');
+                
                 const response = await fetch(`${API_BASE}/dev/info`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
+                console.log('开发者权限检查响应:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('开发者权限数据:', data);
+                    
                     if (data.success && data.data.isDev) {
                         isDevMode = true;
-                        document.getElementById('devBtn').style.display = 'inline-block';
-                        console.log('🛠️ 开发者模式已启用');
+                        const devBtn = document.getElementById('devBtn');
+                        if (devBtn) {
+                            devBtn.style.display = 'inline-block';
+                            console.log('🛠️ 开发者模式已启用，按钮已显示');
+                        } else {
+                            console.error('❌ 找不到 devBtn 元素');
+                        }
+                    } else {
+                        console.log('❌ 非开发者用户:', data);
                     }
+                } else {
+                    console.log('❌ 开发者权限检查失败:', response.status);
                 }
             } catch (error) {
-                console.log('非开发者用户');
+                console.error('❌ 检查开发者权限出错:', error);
             }
         }
 
