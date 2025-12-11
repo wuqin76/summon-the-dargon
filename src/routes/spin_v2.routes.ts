@@ -28,6 +28,32 @@ router.get('/available', authMiddleware, async (req: Request, res: Response) => 
         `, [userId]);
 
         const availableCount = parseInt(result.rows[0].count);
+        
+        // 同时获取 users 表的 available_spins 用于调试
+        const userResult = await pool.query(`
+            SELECT available_spins FROM users WHERE id = $1
+        `, [userId]);
+        
+        const userSpins = userResult.rows[0]?.available_spins || 0;
+        
+        // 如果数据不一致，自动修复
+        if (availableCount !== userSpins) {
+            console.warn('[Spin] 数据不一致检测到!', {
+                userId,
+                spin_entitlements_count: availableCount,
+                users_available_spins: userSpins
+            });
+            
+            // 同步：以 spin_entitlements 为准
+            await pool.query(`
+                UPDATE users SET available_spins = $1 WHERE id = $2
+            `, [availableCount, userId]);
+            
+            console.info('[Spin] 已自动同步 available_spins', {
+                userId,
+                newValue: availableCount
+            });
+        }
 
         res.json({
             success: true,

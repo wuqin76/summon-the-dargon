@@ -1685,6 +1685,13 @@
                         恢复到初始状态
                     </span>
                 </button>
+                
+                <button class="dev-action-btn" onclick="syncSpins()" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
+                    🔧 修复抽奖次数
+                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                        同步数据库和显示不一致
+                    </span>
+                </button>
             </div>
             
             <div class="dev-info" id="devInfo">
@@ -2507,6 +2514,44 @@
                 }
             } catch (error) {
                 alert('操作失败: ' + error.message);
+            }
+        }
+        
+        // 同步抽奖次数（修复数据不一致）
+        async function syncSpins() {
+            try {
+                const response = await fetch(`${API_BASE}/dev/sync-spins`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    await loadAvailableSpins(); // 刷新显示
+                    await toggleDevPanel(); // 刷新开发者面板
+                    
+                    let message = data.message;
+                    if (data.data) {
+                        message += '\n\n详细信息：';
+                        if (data.data.before) {
+                            message += `\n修复前：users表=${data.data.before.userSpins}, 资格表=${data.data.before.entitlementsCount}`;
+                        }
+                        if (data.data.after) {
+                            message += `\n修复后：已同步`;
+                        }
+                    }
+                    
+                    safeTgAlert(message);
+                } else {
+                    safeTgAlert('操作失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('同步抽奖次数失败:', error);
+                safeTgAlert('操作失败: ' + error.message);
             }
         }
 

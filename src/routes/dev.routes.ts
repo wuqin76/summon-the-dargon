@@ -307,4 +307,103 @@ router.get('/info', authMiddleware, async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * POST /api/dev/sync-spins
+ * 修复数据不一致：同步 users.available_spins 和 spin_entitlements
+ */
+router.post('/sync-spins', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const telegramId = (req as any).user.telegramId;
+
+        if (!isDevUser(telegramId.toString())) {
+            return res.status(403).json({
+                success: false,
+                error: '无权限访问开发者功能',
+            });
+        }
+
+        // 获取当前状态
+        const userResult = await db.query(
+            'SELECT available_spins FROM users WHERE id = $1',
+            [userId]
+        );
+        const userSpins = userResult.rows[0].available_spins;
+
+        const entitlementsResult = await db.query(
+            'SELECT COUNT(*) as count FROM spin_entitlements WHERE user_id = $1 AND consumed = false',
+            [userId]
+        );
+        const entitlementsCount = parseInt(entitlementsResult.rows[0].count);
+
+        // 如果 users 表有次数但 spin_entitlements 没有记录，创建记录
+        if (userSpins > entitlementsCount) {
+            const diff = userSpins - entitlementsCount;
+            for (let i = 0; i < diff; i++) {
+                await db.query(
+                    'INSERT INTO spin_entitlements (user_id, source_type, consumed) VALUES ($1, $2, false)',
+                    [userId, 'sync_fix']
+                );
+            }
+            
+            logger.info('✅ Synced spin entitlements', { 
+                userId, 
+                userSpins, 
+                entitlementsCount,
+                created: diff
+            });
+
+            return res.json({
+                success: true,
+                message: `✅ 已同步数据，创建了 ${diff} 条抽奖资格记录`,
+                data: {
+                    before: { userSpins, entitlementsCount },
+                    after: { entitlementsCount: userSpins }
+                }
+            });
+        } 
+        
+        // 如果 spin_entitlements 有记录但 users 表次数为0，更新 users 表
+        if (entitlementsCount > userSpins) {
+            await db.query(
+                'UPDATE users SET available_spins = $1 WHERE id = $2',
+                [entitlementsCount, userId]
+            );
+            
+            logger.info('✅ Updated users.available_spins', { 
+                userId, 
+                oldValue: userSpins,
+                newValue: entitlementsCount
+            });
+
+            return res.json({
+                success: true,
+                message: `✅ 已同步数据，更新 available_spins 为 ${entitlementsCount}`,
+                data: {
+                    before: { userSpins, entitlementsCount },
+                    after: { userSpins: entitlementsCount }
+                }
+            });
+        }
+
+        // 数据一致，无需操作
+        res.json({
+            success: true,
+            message: '✅ 数据已同步，无需修复',
+            data: {
+                userSpins,
+                entitlementsCount,
+                consistent: true
+            }
+        });
+
+    } catch (error: any) {
+        logger.error('Sync spins error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 export default router;
