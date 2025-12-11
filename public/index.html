@@ -2787,14 +2787,22 @@
         async function checkInviteCode() {
             try {
                 // 从URL获取邀请码
-                // Web App格式: ?startapp=CODE (新格式，直接启动)
-                // Bot格式: ?start=CODE (旧格式，需要点击"开始游戏")
+                // 优先级：
+                // 1. tgWebAppStartParam (URL参数)
+                // 2. tg.initDataUnsafe.start_param (Telegram传递的start参数)
+                // 3. startapp (新Web App格式)
                 const urlParams = new URLSearchParams(window.location.search);
                 const startParam = urlParams.get('tgWebAppStartParam') || 
-                                  urlParams.get('startapp') ||
-                                  (tg.initDataUnsafe?.start_parameter);
+                                  (tg.initDataUnsafe?.start_param) ||
+                                  urlParams.get('startapp');
                 
-                console.log('检查邀请码:', { startParam, urlParams: window.location.search, initData: tg.initDataUnsafe });
+                console.log('🔍 检查邀请码详情:', { 
+                    startParam, 
+                    urlSearch: window.location.search, 
+                    tgWebAppStartParam: urlParams.get('tgWebAppStartParam'),
+                    initDataUnsafe: tg.initDataUnsafe,
+                    start_param: tg.initDataUnsafe?.start_param
+                });
                 
                 if (startParam) {
                     console.log('发现邀请码:', startParam);
