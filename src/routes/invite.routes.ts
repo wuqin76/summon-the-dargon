@@ -191,10 +191,10 @@ router.get('/mycode', authMiddleware, async (req: Request, res: Response) => {
         }
 
         const inviteCode = result.rows[0].invite_code;
-        const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'YourBot';
+        const webAppUrl = process.env.WEB_APP_URL || 'https://dragon-spin-game-production.up.railway.app';
         
-        // 使用传统 Bot 链接格式（兼容性最好）
-        const inviteLink = `https://t.me/${botUsername}?start=${inviteCode}`;
+        // 使用直接Web App链接 + 邀请码参数（点击后直接打开游戏并传递参数）
+        const inviteLink = `${webAppUrl}?invite=${inviteCode}`;
 
         res.json({
             success: true,

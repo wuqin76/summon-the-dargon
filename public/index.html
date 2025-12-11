@@ -2786,26 +2786,33 @@
         // 检查是否通过邀请链接进入
         async function checkInviteCode() {
             try {
-                // 从URL获取邀请码
-                // 优先级：
-                // 1. tgWebAppStartParam (URL参数)
-                // 2. tg.initDataUnsafe.start_param (Telegram传递的start参数)
-                // 3. startapp (新Web App格式)
+                // 从URL获取邀请码（多种方式）
                 const urlParams = new URLSearchParams(window.location.search);
-                const startParam = urlParams.get('tgWebAppStartParam') || 
-                                  (tg.initDataUnsafe?.start_param) ||
-                                  urlParams.get('startapp');
+                
+                // 优先级1: 直接从URL参数获取 ?invite=CODE
+                let inviteCode = urlParams.get('invite');
+                
+                // 优先级2: 从Telegram start参数获取
+                if (!inviteCode) {
+                    const startParam = urlParams.get('tgWebAppStartParam') || 
+                                      (tg.initDataUnsafe?.start_param) ||
+                                      urlParams.get('startapp');
+                    if (startParam) {
+                        inviteCode = startParam;
+                    }
+                }
                 
                 console.log('🔍 检查邀请码详情:', { 
-                    startParam, 
+                    inviteCode,
                     urlSearch: window.location.search, 
+                    urlInvite: urlParams.get('invite'),
                     tgWebAppStartParam: urlParams.get('tgWebAppStartParam'),
-                    initDataUnsafe: tg.initDataUnsafe,
-                    start_param: tg.initDataUnsafe?.start_param
+                    start_param: tg.initDataUnsafe?.start_param,
+                    fullUrl: window.location.href
                 });
                 
-                if (startParam) {
-                    console.log('发现邀请码:', startParam);
+                if (inviteCode) {
+                    console.log('✅ 发现邀请码:', inviteCode);
                     
                     // 登录
                     if (!authToken || authToken === 'dev-token') {
@@ -2819,7 +2826,7 @@
                             'Authorization': `Bearer ${authToken}`,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ inviteCode: startParam })
+                        body: JSON.stringify({ inviteCode: inviteCode })
                     });
 
                     const data = await response.json();
