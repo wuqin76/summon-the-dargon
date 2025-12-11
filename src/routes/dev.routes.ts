@@ -57,7 +57,6 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
             UPDATE users SET 
                 game_balance = 150,
                 total_spins = 10,
-                win_count = 5,
                 total_invites = 3,
                 valid_invites = 2,
                 withdrawal_eligible = true,
@@ -65,7 +64,7 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
             WHERE id = $1
         `, [userId]);
 
-        logger.info('Dev test access granted', { userId, telegramId });
+        logger.info('✅ Dev test access granted', { userId, telegramId });
 
         res.json({
             success: true,
@@ -73,7 +72,6 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
             data: {
                 game_balance: 150,
                 total_spins: 10,
-                win_count: 5,
                 total_invites: 3,
                 valid_invites: 2,
                 withdrawal_eligible: true,
@@ -110,7 +108,6 @@ router.post('/reset-account', authMiddleware, async (req: Request, res: Response
             UPDATE users SET 
                 game_balance = 0,
                 total_spins = 0,
-                win_count = 0,
                 total_invites = 0,
                 valid_invites = 0,
                 withdrawal_eligible = false,
@@ -118,7 +115,7 @@ router.post('/reset-account', authMiddleware, async (req: Request, res: Response
             WHERE id = $1
         `, [userId]);
 
-        logger.info('Dev account reset', { userId, telegramId });
+        logger.info('✅ Dev account reset', { userId, telegramId });
 
         res.json({
             success: true,
