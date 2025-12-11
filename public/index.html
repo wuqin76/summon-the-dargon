@@ -227,6 +227,8 @@
             gap: clamp(10px, 3vw, 15px);
             flex-wrap: wrap;
             line-height: 1.4;
+            position: relative;
+            z-index: 50;
         }
         
         @media (max-width: 480px) {
@@ -259,6 +261,9 @@
             box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
             transition: all 0.3s ease;
             white-space: nowrap;
+            position: relative;
+            z-index: 100;
+            pointer-events: auto;
         }
 
         .invite-btn:hover {
@@ -307,6 +312,8 @@
             transform: translate(-50%, -50%);
             background: radial-gradient(circle, rgba(255, 153, 51, 0.4) 0%, rgba(247, 147, 30, 0.2) 50%, transparent 70%);
             animation: glowPulse 2s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 1;
         }
 
         @keyframes glowPulse {
