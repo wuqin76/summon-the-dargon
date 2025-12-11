@@ -34,18 +34,20 @@ async function addIpColumns() {
             console.log(`   - ${col.column_name} (${col.data_type}) ${col.is_nullable === 'YES' ? 'NULL' : 'NOT NULL'}`);
         });
         
-        // 2. 检查是否已存在 IP 字段
+        // 2. 检查是否已存在所有需要的字段
         const hasRegistrationIp = currentColumns.rows.some(col => col.column_name === 'registration_ip');
         const hasLastLoginIp = currentColumns.rows.some(col => col.column_name === 'last_login_ip');
+        const hasLastLoginAt = currentColumns.rows.some(col => col.column_name === 'last_login_at');
         
-        console.log('\n2. 检查 IP 字段状态...');
+        console.log('\n2. 检查所需字段状态...');
         console.log(`   registration_ip: ${hasRegistrationIp ? '✅ 已存在' : '❌ 不存在'}`);
         console.log(`   last_login_ip: ${hasLastLoginIp ? '✅ 已存在' : '❌ 不存在'}`);
+        console.log(`   last_login_at: ${hasLastLoginAt ? '✅ 已存在' : '❌ 不存在'}`);
         
         // 3. 添加缺失的字段
         let needsMigration = false;
         
-        if (!hasRegistrationIp || !hasLastLoginIp) {
+        if (!hasRegistrationIp || !hasLastLoginIp || !hasLastLoginAt) {
             console.log('\n3. 开始添加缺失的字段...');
             needsMigration = true;
             
@@ -68,6 +70,15 @@ async function addIpColumns() {
                         ADD COLUMN last_login_ip VARCHAR(45);
                     `);
                     console.log('   ✅ last_login_ip 添加成功');
+                }
+                
+                if (!hasLastLoginAt) {
+                    console.log('   添加 last_login_at 列...');
+                    await client.query(`
+                        ALTER TABLE users 
+                        ADD COLUMN last_login_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+                    `);
+                    console.log('   ✅ last_login_at 添加成功');
                 }
                 
                 await client.query('COMMIT');
