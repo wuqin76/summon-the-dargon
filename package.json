@@ -16,7 +16,8 @@
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
     "verify-config": "node scripts/verify-config.js",
-    "check": "node scripts/verify-config.js"
+    "check": "node scripts/pre-deploy-check.js",
+    "pre-deploy": "node scripts/pre-deploy-check.js"
   },
   "keywords": [
     "telegram",

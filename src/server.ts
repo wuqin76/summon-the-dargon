@@ -16,6 +16,7 @@ import adminRoutes from './routes/admin.routes';
 import webhookRoutes from './routes/webhook.routes';     // 第三方支付回调
 import taskRoutes from './routes/task.routes';           // 任务系统
 import inviteRoutes from './routes/invite.routes';       // 邀请系统
+import devRoutes from './routes/dev.routes';             // 开发者模式
 
 const app: Application = express();
 
@@ -86,6 +87,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/webhook', webhookRoutes);  // 第三方支付webhook
 app.use('/api/tasks', taskRoutes);        // 任务系统
 app.use('/api/invite', inviteRoutes);     // 邀请系统
+app.use('/api/dev', devRoutes);           // 开发者模式
 
 // Serve static files (frontend)
 app.use(express.static('public'));

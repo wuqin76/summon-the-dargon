@@ -275,6 +275,144 @@
             transform: translateY(0);
         }
 
+        .dev-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: clamp(8px, 2vw, 12px) clamp(18px, 5vw, 28px);
+            border-radius: 20px;
+            font-size: clamp(13px, 3.5vw, 16px);
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            position: relative;
+            z-index: 100;
+            pointer-events: auto;
+            margin-left: 10px;
+        }
+
+        .dev-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        /* 开发者面板样式 */
+        .dev-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dev-modal.show {
+            display: flex;
+        }
+
+        .dev-modal-content {
+            background: white;
+            border-radius: 25px;
+            padding: clamp(25px, 6vw, 35px);
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+            animation: slideUpDev 0.3s ease;
+        }
+
+        @keyframes slideUpDev {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dev-modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .dev-modal-header h2 {
+            margin: 0;
+            font-size: clamp(22px, 5.5vw, 28px);
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dev-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dev-action-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .dev-action-btn.grant {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .dev-action-btn.complete {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+        }
+
+        .dev-action-btn.reset {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+        }
+
+        .dev-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .dev-action-btn:active {
+            transform: translateY(0);
+        }
+
+        .dev-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .close-dev-modal-btn {
+            width: 100%;
+            padding: 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
         /* 转盘容器 - 响应式适配（更大） */
         .wheel-container {
             position: relative;
@@ -1350,6 +1488,9 @@
                         <button class="invite-btn" onclick="showInviteLink()">
                             👥 邀请好友
                         </button>
+                        <button class="dev-btn" id="devBtn" onclick="toggleDevPanel()" style="display: none;">
+                            🛠️ 开发者
+                        </button>
                     </div>
                     
                     <div class="wheel-container">
@@ -1497,6 +1638,47 @@
                 </div>
             </div>
             <button class="close-modal-btn" onclick="closeInviteModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 开发者面板 -->
+    <div class="dev-modal" id="devModal">
+        <div class="dev-modal-content">
+            <div class="dev-modal-header">
+                <h2>🛠️ 开发者模式</h2>
+                <p style="font-size: 14px; color: #666; margin-top: 8px;">快速测试所有功能</p>
+            </div>
+            
+            <div class="dev-buttons">
+                <button class="dev-action-btn grant" onclick="grantTestAccess()">
+                    ⚡ 授予测试权限
+                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                        余额150U + 解锁所有功能
+                    </span>
+                </button>
+                
+                <button class="dev-action-btn complete" onclick="completeAllTasks()">
+                    ✅ 完成所有任务
+                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                        自动完成所有可用任务
+                    </span>
+                </button>
+                
+                <button class="dev-action-btn reset" onclick="resetAccount()">
+                    🔄 重置账号
+                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                        恢复到初始状态
+                    </span>
+                </button>
+            </div>
+            
+            <div class="dev-info" id="devInfo">
+                <div style="text-align: center; color: #999; padding: 20px;">
+                    加载中...
+                </div>
+            </div>
+            
+            <button class="close-dev-modal-btn" onclick="closeDevModal()">关闭</button>
         </div>
     </div>
 
@@ -1749,6 +1931,9 @@
                     authToken = data.data.token;
                     localStorage.setItem('authToken', authToken);
                     console.log('✅ 登录成功，token已保存');
+                    
+                    // 检查开发者权限
+                    await checkDevAccess();
                 } else {
                     console.error('❌ 登录失败:', data.error || data.message);
                     throw new Error(data.error || data.message || '登录失败，未返回有效token');
@@ -2100,6 +2285,149 @@
         function closeInviteModal() {
             const modal = document.getElementById('inviteModal');
             modal.classList.remove('show');
+        }
+
+        // 开发者模式函数
+        let isDevMode = false;
+
+        // 检查开发者权限
+        async function checkDevAccess() {
+            try {
+                const response = await fetch(`${API_BASE}/dev/info`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.data.isDev) {
+                        isDevMode = true;
+                        document.getElementById('devBtn').style.display = 'inline-block';
+                        console.log('🛠️ 开发者模式已启用');
+                    }
+                }
+            } catch (error) {
+                console.log('非开发者用户');
+            }
+        }
+
+        // 切换开发者面板
+        async function toggleDevPanel() {
+            const modal = document.getElementById('devModal');
+            modal.classList.add('show');
+            
+            // 加载当前状态
+            try {
+                const response = await fetch(`${API_BASE}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.data.user;
+                    
+                    document.getElementById('devInfo').innerHTML = `
+                        <div style="font-size: 13px; line-height: 1.8;">
+                            <div><strong>当前状态：</strong></div>
+                            <div>💰 余额: ₹${user.gameBalance || 0}</div>
+                            <div>🎲 抽奖次数: ${data.data.stats?.total_spins || 0}</div>
+                            <div>👥 邀请人数: ${user.totalInvites || 0} (有效: ${user.validInvites || 0})</div>
+                            <div>✅ 提现资格: ${user.withdrawalEligible ? '已解锁' : '未解锁'}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载状态失败:', error);
+            }
+        }
+
+        // 关闭开发者面板
+        function closeDevModal() {
+            const modal = document.getElementById('devModal');
+            modal.classList.remove('show');
+        }
+
+        // 授予测试权限
+        async function grantTestAccess() {
+            if (!confirm('确定要授予测试权限吗？\n\n将会设置：\n- 余额 150U\n- 10次抽奖记录\n- 3个邀请好友\n- 解锁提现功能')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/dev/grant-test-access`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message + '\n\n页面即将刷新显示最新状态');
+                    window.location.reload();
+                } else {
+                    alert('操作失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        // 完成所有任务
+        async function completeAllTasks() {
+            if (!confirm('确定要完成所有任务吗？\n\n将会自动完成所有可用的任务')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/dev/complete-all-tasks`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message + '\n\n页面即将刷新显示最新状态');
+                    window.location.reload();
+                } else {
+                    alert('操作失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
+        }
+
+        // 重置账号
+        async function resetAccount() {
+            if (!confirm('⚠️ 警告！\n\n确定要重置账号吗？\n\n这将清空所有数据，包括：\n- 余额\n- 抽奖记录\n- 任务进度\n- 邀请记录\n\n此操作不可恢复！')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/dev/reset-account`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message + '\n\n页面即将刷新');
+                    window.location.reload();
+                } else {
+                    alert('操作失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('操作失败: ' + error.message);
+            }
         }
 
         // 检查是否通过邀请链接进入
