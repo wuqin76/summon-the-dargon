@@ -72,28 +72,42 @@ export function verifyTelegramWebAppData(initData: string): TelegramUser | null 
             
             // 紧急措施：允许通过但记录警告（仅用于调试）
             // TODO: 在生产环境中移除此代码或通过环境变量控制
-            if (process.env.SKIP_TELEGRAM_VERIFICATION === 'true') {
-                logger.warn('⚠️ SKIPPING Telegram verification due to SKIP_TELEGRAM_VERIFICATION=true');
+            const skipVerification = process.env.SKIP_TELEGRAM_VERIFICATION === 'true' || process.env.NODE_ENV === 'development';
+            if (skipVerification) {
+                logger.warn('⚠️ SKIPPING Telegram verification (dev mode or SKIP_TELEGRAM_VERIFICATION=true)');
                 const userParam = params.get('user');
                 if (userParam) {
-                    const user = JSON.parse(userParam);
-                    const authDate = parseInt(params.get('auth_date') || '0', 10);
-                    return {
-                        ...user,
-                        auth_date: authDate,
-                        hash,
-                    };
+                    try {
+                        const user = JSON.parse(userParam);
+                        const authDate = parseInt(params.get('auth_date') || '0', 10);
+                        logger.info('✅ Bypassed verification, user data:', { id: user.id, username: user.username });
+                        return {
+                            ...user,
+                            auth_date: authDate,
+                            hash,
+                        };
+                    } catch (e) {
+                        logger.error('Failed to parse user data in bypass mode', e);
+                    }
                 }
             }
             
             return null;
         }
 
-        // 检查时间戳（5分钟内有效）
+        // 检查时间戳（30分钟内有效，从5分钟延长）
         const authDate = parseInt(params.get('auth_date') || '0', 10);
         const now = Math.floor(Date.now() / 1000);
         const timeDiff = now - authDate;
-        if (timeDiff > 300) {
+        
+        logger.info('Telegram auth timestamp check', {
+            authDate,
+            now,
+            timeDiff,
+            maxAllowed: 1800
+        });
+        
+        if (timeDiff > 1800) { // 30分钟 = 1800秒
             logger.warn('Telegram data verification failed - expired', {
                 authDate,
                 now,

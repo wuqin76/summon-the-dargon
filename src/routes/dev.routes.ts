@@ -53,29 +53,120 @@ router.post('/grant-test-access', authMiddleware, async (req: Request, res: Resp
         }
 
         // 授予测试权限
-        await db.query(`
-            UPDATE users SET 
-                balance = 150,
-                available_spins = 10,
-                total_invited = 3,
-                updated_at = NOW()
-            WHERE id = $1
-        `, [userId]);
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // 更新用户数据
+            await client.query(`
+                UPDATE users SET 
+                    balance = 150,
+                    available_spins = 10,
+                    total_invited = 3,
+                    updated_at = NOW()
+                WHERE id = $1
+            `, [userId]);
+            
+            // 直接创建10个抽奖资格（简单直接）
+            for (let i = 0; i < 10; i++) {
+                await client.query(`
+                    INSERT INTO spin_entitlements (user_id, source_type, consumed, created_at)
+                    VALUES ($1, 'dev_grant', false, NOW())
+                `, [userId]);
+            }
+            
+            await client.query('COMMIT');
+            logger.info('✅ Dev test access granted with spin entitlements', { userId, telegramId });
 
-        logger.info('✅ Dev test access granted', { userId, telegramId });
-
-        res.json({
-            success: true,
-            message: '✅ 测试权限已授予',
-            data: {
-                balance: 150,
-                available_spins: 10,
-                total_invited: 3,
-            },
-        });
+            res.json({
+                success: true,
+                message: '✅ 测试权限已授予（包含10次抽奖机会）',
+                data: {
+                    balance: 150,
+                    available_spins: 10,
+                    total_invited: 3,
+                },
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
 
     } catch (error: any) {
         logger.error('Grant test access error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * POST /api/dev/add-spins
+ * 快速添加抽奖次数（最简单直接的方式）
+ */
+router.post('/add-spins', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const telegramId = (req as any).user.telegramId;
+        const { count = 1 } = req.body; // 默认添加1次
+
+        if (!isDevUser(telegramId.toString())) {
+            return res.status(403).json({
+                success: false,
+                error: '无权限访问开发者功能',
+            });
+        }
+
+        const client = await db.connect();
+        try {
+            await client.query('BEGIN');
+            
+            // 直接增加次数
+            await client.query(`
+                UPDATE users 
+                SET available_spins = available_spins + $2,
+                    updated_at = NOW()
+                WHERE id = $1
+            `, [userId, count]);
+            
+            // 创建对应的抽奖资格
+            for (let i = 0; i < count; i++) {
+                await client.query(`
+                    INSERT INTO spin_entitlements (user_id, source_type, consumed, created_at)
+                    VALUES ($1, 'dev_manual', false, NOW())
+                `, [userId]);
+            }
+            
+            await client.query('COMMIT');
+            
+            // 获取当前次数
+            const result = await db.query(
+                'SELECT available_spins FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            logger.info('✅ Added spins via dev tool', { userId, count, newTotal: result.rows[0].available_spins });
+
+            res.json({
+                success: true,
+                message: `✅ 已添加 ${count} 次抽奖机会`,
+                data: {
+                    added: count,
+                    total: result.rows[0].available_spins,
+                },
+            });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+
+    } catch (error: any) {
+        logger.error('Add spins error', { error: error.message });
         res.status(500).json({
             success: false,
             error: error.message,
