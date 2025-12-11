@@ -2547,6 +2547,19 @@
             console.log('=== 初始化完成 ===');
         }
 
+        // 页面加载后立即检查开发者权限（针对已登录用户）
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📱 页面DOM加载完成');
+            
+            // 如果已经有 token，立即检查开发者权限
+            const savedToken = localStorage.getItem('authToken');
+            if (savedToken && savedToken !== 'dev-token') {
+                console.log('🔑 发现已保存的 token，立即检查开发者权限');
+                authToken = savedToken;
+                await checkDevAccess();
+            }
+        });
+
         init();
     </script>
 </body>
