@@ -2484,8 +2484,10 @@
                 
                 if (data.success) {
                     const inviteCode = data.data.invite_code;
-                    const botUsername = data.data.bot_username || 'summondargon_bot';
-                    const inviteLink = `https://t.me/${botUsername}?start=${inviteCode}`;
+                    
+                    // 使用直接 Web App URL + 邀请码参数（每次点击都能传递参数）
+                    const webAppUrl = 'https://dragon-spin-game-production.up.railway.app';
+                    const inviteLink = `${webAppUrl}?invite=${inviteCode}`;
                     
                     inviteLinkInput.value = inviteLink;
                     inviteCountEl.textContent = data.data.total_invites || 0;
