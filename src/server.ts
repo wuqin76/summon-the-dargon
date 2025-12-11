@@ -37,6 +37,7 @@ app.use(helmet({
             objectSrc: ["'none'"],
             mediaSrc: ["'self'", "blob:"],
             frameSrc: ["'self'"],
+            frameAncestors: ["'self'", "https://web.telegram.org", "https://*.telegram.org"],
         },
     },
 }));
