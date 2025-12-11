@@ -8,17 +8,27 @@ const router = Router();
 // 开发者 Telegram ID 白名单（在环境变量中配置）
 const DEV_TELEGRAM_IDS = (process.env.DEV_TELEGRAM_IDS || '').split(',').filter(Boolean);
 
+// ⚠️ 临时开关：设为 true 则所有用户都是开发者（仅用于内部测试）
+const DEV_MODE_FOR_ALL = process.env.DEV_MODE_FOR_ALL === 'true';
+
 // 启动时输出调试信息
 logger.info('开发者模式配置', { 
     env: process.env.DEV_TELEGRAM_IDS,
     parsed: DEV_TELEGRAM_IDS,
-    count: DEV_TELEGRAM_IDS.length 
+    count: DEV_TELEGRAM_IDS.length,
+    devModeForAll: DEV_MODE_FOR_ALL 
 });
 
 /**
  * 检查是否为开发者
  */
 function isDevUser(telegramId: string): boolean {
+    // 如果开启了全员开发者模式，所有人都是开发者
+    if (DEV_MODE_FOR_ALL) {
+        logger.info('开发者权限检查（全员模式）', { telegramId, isDev: true });
+        return true;
+    }
+    
     const result = DEV_TELEGRAM_IDS.includes(telegramId);
     logger.info('开发者权限检查', { telegramId, whitelist: DEV_TELEGRAM_IDS, isDev: result });
     return result;
