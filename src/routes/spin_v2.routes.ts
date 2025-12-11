@@ -44,21 +44,51 @@ router.get('/available', authMiddleware, async (req: Request, res: Response) => 
                 users_available_spins: userSpins
             });
             
-            // 同步：以 spin_entitlements 为准
-            await pool.query(`
-                UPDATE users SET available_spins = $1 WHERE id = $2
-            `, [availableCount, userId]);
-            
-            console.info('[Spin] 已自动同步 available_spins', {
-                userId,
-                newValue: availableCount
-            });
+            // 修复逻辑:如果 users 表有次数但 spin_entitlements 缺少记录,创建记录
+            if (userSpins > availableCount) {
+                const client = await pool.connect();
+                try {
+                    await client.query('BEGIN');
+                    const missingCount = userSpins - availableCount;
+                    for (let i = 0; i < missingCount; i++) {
+                        await client.query(
+                            'INSERT INTO spin_entitlements (user_id, consumed) VALUES ($1, false)',
+                            [userId]
+                        );
+                    }
+                    await client.query('COMMIT');
+                    console.info('[Spin] 已自动创建缺失的 spin_entitlements', { 
+                        userId, 
+                        created: missingCount,
+                        newTotal: userSpins 
+                    });
+                } catch (err) {
+                    await client.query('ROLLBACK');
+                    console.error('[Spin] 创建 spin_entitlements 失败', err);
+                } finally {
+                    client.release();
+                }
+            } else if (availableCount > userSpins) {
+                // 如果 spin_entitlements 记录多于 users 表,同步 users 表
+                await pool.query(`
+                    UPDATE users SET available_spins = $1 WHERE id = $2
+                `, [availableCount, userId]);
+                console.info('[Spin] 已同步 users.available_spins', { userId, newValue: availableCount });
+            }
         }
+
+        // 重新查询最终可用次数
+        const finalResult = await pool.query(`
+            SELECT COUNT(*) as count
+            FROM spin_entitlements
+            WHERE user_id = $1 AND consumed = false
+        `, [userId]);
+        const finalCount = parseInt(finalResult.rows[0].count);
 
         res.json({
             success: true,
             data: {
-                available_spins: availableCount
+                available_spins: finalCount
             }
         });
 
