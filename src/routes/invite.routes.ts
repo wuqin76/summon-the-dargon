@@ -192,7 +192,10 @@ router.get('/mycode', authMiddleware, async (req: Request, res: Response) => {
 
         const inviteCode = result.rows[0].invite_code;
         const botUsername = process.env.TELEGRAM_BOT_USERNAME || 'YourBot';
-        const inviteLink = `https://t.me/${botUsername}?start=${inviteCode}`;
+        const webAppName = process.env.TELEGRAM_WEBAPP_SHORT_NAME || 'game';
+        
+        // 使用 Web App 直接启动链接格式（点击后直接打开游戏）
+        const inviteLink = `https://t.me/${botUsername}/${webAppName}?startapp=${inviteCode}`;
 
         res.json({
             success: true,

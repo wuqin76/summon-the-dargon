@@ -2786,12 +2786,19 @@
         // 检查是否通过邀请链接进入
         async function checkInviteCode() {
             try {
-                // 从URL获取邀请码（Telegram start参数）
+                // 从URL获取邀请码
+                // Web App格式: ?startapp=CODE (新格式，直接启动)
+                // Bot格式: ?start=CODE (旧格式，需要点击"开始游戏")
                 const urlParams = new URLSearchParams(window.location.search);
                 const startParam = urlParams.get('tgWebAppStartParam') || 
+                                  urlParams.get('startapp') ||
                                   (tg.initDataUnsafe?.start_parameter);
                 
+                console.log('检查邀请码:', { startParam, urlParams: window.location.search, initData: tg.initDataUnsafe });
+                
                 if (startParam) {
+                    console.log('发现邀请码:', startParam);
+                    
                     // 登录
                     if (!authToken || authToken === 'dev-token') {
                         await login();
@@ -2808,6 +2815,7 @@
                     });
 
                     const data = await response.json();
+                    console.log('邀请码处理结果:', data);
                     
                     if (data.success) {
                         // 显示邀请成功提示
@@ -2816,7 +2824,11 @@
                                 alert('🎉 欢迎！你的邀请人获得了一次抽奖机会！');
                             }, 1000);
                         }
+                    } else {
+                        console.warn('邀请码处理失败:', data.message);
                     }
+                } else {
+                    console.log('未发现邀请码');
                 }
             } catch (error) {
                 console.error('处理邀请码错误:', error);
