@@ -1548,10 +1548,43 @@
         tg.ready();
         tg.expand();
 
+        const APP_VERSION = '1.2.0'; // 版本号，用于调试
+        console.log('🚀 应用版本:', APP_VERSION);
+        console.log('📱 Telegram WebApp 版本:', tg.version);
+        
         const isDevelopment = !tg.initData;
         const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('authToken') || 'dev-token';
         let isSpinning = false;
+
+        // 安全的 Telegram API 包装函数
+        function safeTgAlert(message) {
+            try {
+                if (typeof tg.showAlert === 'function') {
+                    tg.showAlert(message);
+                } else {
+                    alert(message);
+                }
+            } catch (error) {
+                console.error('showAlert 失败:', error);
+                alert(message);
+            }
+        }
+
+        function safeTgConfirm(message, callback) {
+            try {
+                if (typeof tg.showConfirm === 'function') {
+                    tg.showConfirm(message, callback);
+                } else if (confirm(message)) {
+                    callback(true);
+                }
+            } catch (error) {
+                console.error('showConfirm 失败:', error);
+                if (confirm(message)) {
+                    callback(true);
+                }
+            }
+        }
 
         // 任务系统配置 - 后端控制，前端只显示当前任务
         const TASK_REWARDS = [
@@ -1962,13 +1995,6 @@
                     return;
                 }
 
-                // 显示加载提示
-                tg.showPopup({
-                    title: '加载中',
-                    message: '正在获取邀请信息...',
-                    buttons: []
-                });
-
                 // 尝试登录（如果还没有有效的 token）
                 if (!authToken || authToken === 'dev-token') {
                     console.log('需要登录，开始登录流程...');
@@ -1977,8 +2003,7 @@
                         console.log('登录完成，token:', authToken ? '已设置' : '未设置');
                     } catch (loginError) {
                         console.error('登录失败:', loginError);
-                        tg.close();
-                        tg.showAlert('登录失败，请重新打开应用再试');
+                        safeTgAlert('登录失败，请重新打开应用再试');
                         return;
                     }
                 }
@@ -1991,9 +2016,6 @@
                 });
                 
                 console.log('API响应状态:', response.status);
-                
-                // 关闭加载提示
-                tg.close();
                 
                 if (!response.ok) {
                     if (response.status === 401) {
@@ -2008,7 +2030,7 @@
                             return await showInviteLink();
                         } catch (retryError) {
                             console.error('重新登录失败:', retryError);
-                            tg.showAlert('身份验证失败，请关闭应用后重新打开再试');
+                            safeTgAlert('身份验证失败，请关闭应用后重新打开再试');
                             return;
                         }
                     }
@@ -2034,7 +2056,7 @@
                 }
             } catch (error) {
                 console.error('❌ 邀请链接错误:', error);
-                tg.showAlert('获取邀请链接失败，请稍后再试\n\n错误: ' + error.message);
+                safeTgAlert('获取邀请链接失败，请稍后再试\n\n错误: ' + error.message);
             }
         }
 
@@ -2130,11 +2152,7 @@
         // 处理付费模式
         function handlePaidMode() {
             // 这里将调用第三方支付API
-            if (tg.showAlert) {
-                tg.showAlert('即将跳转到第三方支付页面，支付完成后返回即可开始游戏');
-            } else {
-                alert('即将跳转到第三方支付页面，支付完成后返回即可开始游戏');
-            }
+            safeTgAlert('即将跳转到第三方支付页面，支付完成后返回即可开始游戏');
 
             // TODO: 集成第三方支付API
             // 示例：window.open('https://payment-provider.com/pay?amount=10&callback=' + encodeURIComponent(window.location.origin));
