@@ -1879,18 +1879,7 @@
         <div class="task-modal-content">
             <div class="task-modal-header">
                 <h2>📋 当前任务</h2>
-                <p>完成任务获得能量，累积 ₹100 卢比即可提现</p>
-            </div>
-
-            <div class="task-info-box">
-                <div class="task-info-item">
-                    <span class="task-info-label">当前进度</span>
-                    <span class="task-info-value" id="taskTotalProgress">₹0 / ₹100</span>
-                </div>
-                <div class="task-info-item">
-                    <span class="task-info-label">已完成任务</span>
-                    <span class="task-info-value" id="taskCompletedCount">0</span>
-                </div>
+                <p>完成任务获得抽奖机会，抽奖必中对应金额</p>
             </div>
 
             <div class="current-task-card" id="currentTaskCard">
@@ -2379,18 +2368,13 @@
             const taskProgressFill = document.getElementById('taskProgressFill');
             const taskProgressText = document.getElementById('taskProgressText');
             const taskActionButtons = document.getElementById('taskActionButtons');
-            const taskTotalProgress = document.getElementById('taskTotalProgress');
-            const taskCompletedCount = document.getElementById('taskCompletedCount');
 
             const { task_index, task_type, progress, required, total_progress, completed_tasks } = taskData;
 
             // 获取当前任务奖励金额
             const rewardAmount = TASK_REWARDS[task_index] || 0;
-            const formattedReward = formatPrizeAmount(rewardAmount);
-
-            // 更新总进度
-            taskTotalProgress.textContent = `${total_progress.toFixed(2)} / 100 U`;
-            taskCompletedCount.textContent = completed_tasks;
+            // 直接显示准确数字，不使用格式化（避免9900变成9.9K）
+            const formattedReward = rewardAmount >= 1000 ? `₹${rewardAmount.toLocaleString('en-IN')}` : `₹${rewardAmount}`;
 
             // 更新进度条
             const progressPercent = (progress / required) * 100;
