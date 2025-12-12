@@ -14,7 +14,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: url('../图片/主背景图1.png') no-repeat center center;
+            background: url('/images/picture1.png') no-repeat center center;
             background-size: cover;
             background-attachment: fixed;
             color: #ffffff;
@@ -477,312 +477,200 @@
             margin-top: 15px;
         }
 
-        /* 转盘容器 - 响应式适配（更大） */
+        /* 转盘容器 - 方块格子样式 */
         .wheel-container {
             position: relative;
-            width: 92vw;
-            max-width: 550px;
-            height: 92vw;
-            max-height: 550px;
+            width: 95vw;
+            max-width: 500px;
             margin: 0 auto 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.3);
         }
         
         @media (max-width: 768px) {
             .wheel-container {
-                width: 90vw;
-                height: 90vw;
-                max-width: 450px;
-                max-height: 450px;
+                width: 92vw;
+                padding: 15px;
             }
         }
         
         @media (max-width: 480px) {
             .wheel-container {
-                width: 92vw;
-                height: 92vw;
-                max-width: 380px;
-                max-height: 380px;
+                width: 95vw;
+                padding: 12px;
             }
         }
 
         .wheel-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 550px;
-            height: 550px;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(255, 153, 51, 0.4) 0%, rgba(247, 147, 30, 0.2) 50%, transparent 70%);
-            animation: glowPulse 2s ease-in-out infinite;
-            pointer-events: none;
-            z-index: 1;
+            display: none;
         }
 
-        @keyframes glowPulse {
-            0%, 100% { 
-                opacity: 0.6; 
-                transform: translate(-50%, -50%) scale(1);
-                filter: brightness(1);
-            }
-            50% { 
-                opacity: 1; 
-                transform: translate(-50%, -50%) scale(1.1);
-                filter: brightness(1.3);
-            }
-        }
-
+        /* 方块格子老虎机样式 */
         .wheel {
             width: 100%;
-            height: 100%;
-            position: relative;
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 
-                0 15px 50px rgba(0, 0, 0, 0.5), 
-                0 0 60px rgba(255, 153, 51, 0.6),
-                0 0 100px rgba(247, 147, 30, 0.4),
-                inset 0 0 30px rgba(255, 255, 255, 0.2),
-                inset 0 0 50px rgba(255, 153, 51, 0.1);
-            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1);
-            border: 8px solid #FFD700;
-            border-image: linear-gradient(45deg, #FFD700, #FF9933, #FFD700, #FF9933) 1;
-            animation: wheelGlow 3s ease-in-out infinite;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 10px;
         }
         
-        @keyframes wheelGlow {
-            0%, 100% { 
-                filter: brightness(1) drop-shadow(0 0 20px rgba(255, 153, 51, 0.5));
-            }
-            50% { 
-                filter: brightness(1.2) drop-shadow(0 0 40px rgba(255, 153, 51, 0.8));
-            }
-        }
-
         .wheel-inner {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            display: contents;
         }
 
+        /* 方块格子 */
         .sector {
-            position: absolute;
-            width: 50%;
-            height: 50%;
-            transform-origin: 100% 100%;
-            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            aspect-ratio: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0;
+            border-radius: 12px;
             font-weight: 900;
-            font-size: 22px;
+            font-size: clamp(16px, 4vw, 24px);
             color: white;
+            text-align: center;
+            padding: 10px;
+            transition: all 0.15s ease;
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.4),
+                inset 0 2px 10px rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sector::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+
+        .sector:hover::before {
+            opacity: 1;
         }
 
         .sector span {
-            display: block;
-            transform: rotate(-15deg);
+            position: relative;
+            z-index: 1;
             text-shadow: 
-                0 3px 10px rgba(0, 0, 0, 0.9),
-                0 0 20px rgba(255, 255, 255, 0.6),
-                0 0 5px rgba(0, 0, 0, 0.8);
-            margin-left: clamp(50px, 13vw, 75px);
-            margin-top: clamp(-75px, -18vw, -100px);
-            font-size: clamp(20px, 6vw, 34px);
+                0 2px 8px rgba(0, 0, 0, 0.8),
+                0 0 15px rgba(255, 255, 255, 0.3);
+            font-size: clamp(15px, 3.8vw, 22px);
             font-weight: 900;
-            letter-spacing: 1px;
-        }
-        
-        @media (max-width: 768px) {
-            .sector span {
-                margin-left: clamp(45px, 12vw, 68px);
-                margin-top: clamp(-70px, -17vw, -92px);
-                font-size: clamp(19px, 5.8vw, 30px);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .sector span {
-                margin-left: clamp(42px, 11.5vw, 62px);
-                margin-top: clamp(-65px, -16vw, -85px);
-                font-size: clamp(18px, 5.5vw, 28px);
-            }
+            line-height: 1.2;
         }
 
-        /* 印度风格扇区配色 - 鲜艳明亮 */
+        /* 活跃闪烁状态 */
+        .sector.active {
+            transform: scale(1.15);
+            box-shadow: 
+                0 8px 30px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                inset 0 0 20px rgba(255, 255, 255, 0.4);
+            z-index: 10;
+            animation: slotPulse 0.15s ease;
+        }
+
+        @keyframes slotPulse {
+            0%, 100% { transform: scale(1.15); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* 印度风格方块配色 - 鲜艳明亮 */
         .sector:nth-child(1) {
-            transform: rotate(0deg);
             background: linear-gradient(135deg, #FF6347, #FF4500);
         }
 
         .sector:nth-child(2) {
-            transform: rotate(30deg);
             background: linear-gradient(135deg, #FFD700, #FFA500);
         }
 
         .sector:nth-child(3) {
-            transform: rotate(60deg);
             background: linear-gradient(135deg, #FF9933, #FF7F00);
         }
 
         .sector:nth-child(4) {
-            transform: rotate(90deg);
             background: linear-gradient(135deg, #32CD32, #228B22);
         }
 
         .sector:nth-child(5) {
-            transform: rotate(120deg);
             background: linear-gradient(135deg, #FF69B4, #FF1493);
         }
 
         .sector:nth-child(6) {
-            transform: rotate(150deg);
             background: linear-gradient(135deg, #FFD700, #FFEC8B);
         }
 
         .sector:nth-child(7) {
-            transform: rotate(180deg);
             background: linear-gradient(135deg, #00CED1, #20B2AA);
         }
 
         .sector:nth-child(8) {
-            transform: rotate(210deg);
             background: linear-gradient(135deg, #FF6B35, #F7931E);
         }
 
         .sector:nth-child(9) {
-            transform: rotate(240deg);
             background: linear-gradient(135deg, #9370DB, #8A2BE2);
         }
 
         .sector:nth-child(10) {
-            transform: rotate(270deg);
             background: linear-gradient(135deg, #FF4500, #DC143C);
         }
 
         .sector:nth-child(11) {
-            transform: rotate(300deg);
             background: linear-gradient(135deg, #FFD700, #FF8C00);
         }
 
         .sector:nth-child(12) {
-            transform: rotate(330deg);
             background: linear-gradient(135deg, #32CD32, #3CB371);
         }
 
+        /* 浅色背景的格子使用深色文字 */
+        .sector:nth-child(2) span,
         .sector:nth-child(3) span,
-        .sector:nth-child(4) span,
-        .sector:nth-child(6) span {
-            color: #333;
-            text-shadow: 0 2px 6px rgba(255, 255, 255, 0.8);
+        .sector:nth-child(6) span,
+        .sector:nth-child(11) span {
+            color: #1a1a1a;
+            text-shadow: 
+                0 2px 6px rgba(255, 255, 255, 0.8),
+                0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Random格子特殊样式 - 彩虹渐变 */
+        .sector:nth-child(11) {
+            background: linear-gradient(135deg, 
+                #ff0000 0%, 
+                #ff7f00 14%, 
+                #ffff00 28%, 
+                #00ff00 42%, 
+                #0000ff 56%, 
+                #4b0082 70%, 
+                #9400d3 84%, 
+                #ff0000 100%);
+            background-size: 200% 200%;
+            animation: rainbowShift 3s ease infinite;
+        }
+
+        @keyframes rainbowShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .wheel-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: clamp(95px, 20vw, 140px);
-            height: clamp(95px, 20vw, 140px);
-            background: linear-gradient(135deg, #FFD700, #FF9933, #FFD700);
-            background-size: 200% 200%;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(45px, 10vw, 65px);
-            box-shadow: 
-                0 10px 30px rgba(0, 0, 0, 0.6), 
-                0 0 50px rgba(255, 153, 51, 0.9),
-                0 0 80px rgba(255, 215, 0, 0.5),
-                inset 0 4px 18px rgba(255, 255, 255, 0.6),
-                inset 0 -4px 18px rgba(255, 153, 51, 0.5);
-            border: clamp(4px, 1vw, 6px) solid #FFFFFF;
-            z-index: 10;
-            animation: centerGlow 2s ease-in-out infinite;
-        }
-        
-        @media (max-width: 768px) {
-            .wheel-center {
-                width: clamp(88px, 19vw, 125px);
-                height: clamp(88px, 19vw, 125px);
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .wheel-center {
-                width: clamp(80px, 18vw, 115px);
-                height: clamp(80px, 18vw, 115px);
-                font-size: clamp(40px, 9.5vw, 58px);
-            }
-        }
-        
-        @keyframes centerGlow {
-            0%, 100% { 
-                background-position: 0% 50%;
-                box-shadow: 
-                    0 5px 20px rgba(0, 0, 0, 0.4), 
-                    0 0 30px rgba(255, 153, 51, 0.6),
-                    inset 0 2px 10px rgba(255, 255, 255, 0.4);
-            }
-            50% { 
-                background-position: 100% 50%;
-                box-shadow: 
-                    0 5px 20px rgba(0, 0, 0, 0.4), 
-                    0 0 50px rgba(255, 153, 51, 0.9),
-                    inset 0 2px 10px rgba(255, 255, 255, 0.6);
-            }
+            display: none;
         }
 
+        /* 指针样式调整为不显示 */
         .pointer {
-            position: absolute;
-            top: clamp(-25px, -6vw, -40px);
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: clamp(25px, 6.5vw, 40px) solid transparent;
-            border-right: clamp(25px, 6.5vw, 40px) solid transparent;
-            border-top: clamp(50px, 13vw, 80px) solid #FF9933;
-            z-index: 11;
-            filter: drop-shadow(0 5px 20px rgba(255, 153, 51, 0.9)) 
-                    drop-shadow(0 0 30px rgba(255, 153, 51, 0.7));
-            animation: pointerBounce 1s ease-in-out infinite;
-        }
-        
-        .pointer::after {
-            content: '';
-            position: absolute;
-            top: clamp(-50px, -13vw, -80px);
-            left: clamp(-25px, -6.5vw, -40px);
-            width: clamp(50px, 13vw, 80px);
-            height: clamp(50px, 13vw, 80px);
-            background: radial-gradient(circle, rgba(255, 153, 51, 0.4) 0%, transparent 70%);
-            animation: pointerGlow 1.5s ease-in-out infinite;
-        }
-        
-        @media (max-width: 480px) {
-            .pointer {
-                top: clamp(-20px, -5vw, -30px);
-            }
-        }
-
-        @keyframes pointerBounce {
-            0%, 100% { 
-                transform: translateX(-50%) translateY(0);
-                filter: drop-shadow(0 5px 15px rgba(255, 153, 51, 0.8));
-            }
-            50% { 
-                transform: translateX(-50%) translateY(-8px);
-                filter: drop-shadow(0 8px 20px rgba(255, 153, 51, 1));
-            }
-        }
-        
-        @keyframes pointerGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+            display: none;
         }
 
         .spin-btn {
@@ -1637,6 +1525,15 @@
                 filter: drop-shadow(0 0 20px rgba(255, 153, 51, 1));
             }
         }
+
+        @keyframes scrollText {
+            0% { 
+                transform: translateX(100%); 
+            }
+            100% { 
+                transform: translateX(-100%); 
+            }
+        }
     </style>
 </head>
 
@@ -1664,38 +1561,30 @@
                 </div>
 
                 <div class="modes-container">
-                <!-- 免费模式 -->
-                <div class="mode-card" onclick="playFreeMode()">
-                    <div class="mode-badge free">免费体验</div>
-                    <div class="mode-icon">🎮</div>
-                    <div class="mode-title">免费游玩</div>
-                    <div class="mode-price">FREE</div>
-                    <ul class="mode-features">
-                        <li>无限次游玩机会</li>
-                        <li>体验完整游戏内容</li>
-                        <li>练习游戏技巧</li>
-                        <li class="disabled-feature">不能参与抽奖</li>
-                        <li class="disabled-feature">无法获得奖励</li>
-                    </ul>
-                    <button class="play-btn free-btn" onclick="event.stopPropagation(); playFreeMode();">🎮 开始游玩</button>
-                </div>
-
-                <!-- 付费模式 -->
+                <!-- 付费模式（首次免费）-->
                 <div class="mode-card" id="paidModeCard">
-                    <div class="mode-badge">付费模式</div>
+                    <div class="mode-badge" id="modeBadge">首次免费</div>
                     <div class="mode-icon">💎</div>
                     <div class="mode-title">付费游玩</div>
-                    <div class="mode-price">10 USDT</div>
+                    <div class="mode-price" id="modePrice">
+                        <span style="text-decoration: line-through; opacity: 0.5; font-size: 18px;">10 USDT</span>
+                        <span style="color: #FFD700; font-size: 32px; font-weight: bold;">FREE</span>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+                        <p style="font-size: 18px; font-weight: bold; color: #000; margin: 0;">🎁 首次参与游戏即可获得</p>
+                        <p style="font-size: 24px; font-weight: bold; color: #FF0000; margin: 5px 0 0 0;">一次抽奖机会！</p>
+                    </div>
                     <ul class="mode-features">
-                        <li>完整游戏体验</li>
-                        <li>通关后获得抽奖机会</li>
-                        <li>最高可赢 ₹8888 卢比</li>
-                        <li>多档奖金等你拿</li>
-                        <li>公平公正，区块链验证</li>
+                        <li>✨ 首次游玩完全免费</li>
+                        <li>🎰 游戏结束立即抽奖</li>
+                        <li>💰 最高可赢 ₹8.88Cr 卢比</li>
+                        <li>🎉 多档奖金等你拿</li>
                     </ul>
-                    <button class="play-btn" id="paidPlayBtn" onclick="event.stopPropagation(); handlePaidMode();">💰 支付游玩</button>
-                    <div class="payment-notice" id="paymentNotice">
-                        <p>⚠️ 付费游玩需要支付 10 USDT</p>
+                    <button class="play-btn" id="paidPlayBtn" onclick="event.stopPropagation(); handleFirstPlay();" style="background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 18px; font-weight: bold;">
+                        🎮 <span id="playBtnText">立即免费游玩</span>
+                    </button>
+                    <div class="payment-notice" id="paymentNotice" style="display: none;">
+                        <p>⚠️ 后续游玩需要支付 10 USDT</p>
                         <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">点击按钮后将跳转到第三方支付页面</p>
                     </div>
                 </div>
@@ -1704,9 +1593,9 @@
                 <div class="info-box">
                     <h3>📋 游戏规则</h3>
                     <p>
-                        <strong>免费模式：</strong>可以无限次游玩体验游戏，但不能参与抽奖。<br><br>
-                        <strong>付费模式：</strong>支付 10 USDT 后，成功通关即可获得一次抽奖机会，
-                        有机会赢取 ₹0.1 - ₹8888 不等的奖励,还有神秘随机金额，快来试试手气！
+                        <strong>🎁 首次免费：</strong>新用户首次游玩完全免费，游戏结束后立即获得一次抽奖机会！<br><br>
+                        <strong>💰 后续游玩：</strong>支付 ₹1000 卢比即可继续游玩，每次通关都能获得抽奖机会，
+                        有机会赢取高达 ₹8.88 Crore (8.88亿卢比) 超级大奖，还有多档奖金等你拿，快来试试手气！
                     </p>
                 </div>
             </div>
@@ -1727,26 +1616,23 @@
                         </div>
                     </div>
                     
-                    <!-- 转盘 -->
+                    <!-- 转盘 - 方块格子老虎机 -->
                     <div class="wheel-container" style="margin: 25px auto;">
-                        <div class="wheel-glow"></div>
-                        <div class="pointer"></div>
                         <div class="wheel" id="wheel">
                             <div class="wheel-inner">
-                                <div class="sector"><span>₹8888</span></div>
-                                <div class="sector"><span>₹888</span></div>
-                                <div class="sector"><span>₹188</span></div>
-                                <div class="sector"><span>₹88</span></div>
-                                <div class="sector"><span>₹18</span></div>
-                                <div class="sector"><span>₹8</span></div>
-                                <div class="sector"><span>₹3</span></div>
-                                <div class="sector"><span>₹1</span></div>
-                                <div class="sector"><span>₹0.5</span></div>
-                                <div class="sector"><span>₹0.7</span></div>
-                                <div class="sector"><span>₹5</span></div>
-                                <div class="sector"><span>₹0.1</span></div>
+                                <div class="sector" data-index="0"><span>₹8.88Cr</span></div>
+                                <div class="sector" data-index="1"><span>₹88.8L</span></div>
+                                <div class="sector" data-index="2"><span>₹18.8L</span></div>
+                                <div class="sector" data-index="3"><span>₹8.8L</span></div>
+                                <div class="sector" data-index="4"><span>₹1.8L</span></div>
+                                <div class="sector" data-index="5"><span>₹80K</span></div>
+                                <div class="sector" data-index="6"><span>₹30K</span></div>
+                                <div class="sector" data-index="7"><span>₹10K</span></div>
+                                <div class="sector" data-index="8"><span>₹9.9K</span></div>
+                                <div class="sector" data-index="9"><span>₹7K</span></div>
+                                <div class="sector" data-index="10"><span>🎲 Random</span></div>
+                                <div class="sector" data-index="11"><span>₹99</span></div>
                             </div>
-                            <div class="wheel-center">🎁</div>
                         </div>
                     </div>
 
@@ -1774,7 +1660,7 @@
                     <div class="energy-container" style="margin-top: 30px;">
                         <div class="energy-header">
                             <div class="energy-title">💰 提现进度</div>
-                            <div class="energy-value" id="energyValue">₹0 / ₹100</div>
+                            <div class="energy-value" id="energyValue">₹0 / ₹10K</div>
                         </div>
                         <div class="energy-bar-wrapper">
                             <div class="energy-bar" id="energyBar" style="width: 0%;">
@@ -1782,7 +1668,7 @@
                             </div>
                         </div>
                         <div class="energy-tip" id="energyTip">
-                            ✨ 完成任务和邀请好友，累计满 ₹100 即可提现！
+                            ✨ 完成任务和邀请好友，累计满 ₹10000 即可提现！
                         </div>
                         <button class="task-btn" id="taskBtn" onclick="showTaskModal()">
                             📋 查看任务
@@ -1800,6 +1686,18 @@
                     <p>实时提现数据，公开透明</p>
                 </div>
 
+                <!-- 成功提现通知滚动框 -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); overflow: hidden;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-size: 24px;">🎉</div>
+                        <div style="flex: 1; overflow: hidden;">
+                            <div id="withdrawalNotice" style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 20s linear infinite;">
+                                加载中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="leaderboard-container" id="leaderboardContainer">
                     <div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.6);">
                         <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
@@ -1812,7 +1710,7 @@
                     <p>
                         • 排行榜显示所有玩家的提现记录<br>
                         • 数据实时更新，公平公正<br>
-                        • 累计满 ₹100 卢比即可申请提现<br>
+                        • 累计满 ₹10K 卢比即可申请提现<br>
                         • 提现审核通过后24小时内到账
                     </p>
                 </div>
@@ -2056,6 +1954,28 @@
             INVITE_OR_GAME: 'invite_or_game'   // 邀请好友或付费游玩
         };
 
+        // 格式化奖金显示 - 使用印度数字系统
+        function formatPrizeAmount(amount) {
+            if (amount >= 10000000) {
+                // Crore (千万)
+                const crore = amount / 10000000;
+                return `₹${crore.toFixed(2)}Cr`;
+            } else if (amount >= 100000) {
+                // Lakh (十万)
+                const lakh = amount / 100000;
+                return `₹${lakh.toFixed(1)}L`;
+            } else if (amount >= 1000) {
+                // Thousand
+                const thousand = amount / 1000;
+                // 特殊处理9900显示为9.9K
+                if (amount === 9900) {
+                    return `₹9.9K`;
+                }
+                return `₹${thousand.toFixed(1)}K`.replace('.0K', 'K');
+            }
+            return `₹${amount.toLocaleString('en-IN')}`;
+        }
+
         // 抽奖功能（基于 available_spins）
         async function handleSpin() {
             if (isSpinning) return;
@@ -2108,25 +2028,70 @@
                 const result = spinData.data;
                 const prizeAmount = result.prize_amount || result.amount || 88;
 
-                // 计算转盘动画（根据奖金金额匹配扇区）
-                // 转盘扇区金额：₹8888, ₹888, ₹188, ₹88, ₹18, ₹8, ₹3, ₹1, ₹0.5, ₹0.7, ₹5, ₹0.1
+                // 计算方块跳动动画（根据奖金金额匹配格子）
+                // 格子金额：8.88Cr, 88.8L, 18.8L, 8.8L, 1.8L, 80K, 30K, 10K, 9.9K, 7K, Random, 99
                 const prizeMap = {
-                    8888: 0, 888: 1, 188: 2, 88: 3, 18: 4, 8: 5, 
-                    3: 6, 1: 7, 0.5: 8, 0.7: 9, 5: 10, 0.1: 11
+                    88880000: 0, 8880000: 1, 1880000: 2, 880000: 3, 180000: 4, 80000: 5, 
+                    30000: 6, 10000: 7, 9900: 8, 7000: 9, 99: 11
+                    // Random奖励会在后端随机生成金额，根据实际金额匹配到对应格子，如果没有匹配就显示在格子10
                 };
-                const targetSector = prizeMap[prizeAmount] !== undefined ? prizeMap[prizeAmount] : 3;
-                const targetDegree = targetSector * 30; // 12个扇区，每个30度
-                const spinDegrees = 360 * 5 + targetDegree;
-                wheel.style.transform = `rotate(${spinDegrees}deg)`;
+                
+                // 对于随机奖励（格子10），如果金额不在prizeMap中，就显示在这个格子
+                let targetSector = prizeMap[prizeAmount];
+                if (targetSector === undefined) {
+                    // 检查是否是随机金额（100-10000之间的任意值）
+                    if (prizeAmount > 99 && prizeAmount < 100000 && !prizeMap[prizeAmount]) {
+                        targetSector = 10; // Random格子
+                    } else {
+                        targetSector = 7; // 默认10K格子
+                    }
+                }
+                
+                // 老虎机跳动动画
+                const sectors = wheel.querySelectorAll('.sector');
+                let currentIndex = 0;
+                let cycles = 0;
+                const totalCycles = 3; // 跳动3圈
+                const speed = 80; // 初始速度(ms)
+                
+                const jump = () => {
+                    // 移除之前的active
+                    sectors.forEach(s => s.classList.remove('active'));
+                    
+                    // 添加当前的active
+                    sectors[currentIndex].classList.add('active');
+                    
+                    // 计算下一个位置
+                    currentIndex = (currentIndex + 1) % 12;
+                    
+                    // 完成一圈
+                    if (currentIndex === 0) {
+                        cycles++;
+                    }
+                    
+                    // 判断是否结束
+                    if (cycles < totalCycles || currentIndex <= targetSector) {
+                        // 逐渐减速
+                        const delay = cycles >= totalCycles ? speed + (currentIndex * 30) : speed;
+                        setTimeout(jump, delay);
+                    } else {
+                        // 确保停在目标位置
+                        sectors.forEach(s => s.classList.remove('active'));
+                        sectors[targetSector].classList.add('active');
+                    }
+                };
+                
+                jump();
 
                 // 显示结果
                 setTimeout(async () => {
-                    spinStatus.textContent = `🎉 恭喜获得 ₹${prizeAmount} 卢比！`;
+                    const formattedAmount = formatPrizeAmount(prizeAmount);
+                    spinStatus.textContent = `🎉 恭喜获得 ${formattedAmount} 卢比！`;
                     
                     // 显示弹窗
                     const message = result.requires_tasks 
-                        ? `恭喜获得 ₹${prizeAmount} 卢比！完成任务后即可解锁提现。`
-                        : `恭喜获得 ₹${prizeAmount} 卢比！`;
+                        ? `恭喜获得 ${formattedAmount} 卢比！完成任务后即可解锁提现。`
+                        : `恭喜获得 ${formattedAmount} 卢比！`;
                     showResultModal(prizeAmount, message);
                     
                     isSpinning = false;
@@ -2235,23 +2200,24 @@
             const energyTip = document.getElementById('energyTip');
             const taskBtn = document.getElementById('taskBtn');
             
-            const percentage = Math.min((balance / 100) * 100, 100);
+            const threshold = 10000; // 提现门槛改为10000
+            const percentage = Math.min((balance / threshold) * 100, 100);
             
             energyBar.style.width = percentage + '%';
-            energyValue.textContent = `₹${balance.toFixed(2)} / ₹100`;
+            energyValue.textContent = `${formatPrizeAmount(balance)} / ₹10K`;
             
             // 根据余额显示不同提示
-            if (balance >= 100) {
+            if (balance >= threshold) {
                 energyBar.style.background = 'linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%)';
                 energyBar.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8)';
                 energyTip.innerHTML = '🎉 恭喜！已达到提现条件，点击下方按钮提交提现申请';
                 taskBtn.textContent = '💵 申请提现';
                 taskBtn.onclick = showWithdrawModal;
             } else if (balance > 0) {
-                const remaining = (100 - balance).toFixed(2);
-                energyTip.innerHTML = `💪 再获得 ₹${remaining} 即可提现！继续完成任务和邀请好友吧`;
+                const remaining = threshold - balance;
+                energyTip.innerHTML = `💪 再获得 ${formatPrizeAmount(remaining)} 即可提现！继续完成任务和邀请好友吧`;
             } else {
-                energyTip.innerHTML = '✨ 完成付费游玩抽奖获得 ₹88 卢比，完成任务获取更多奖励！';
+                energyTip.innerHTML = `✨ 完成付费游玩抽奖获得 ₹8.8L 卢比，完成任务获取更多奖励！`;
             }
         }
 
@@ -2405,7 +2371,8 @@
             const prizeAmount = document.getElementById('prizeAmount');
             const prizeMessage = document.getElementById('prizeMessage');
             
-            prizeAmount.textContent = amount + ' USDT';
+            const formattedAmount = formatPrizeAmount(amount);
+            prizeAmount.textContent = formattedAmount.replace('₹', '') + ' 卢比';
             prizeMessage.innerHTML = message + '<br>完成任务即可提现！';
             modal.classList.add('show');
         }
@@ -2854,35 +2821,45 @@
             }
         }
 
-        // 免费模式
-        function playFreeMode() {
-            localStorage.setItem('gameMode', 'free');
-            localStorage.removeItem('gameCompleted');
-            window.location.href = '/game/index.html';
+        // 处理首次游玩（免费）或后续付费游玩
+        async function handleFirstPlay() {
+            try {
+                // 检查用户是否已经玩过
+                const response = await fetch(`${API_BASE}/user/play-status`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.hasPlayed) {
+                    // 已经玩过，需要付费
+                    handlePaidMode();
+                } else {
+                    // 首次游玩，免费
+                    localStorage.setItem('gameMode', 'first-time-free');
+                    localStorage.setItem('isFirstPlay', 'true');
+                    localStorage.removeItem('gameCompleted');
+                    window.location.href = '/game/index.html';
+                }
+            } catch (error) {
+                console.error('检查游玩状态失败:', error);
+                // 默认允许游玩
+                localStorage.setItem('gameMode', 'first-time-free');
+                localStorage.setItem('isFirstPlay', 'true');
+                localStorage.removeItem('gameCompleted');
+                window.location.href = '/game/index.html';
+            }
         }
 
         // 处理付费模式
         function handlePaidMode() {
-            // 这里将调用第三方支付API
             safeTgAlert('即将跳转到第三方支付页面，支付完成后返回即可开始游戏');
-
             // 第三方支付集成（待实现）
-            // 示例：window.open('https://payment-provider.com/pay?amount=10&callback=' + encodeURIComponent(window.location.origin));
-            
-            // 支付成功后的回调处理
-            // 当从支付页面返回时，应该检查支付状态
-            // 如果支付成功，设置游戏模式并跳转
-            // localStorage.setItem('gameMode', 'paid');
-            // localStorage.removeItem('gameCompleted');
-            // window.location.href = '/game/index.html';
         }
 
-        // 监听来自iframe的消息
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.action === 'switchPage') {
-                switchPage(event.data.page);
-            }
-        });
+
 
         // 加载可抽奖次数
         async function loadAvailableSpins() {
@@ -2985,8 +2962,107 @@
             }
         }
 
+        // 随机生成印度名字
+        function generateIndianName() {
+            const firstNames = [
+                'Raj', 'Amit', 'Priya', 'Sunita', 'Vikram', 'Anjali', 'Ravi', 'Deepika',
+                'Arjun', 'Kavya', 'Rohan', 'Neha', 'Aditya', 'Pooja', 'Sanjay', 'Meera',
+                'Karan', 'Divya', 'Rahul', 'Sneha', 'Akash', 'Shreya', 'Nikhil', 'Ishita',
+                'Varun', 'Ritika', 'Abhishek', 'Tanvi', 'Siddharth', 'Nisha', 'Gaurav', 'Simran',
+                'Manish', 'Preeti', 'Vishal', 'Aarti', 'Ajay', 'Swati', 'Suresh', 'Geeta'
+            ];
+            const lastNames = [
+                'Kumar', 'Singh', 'Sharma', 'Patel', 'Gupta', 'Reddy', 'Verma', 'Rao',
+                'Chopra', 'Malhotra', 'Kapoor', 'Mehta', 'Nair', 'Joshi', 'Iyer', 'Khan',
+                'Das', 'Bose', 'Mukherjee', 'Sinha', 'Pandey', 'Mishra', 'Agarwal', 'Bansal'
+            ];
+            
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            return `${firstName} ${lastName}`;
+        }
+
+        // 生成随机提现金额（印度卢比）
+        function generateRandomAmount() {
+            const amounts = [100, 150, 200, 250, 300, 500, 1000, 1500, 2000];
+            return amounts[Math.floor(Math.random() * amounts.length)];
+        }
+
+        // 更新提现通知
+        function updateWithdrawalNotice() {
+            const noticeElement = document.getElementById('withdrawalNotice');
+            if (!noticeElement) return;
+            
+            const name = generateIndianName();
+            const amount = generateRandomAmount();
+            const timeAgo = Math.floor(Math.random() * 30) + 1; // 1-30分钟前
+            
+            noticeElement.textContent = `🎉 恭喜 ${name} 成功提现 ₹${amount} 卢比！(${timeAgo}分钟前)    `;
+        }
+
+        // 定期更新通知
+        setInterval(updateWithdrawalNotice, 8000); // 每8秒更新一次
+
+        // 生成虚假印度用户排行榜数据
+        function generateFakeLeaderboard() {
+            const indianNames = [
+                { name: 'Rajesh Kumar', spins: 7143 },
+                { name: 'Priya Sharma', spins: 6892 },
+                { name: 'Amit Patel', spins: 6543 },
+                { name: 'Sneha Gupta', spins: 6234 },
+                { name: 'Vikram Singh', spins: 5987 },
+                { name: 'Anjali Reddy', spins: 5678 },
+                { name: 'Rohit Verma', spins: 5432 },
+                { name: 'Pooja Iyer', spins: 5234 },
+                { name: 'Arjun Mehta', spins: 4987 },
+                { name: 'Kavita Desai', spins: 4765 },
+                { name: 'Rahul Joshi', spins: 4543 },
+                { name: 'Neha Shah', spins: 4321 },
+                { name: 'Sanjay Pillai', spins: 4123 },
+                { name: 'Deepika Nair', spins: 3987 },
+                { name: 'Anil Kapoor', spins: 3765 },
+                { name: 'Swati Malhotra', spins: 3543 },
+                { name: 'Karan Thakur', spins: 3321 },
+                { name: 'Ritu Bansal', spins: 3123 },
+                { name: 'Manoj Rao', spins: 2987 },
+                { name: 'Shruti Bose', spins: 2765 },
+                { name: 'Suresh Chopra', spins: 2543 },
+                { name: 'Meera Kulkarni', spins: 2321 },
+                { name: 'Ashok Sinha', spins: 2123 },
+                { name: 'Divya Mishra', spins: 1987 },
+                { name: 'Vikas Agarwal', spins: 1765 },
+                { name: 'Nidhi Saxena', spins: 1543 },
+                { name: 'Sandeep Yadav', spins: 1321 },
+                { name: 'Isha Pandey', spins: 1123 },
+                { name: 'Rakesh Tiwari', spins: 987 },
+                { name: 'Tanvi Bhatt', spins: 865 }
+            ];
+
+            return indianNames.map((user, index) => {
+                // 计算提现金额：抽奖次数 * (7000-10000)随机比例
+                const ratio = 7000 + Math.random() * 3000;
+                const amount = user.spins * ratio;
+                
+                // 生成随机日期（最近30天内）
+                const daysAgo = Math.floor(Math.random() * 30);
+                const date = new Date();
+                date.setDate(date.getDate() - daysAgo);
+                
+                return {
+                    rank: index + 1,
+                    name: user.name,
+                    spins: user.spins,
+                    amount: amount,
+                    date: date,
+                    status: Math.random() > 0.3 ? 'completed' : 'pending'
+                };
+            });
+        }
+
         // 加载排行榜数据
         async function loadLeaderboard() {
+            // 首次加载时初始化通知
+            updateWithdrawalNotice();
             const container = document.getElementById('leaderboardContainer');
             
             try {
@@ -2997,57 +3073,27 @@
                     </div>
                 `;
                 
-                // 确保已登录
-                if (!authToken || authToken === 'dev-token') {
-                    await login();
-                }
-                
-                // 调用后端API获取提现排行榜
-                const response = await fetch(`${API_BASE}/payout/leaderboard`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('加载排行榜失败');
-                }
-                
-                const data = await response.json();
-                
-                if (!data.success || !data.data || data.data.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.6);">
-                            <div style="font-size: 48px; margin-bottom: 15px;">📭</div>
-                            <p>暂无提现记录</p>
-                            <p style="margin-top: 10px; font-size: 14px;">成为第一个提现的玩家吧！</p>
-                        </div>
-                    `;
-                    return;
-                }
+                // 生成虚假排行榜数据
+                const fakeData = generateFakeLeaderboard();
                 
                 // 渲染排行榜
                 let html = '';
-                data.data.forEach((item, index) => {
-                    const rank = index + 1;
-                    const rankClass = rank <= 3 ? `top-${rank}` : '';
+                fakeData.forEach((item) => {
+                    const rankClass = item.rank <= 3 ? `top-${item.rank}` : '';
                     const statusClass = item.status === 'completed' ? 'completed' : 'pending';
                     const statusText = item.status === 'completed' ? '已完成' : '审核中';
                     
-                    // 隐藏用户名部分字符
-                    const displayName = item.telegram_username ? 
-                        item.telegram_username.substring(0, 3) + '***' : 
-                        'User' + item.user_id.substring(0, 6);
-                    
                     html += `
                         <div class="leaderboard-item">
-                            <div class="leaderboard-rank ${rankClass}">${rank}</div>
+                            <div class="leaderboard-rank ${rankClass}">${item.rank}</div>
                             <div class="leaderboard-info">
-                                <div class="leaderboard-name">${displayName}</div>
+                                <div class="leaderboard-name">${item.name}</div>
                                 <div class="leaderboard-detail">
-                                    ${new Date(item.created_at).toLocaleDateString('zh-CN')}
+                                    抽奖次数: ${item.spins.toLocaleString('en-IN')} 次
                                     <span class="leaderboard-status ${statusClass}">${statusText}</span>
                                 </div>
                             </div>
-                            <div class="leaderboard-amount">₹${parseFloat(item.amount).toFixed(2)}</div>
+                            <div class="leaderboard-amount">₹${item.amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                     `;
                 });
@@ -3071,6 +3117,48 @@
         // 页面加载后立即检查开发者权限（针对已登录用户）
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('📱 页面DOM加载完成');
+            
+            // 检查URL参数，看是否需要跳转到特定页面
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetPage = urlParams.get('page');
+            
+            // 检查是否刚完成游戏
+            const gameCompleted = localStorage.getItem('gameCompleted');
+            const isFirstPlay = localStorage.getItem('isFirstPlay');
+            const gameScore = localStorage.getItem('gameScore');
+            
+            if (gameCompleted === 'true') {
+                console.log('🎮 检测到游戏完成，处理奖励');
+                localStorage.removeItem('gameCompleted');
+                
+                if (isFirstPlay === 'true') {
+                    // 首次游玩，赠送抽奖机会
+                    try {
+                        const response = await fetch(`${API_BASE}/user/first-play-reward`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            localStorage.removeItem('isFirstPlay');
+                            safeTgAlert('🎉 恭喜完成首次游戏！已获得一次抽奖机会！');
+                        }
+                    } catch (error) {
+                        console.error('领取首次游玩奖励失败:', error);
+                    }
+                }
+                
+                // 跳转到抽奖页面
+                setTimeout(() => {
+                    switchPage('spinPage');
+                }, isFirstPlay === 'true' ? 1500 : 500);
+            } else if (targetPage === 'spin') {
+                // URL指定跳转到抽奖页面
+                switchPage('spinPage');
+            }
             
             // 如果已经有 token，立即检查开发者权限
             const savedToken = localStorage.getItem('authToken');

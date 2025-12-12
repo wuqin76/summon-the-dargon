@@ -1561,10 +1561,20 @@ window.__require = function e(t, a, i) {
             },
             SummonDragonAction: function() {
                 var e = this;
-                this.gameOverFlags = !0,
-                this.speed = 0,
-                this.speedNum = 0,
-                this.enemyNode.removeAllChildren(),
+                this.gameOverFlags = !0;
+                this.speed = 0;
+                this.speedNum = 0;
+                // 标记游戏已完成
+                try {
+                    var gameScore = a.gameScore || 0;
+                    var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
+                    console.log("游戏结束，分数:", gameScore, "首次游玩:", isFirstPlay);
+                    localStorage.setItem('gameCompleted', 'true');
+                    localStorage.setItem('gameScore', gameScore.toString());
+                } catch (err) {
+                    console.error("保存游戏状态失败:", err);
+                }
+                this.enemyNode.removeAllChildren();
                 this.enemyNode.destroy();
                 for (var t = this.playerNode.getChildByName("son"), a = t.convertToNodeSpaceAR(this.playerNode.convertToWorldSpaceAR(this.myFish.position)), i = 0; i < t.children.length; i++) {
                     var o = s.getRandomNum(50, 100, !1)
@@ -1636,12 +1646,10 @@ window.__require = function e(t, a, i) {
                         n.runAction(cc.sequence(cc.delayTime(2), cc.scaleTo(.3, .7 * e.SizeScale).easing(cc.easeSineInOut()), cc.scaleTo(.3, .6 * e.SizeScale).easing(cc.easeSineInOut()), cc.rotateTo(.1, 15).easing(cc.easeSineInOut()), cc.rotateTo(.2, -15).easing(cc.easeSineInOut()), cc.rotateTo(.1, 15).easing(cc.easeSineInOut()), cc.rotateTo(.2, -15).easing(cc.easeSineInOut()), cc.rotateTo(.1, 0).easing(cc.easeSineInOut()))).repeatForever(),
                         n.on(cc.Node.EventType.TOUCH_START, function() {}),
                         n.on(cc.Node.EventType.TOUCH_END, function() {
-                            h.canTouchReplay && (cc.eventManager.removeAllListeners(),
-                            a.GAME_OVER_BOOL = !0,
-                            a.gameScore = 0,
-                            a.publicGameBool,
-                            console.log("loadScene"),
-                            i.loadingScene("MainGameScene"))
+                            if (h.canTouchReplay) {
+                                console.log("重新开始，跳转到抽奖页面");
+                                window.location.href = '/?page=spin';
+                            }
                         })
                     }, .8)
                 }, this))),
@@ -2717,17 +2725,15 @@ window.__require = function e(t, a, i) {
                 var e = this;
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
-                    console.log("MoreGame"),
-                    window.location.href = o.moreGameUrl
+                    console.log("返回大厅，跳转到抽奖页面");
+                    window.location.href = '/?page=spin';
                 }),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
-                    e.canTouchReplay && (cc.eventManager.removeAllListeners(),
-                    i.GAME_OVER_BOOL = !0,
-                    i.gameScore = 0,
-                    i.publicGameBool,
-                    console.log("loadScene"),
-                    a.loadingScene("MainGameScene"))
+                    if (e.canTouchReplay) {
+                        console.log("重新开始，跳转到抽奖页面");
+                        window.location.href = '/?page=spin';
+                    }
                 })
             },
             getPercent: function(e) {

@@ -245,6 +245,30 @@ export class UserService {
 
         logger.info('User banned', { userId, reason, adminId });
     }
+    /**
+     * 赠送首次游玩奖励（1次抽奖机会）
+     */
+    async grantFirstPlayReward(userId: string): Promise<void> {
+        return await db.transaction(async (client) => {
+            // 1. 创建抽奖资格记录
+            await client.query(`
+                INSERT INTO spin_entitlements (
+                    user_id, source_type, source_id, consumed, created_at
+                ) VALUES ($1, 'first_play', NULL, false, NOW())
+            `, [userId]);
+
+            // 2. 更新用户可用抽奖次数
+            await client.query(`
+                UPDATE users
+                SET available_spins = available_spins + 1,
+                    total_free_plays = total_free_plays + 1,
+                    updated_at = NOW()
+                WHERE id = $1
+            `, [userId]);
+
+            logger.info('首次游玩奖励发放成功', { userId });
+        });
+    }
 }
 
 export const userService = new UserService();

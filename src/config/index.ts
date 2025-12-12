@@ -53,25 +53,25 @@ export const config = {
     },
 
     spin: {
-        largePrizeThreshold: parseFloat(process.env.LARGE_PRIZE_THRESHOLD || '888'),
+        largePrizeThreshold: parseFloat(process.env.LARGE_PRIZE_THRESHOLD || '8880000'),
         probabilities: JSON.parse(process.env.SPIN_PROBABILITIES || JSON.stringify([
-            { value: 8888, probability: 0, label: '₹8888' },
-            { value: 888, probability: 0, label: '₹888' },
-            { value: 188, probability: 0, label: '₹188' },
-            { value: 88, probability: 1.0, label: '₹88' },  // 100%概率
-            { value: 18, probability: 0, label: '₹18' },
-            { value: 8, probability: 0, label: '₹8' },
-            { value: 3, probability: 0, label: '₹3' },
-            { value: 1, probability: 0, label: '₹1' },
-            { value: 0.5, probability: 0, label: '₹0.5' },
-            { value: 0.7, probability: 0, label: '₹0.7' },  // 付费任务固定奖励
-            { value: 5, probability: 0, label: '₹5' },  // 任务1固定奖励
-            { value: 0.1, probability: 0, label: '₹0.1' },
+            { value: 88880000, probability: 0, label: '₹8.88Cr' },
+            { value: 8880000, probability: 0, label: '₹88.8L' },
+            { value: 1880000, probability: 0, label: '₹18.8L' },
+            { value: 880000, probability: 1.0, label: '₹8.8L' },  // 100%概率
+            { value: 180000, probability: 0, label: '₹1.8L' },
+            { value: 80000, probability: 0, label: '₹80K' },
+            { value: 30000, probability: 0, label: '₹30K' },
+            { value: 10000, probability: 0, label: '₹10K' },
+            { value: 9900, probability: 0, label: '₹9.9K' },  // 新增
+            { value: 7000, probability: 0, label: '₹7K' },  // 付费任务固定奖励
+            { value: 99, probability: 0, label: '₹99' },  // 新增
+            { value: -1, probability: 0, label: 'Random' },  // 随机奖励标记，实际金额在100-10000之间随机
         ])) as SpinProbability[],
     },
 
     withdrawal: {
-        threshold: parseFloat(process.env.WITHDRAWAL_THRESHOLD || '100'),
+        threshold: parseFloat(process.env.WITHDRAWAL_THRESHOLD || '10000'),
         platformPaysFee: process.env.PLATFORM_PAYS_FEE === 'true',
         feePercent: parseFloat(process.env.WITHDRAWAL_FEE_PERCENT || '1.0'),
         feeFixed: parseFloat(process.env.WITHDRAWAL_FEE_FIXED || '0'),
