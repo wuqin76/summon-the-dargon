@@ -105,19 +105,31 @@ router.get('/play-status', authMiddleware, async (req: Request, res: Response) =
 router.post('/first-play-reward', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
+        logger.info('🎁 收到首次游玩奖励请求', { userId });
+        
         const user = await userService.getUserById(userId);
+        logger.info('📊 用户当前状态', { 
+            userId, 
+            total_free_plays: user.total_free_plays, 
+            total_paid_plays: user.total_paid_plays,
+            available_spins: user.available_spins
+        });
         
         // 检查是否真的是首次游玩
         const totalPlays = (user.total_free_plays || 0) + (user.total_paid_plays || 0);
         if (totalPlays > 0) {
+            logger.warn('⚠️ 用户已经玩过游戏，拒绝重复发放奖励', { userId, totalPlays });
             return res.status(400).json({
                 success: false,
-                error: '您已经玩过游戏了'
+                error: '您已经玩过游戏了',
+                debug: { totalPlays, total_free_plays: user.total_free_plays, total_paid_plays: user.total_paid_plays }
             });
         }
 
         // 使用事务处理
+        logger.info('✅ 开始发放首次游玩奖励', { userId });
         await userService.grantFirstPlayReward(userId);
+        logger.info('🎉 首次游玩奖励发放成功', { userId });
 
         res.json({
             success: true,
@@ -128,7 +140,7 @@ router.post('/first-play-reward', authMiddleware, async (req: Request, res: Resp
         });
 
     } catch (error: any) {
-        logger.error('Grant first play reward error', { error: error.message });
+        logger.error('❌ Grant first play reward error', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             error: error.message,

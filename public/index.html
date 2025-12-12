@@ -1560,6 +1560,18 @@
                     <p>选择游戏模式开始你的冒险</p>
                 </div>
 
+                <!-- 成功提现通知滚动框 - 主页 -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); overflow: hidden;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-size: 24px;">🎉</div>
+                        <div style="flex: 1; overflow: hidden;">
+                            <div data-withdrawal-notice style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 12s linear infinite;">
+                                加载中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="modes-container">
                 <!-- 付费模式（首次免费）-->
                 <div class="mode-card" id="paidModeCard">
@@ -1570,9 +1582,13 @@
                         <span style="text-decoration: line-through; opacity: 0.5; font-size: 18px;">10 USDT</span>
                         <span style="color: #FFD700; font-size: 32px; font-weight: bold;">FREE</span>
                     </div>
-                    <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 15px; border-radius: 12px; margin: 15px 0; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
-                        <p style="font-size: 18px; font-weight: bold; color: #000; margin: 0;">🎁 首次参与游戏即可获得</p>
-                        <p style="font-size: 24px; font-weight: bold; color: #FF0000; margin: 5px 0 0 0;">一次抽奖机会！</p>
+                    <div style="background: linear-gradient(135deg, #FF6B6B, #FF8E53); padding: 20px; border-radius: 20px; margin: 15px 0; box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); border: 3px solid rgba(255, 255, 255, 0.3); position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%); animation: shine 3s infinite;"></div>
+                        <div style="position: relative; z-index: 1; text-align: center;">
+                            <div style="font-size: 40px; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🎁</div>
+                            <p style="font-size: 20px; font-weight: 900; color: #FFF; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); letter-spacing: 1px;">首次参与即送</p>
+                            <p style="font-size: 28px; font-weight: 900; color: #FFD700; margin: 8px 0 0 0; text-shadow: 3px 3px 6px rgba(0,0,0,0.5); letter-spacing: 2px; animation: pulse 1.5s infinite;">免费抽奖机会！</p>
+                        </div>
                     </div>
                     <ul class="mode-features">
                         <li>✨ 首次游玩完全免费</li>
@@ -1607,6 +1623,18 @@
                 <div class="spin-hero-content">
                     <!-- 顶部标题区 -->
                     <div class="spin-title" style="margin-bottom: 20px;">🎰 भाग्य चक्र 🎰</div>
+                    
+                    <!-- 成功提现通知滚动框 - 抽奖页 -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 12px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); overflow: hidden;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="font-size: 20px;">🎉</div>
+                            <div style="flex: 1; overflow: hidden;">
+                                <div data-withdrawal-notice style="color: white; font-size: 13px; white-space: nowrap; animation: scrollText 12s linear infinite;">
+                                    加载中...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- 抽奖次数显示 -->
                     <div style="text-align: center; margin-bottom: 20px;">
@@ -1656,23 +1684,17 @@
                         </button>
                     </div>
 
-                    <!-- 能量条区域 -->
-                    <div class="energy-container" style="margin-top: 30px;">
-                        <div class="energy-header">
-                            <div class="energy-title">💰 提现进度</div>
-                            <div class="energy-value" id="energyValue">₹0 / ₹10K</div>
-                        </div>
-                        <div class="energy-bar-wrapper">
-                            <div class="energy-bar" id="energyBar" style="width: 0%;">
-                                <div class="energy-shine"></div>
+                    <!-- 提现按钮区域 -->
+                    <div style="margin-top: 30px; padding: 25px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.15)); border-radius: 20px; box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3); border: 2px solid rgba(255, 215, 0, 0.3);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                            <div style="flex: 1; text-align: center; padding: 15px; background: rgba(255, 215, 0, 0.2); border-radius: 15px; border: 2px solid rgba(255, 215, 0, 0.4);">
+                                <div style="font-size: 14px; font-weight: bold; color: #FFD700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">🎁 我的奖金</div>
+                                <div id="withdrawBalance" style="font-size: 32px; font-weight: 900; color: #FFD700; text-shadow: 0 3px 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5); letter-spacing: 1px;">₹0</div>
                             </div>
+                            <button class="task-btn" id="withdrawBtn" onclick="handleWithdraw()" style="flex: 1; background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 20px; font-weight: bold; padding: 25px 20px; box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5); border: 3px solid rgba(255, 255, 255, 0.3);">
+                                💰 申请提现
+                            </button>
                         </div>
-                        <div class="energy-tip" id="energyTip">
-                            ✨ 完成任务和邀请好友，累计满 ₹10000 即可提现！
-                        </div>
-                        <button class="task-btn" id="taskBtn" onclick="showTaskModal()">
-                            📋 查看任务
-                        </button>
                     </div>
                 </div>
             </div>
@@ -1691,7 +1713,7 @@
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div style="font-size: 24px;">🎉</div>
                         <div style="flex: 1; overflow: hidden;">
-                            <div id="withdrawalNotice" style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 20s linear infinite;">
+                            <div data-withdrawal-notice style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 12s linear infinite;">
                                 加载中...
                             </div>
                         </div>
@@ -1719,15 +1741,15 @@
 
         <!-- 底部导航栏 -->
         <div class="bottom-nav">
-            <button class="nav-item active" onclick="switchPage('gamePage')">
+            <button class="nav-item active" onclick="switchPage('gamePage', event)">
                 <div class="nav-icon">🎮</div>
                 <div>游戏</div>
             </button>
-            <button class="nav-item" onclick="switchPage('spinPage')">
+            <button class="nav-item" onclick="switchPage('spinPage', event)">
                 <div class="nav-icon">🎰</div>
                 <div>抽奖</div>
             </button>
-            <button class="nav-item" onclick="switchPage('leaderboardPage')">
+            <button class="nav-item" onclick="switchPage('leaderboardPage', event)">
                 <div class="nav-icon">🏆</div>
                 <div>排行榜</div>
             </button>
@@ -1828,6 +1850,24 @@
             </div>
             
             <button class="close-dev-modal-btn" onclick="closeDevModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 提现提示弹窗 -->
+    <div class="result-modal" id="withdrawTipModal">
+        <div class="result-content" style="max-width: 400px;">
+            <div style="font-size: 60px; margin-bottom: 15px;">💰</div>
+            <h2 style="font-size: 28px; margin-bottom: 15px; color: #FFD700;">提现说明</h2>
+            <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2)); padding: 25px; border-radius: 15px; margin: 20px 0; border: 2px solid rgba(255, 215, 0, 0.3);">
+                <p style="font-size: 20px; font-weight: bold; color: #FFD700; margin: 0; line-height: 1.6; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    累计满 <span style="font-size: 28px; color: #FFF;">₹10K</span><br>
+                    即可立马提现到账！
+                </p>
+            </div>
+            <div id="withdrawTipContent" style="font-size: 16px; color: rgba(255,255,255,0.9); margin: 20px 0; line-height: 1.8;">
+                <!-- 动态内容 -->
+            </div>
+            <button class="close-modal-btn" onclick="closeWithdrawTipModal()" style="margin-top: 10px;">知道了</button>
         </div>
     </div>
 
@@ -2002,9 +2042,10 @@
 
                 if (!availableData.success || availableData.data.available_spins <= 0) {
                     spinStatus.textContent = '没有可用的抽奖机会！';
-                    safeTgAlert('你需要邀请好友或进行付费游玩来获得抽奖机会！\n\n💡 提示：\n• 邀请1个好友 = 1次抽奖机会\n• 付费游玩1次 = 1次抽奖机会');
                     isSpinning = false;
                     spinBtn.disabled = false;
+                    // 显示任务弹窗
+                    showTaskModal();
                     return;
                 }
 
@@ -2193,32 +2234,58 @@
             }
         }
 
-        // 更新能量条显示
+        // 更新余额显示
         function updateEnergyBar(balance) {
-            const energyBar = document.getElementById('energyBar');
-            const energyValue = document.getElementById('energyValue');
-            const energyTip = document.getElementById('energyTip');
-            const taskBtn = document.getElementById('taskBtn');
-            
-            const threshold = 10000; // 提现门槛改为10000
-            const percentage = Math.min((balance / threshold) * 100, 100);
-            
-            energyBar.style.width = percentage + '%';
-            energyValue.textContent = `${formatPrizeAmount(balance)} / ₹10K`;
-            
-            // 根据余额显示不同提示
-            if (balance >= threshold) {
-                energyBar.style.background = 'linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%)';
-                energyBar.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8)';
-                energyTip.innerHTML = '🎉 恭喜！已达到提现条件，点击下方按钮提交提现申请';
-                taskBtn.textContent = '💵 申请提现';
-                taskBtn.onclick = showWithdrawModal;
-            } else if (balance > 0) {
-                const remaining = threshold - balance;
-                energyTip.innerHTML = `💪 再获得 ${formatPrizeAmount(remaining)} 即可提现！继续完成任务和邀请好友吧`;
-            } else {
-                energyTip.innerHTML = `✨ 完成付费游玩抽奖获得 ₹8.8L 卢比，完成任务获取更多奖励！`;
+            // 更新提现按钮区域的余额显示
+            const withdrawBalance = document.getElementById('withdrawBalance');
+            if (withdrawBalance) {
+                withdrawBalance.textContent = formatPrizeAmount(balance);
             }
+            
+            // 保存当前余额到全局变量
+            window.currentBalance = balance;
+        }
+
+        // 处理提现按钮点击
+        async function handleWithdraw() {
+            const threshold = 10000;
+            const balance = window.currentBalance || 0;
+            
+            if (balance < threshold) {
+                const remaining = threshold - balance;
+                showWithdrawTipModal(balance, remaining);
+                return;
+            }
+            
+            // 余额足够，显示任务弹窗
+            showTaskModal();
+        }
+
+        // 显示提现提示弹窗
+        function showWithdrawTipModal(currentBalance, remaining) {
+            const modal = document.getElementById('withdrawTipModal');
+            const content = document.getElementById('withdrawTipContent');
+            
+            content.innerHTML = `
+                <div style="background: rgba(255, 107, 107, 0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255, 107, 107, 0.3); margin-bottom: 15px;">
+                    <p style="margin: 0; font-size: 14px; opacity: 0.8;">当前奖金</p>
+                    <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #FFD700;">${formatPrizeAmount(currentBalance)}</p>
+                </div>
+                <p style="margin: 0; font-size: 16px; opacity: 0.9;">
+                    💪 还需获得 <span style="color: #FFD700; font-weight: bold; font-size: 18px;">${formatPrizeAmount(remaining)}</span> 即可提现！
+                </p>
+                <p style="margin: 15px 0 0 0; font-size: 14px; opacity: 0.7;">
+                    💡 继续完成任务和邀请好友来增加奖金吧
+                </p>
+            `;
+            
+            modal.classList.add('show');
+        }
+
+        // 关闭提现提示弹窗
+        function closeWithdrawTipModal() {
+            const modal = document.getElementById('withdrawTipModal');
+            modal.classList.remove('show');
         }
 
         // 显示提现弹窗
@@ -2934,7 +3001,7 @@
         }
 
         // 页面切换函数
-        function switchPage(pageId) {
+        function switchPage(pageId, event) {
             console.log('切换到页面:', pageId);
             
             // 隐藏所有页面
@@ -2953,8 +3020,22 @@
                 targetPage.classList.add('active');
             }
             
-            // 激活对应导航项
-            event.target.closest('.nav-item').classList.add('active');
+            // 激活对应导航项（如果是通过点击触发的）
+            if (event && event.target) {
+                const navItem = event.target.closest('.nav-item');
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+            } else {
+                // 编程方式调用，根据pageId激活对应的nav-item
+                const navItems = document.querySelectorAll('.nav-item');
+                navItems.forEach(item => {
+                    const itemPageId = item.getAttribute('onclick')?.match(/switchPage\('([^']+)'/);
+                    if (itemPageId && itemPageId[1] === pageId) {
+                        item.classList.add('active');
+                    }
+                });
+            }
             
             // 如果切换到排行榜页面，加载数据
             if (pageId === 'leaderboardPage') {
@@ -2982,26 +3063,29 @@
             return `${firstName} ${lastName}`;
         }
 
-        // 生成随机提现金额（印度卢比）
+        // 生成随机提现金额（印度卢比）- 增加100倍
         function generateRandomAmount() {
-            const amounts = [100, 150, 200, 250, 300, 500, 1000, 1500, 2000];
+            const amounts = [10000, 15000, 20000, 25000, 30000, 50000, 100000, 150000, 200000];
             return amounts[Math.floor(Math.random() * amounts.length)];
         }
 
-        // 更新提现通知
+        // 更新提现通知（通用函数，支持多个元素）
         function updateWithdrawalNotice() {
-            const noticeElement = document.getElementById('withdrawalNotice');
-            if (!noticeElement) return;
+            const noticeElements = document.querySelectorAll('[data-withdrawal-notice]');
+            if (noticeElements.length === 0) return;
             
             const name = generateIndianName();
             const amount = generateRandomAmount();
             const timeAgo = Math.floor(Math.random() * 30) + 1; // 1-30分钟前
+            const formattedAmount = formatPrizeAmount(amount);
             
-            noticeElement.textContent = `🎉 恭喜 ${name} 成功提现 ₹${amount} 卢比！(${timeAgo}分钟前)    `;
+            noticeElements.forEach(element => {
+                element.textContent = `🎉 恭喜 ${name} 成功提现 ${formattedAmount} 卢比！(${timeAgo}分钟前)    `;
+            });
         }
 
-        // 定期更新通知
-        setInterval(updateWithdrawalNotice, 8000); // 每8秒更新一次
+        // 定期更新通知 - 加快滚动速度（从8秒改为5秒）
+        setInterval(updateWithdrawalNotice, 5000);
 
         // 生成虚假印度用户排行榜数据
         function generateFakeLeaderboard() {
@@ -3133,28 +3217,47 @@
                 
                 if (isFirstPlay === 'true') {
                     // 首次游玩，赠送抽奖机会
-                    try {
-                        const response = await fetch(`${API_BASE}/user/first-play-reward`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`,
-                                'Content-Type': 'application/json'
+                    console.log('🎁 处理首次游玩奖励...');
+                    
+                    // 确保有token
+                    const savedToken = localStorage.getItem('authToken');
+                    if (!savedToken || savedToken === 'dev-token') {
+                        console.error('❌ 没有有效的token，无法领取奖励');
+                        localStorage.removeItem('isFirstPlay');
+                    } else {
+                        try {
+                            console.log('📡 调用首次游玩奖励API...');
+                            const response = await fetch(`${API_BASE}/user/first-play-reward`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${savedToken}`,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            
+                            const result = await response.json();
+                            console.log('🎁 首次游玩奖励响应:', result);
+                            
+                            if (response.ok && result.success) {
+                                localStorage.removeItem('isFirstPlay');
+                                safeTgAlert('🎉 恭喜完成首次游戏！已获得一次抽奖机会！');
+                                
+                                // 重新加载抽奖次数
+                                await loadAvailableSpins();
+                                console.log('✅ 首次游玩奖励领取成功');
+                            } else {
+                                console.error('❌ 领取首次游玩奖励失败:', result.message || '未知错误');
                             }
-                        });
-                        
-                        if (response.ok) {
-                            localStorage.removeItem('isFirstPlay');
-                            safeTgAlert('🎉 恭喜完成首次游戏！已获得一次抽奖机会！');
+                        } catch (error) {
+                            console.error('❌ 领取首次游玩奖励异常:', error);
                         }
-                    } catch (error) {
-                        console.error('领取首次游玩奖励失败:', error);
                     }
                 }
                 
                 // 跳转到抽奖页面
                 setTimeout(() => {
                     switchPage('spinPage');
-                }, isFirstPlay === 'true' ? 1500 : 500);
+                }, isFirstPlay === 'true' ? 2000 : 500);
             } else if (targetPage === 'spin') {
                 // URL指定跳转到抽奖页面
                 switchPage('spinPage');
@@ -3167,6 +3270,9 @@
                 authToken = savedToken;
                 await checkDevAccess();
             }
+            
+            // 初始化提现通知
+            updateWithdrawalNotice();
         });
 
         init();
