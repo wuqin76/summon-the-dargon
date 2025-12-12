@@ -159,9 +159,10 @@ CREATE TABLE spin_entitlements (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
     -- 来源类型
-    source_type VARCHAR(20) NOT NULL CHECK (source_type IN ('invite', 'paid_game', 'manual', 'bonus')),
+    source_type VARCHAR(20) NOT NULL CHECK (source_type IN ('invite', 'paid_game', 'first_play', 'manual', 'bonus')),
     -- invite: 邀请好友获得
     -- paid_game: 付费游戏通关获得
+    -- first_play: 首次游玩获得
     -- manual: 管理员手动发放
     -- bonus: 活动奖励等
     
