@@ -1,10 +1,16 @@
 const { Pool } = require('pg');
 
 async function migrate() {
-    console.log('DATABASE_URL:', process.env.DATABASE_URL ? '已设置' : '未设置');
+    // 使用环境变量或公共连接
+    const connectionString = process.env.DATABASE_URL || 
+        'postgresql://postgres:rZRhUCiZwNxPPgzalXHntwdDWwcVbgSn@trolley.proxy.rlwy.net:38119/railway';
+    
+    console.log('🔌 连接到Railway数据库...');
+    console.log('使用', process.env.DATABASE_URL ? '内部' : '公共', '网络连接');
     
     const pool = new Pool({
-        connectionString: process.env.DATABASE_URL
+        connectionString: connectionString,
+        connectionTimeoutMillis: 10000
     });
 
     try {

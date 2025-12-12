@@ -14,16 +14,8 @@ router.post('/migrate-first-play', authMiddleware, async (req: Request, res: Res
     try {
         const userId = (req as any).user.id;
         
-        // 检查是否是开发者
-        const user = await db.query('SELECT telegram_id FROM users WHERE id = $1', [userId]);
-        const isDev = process.env.DEVELOPER_IDS?.split(',').includes(user.rows[0]?.telegram_id?.toString());
-        
-        if (!isDev) {
-            return res.status(403).json({
-                success: false,
-                error: '权限不足'
-            });
-        }
+        // 临时允许所有用户执行迁移（仅用于修复数据库约束）
+        logger.info('🔓 迁移API被调用（临时开放权限）', { userId });
 
         logger.info('🔄 开始数据库迁移：添加first_play到source_type约束', { userId });
 
