@@ -2761,21 +2761,18 @@ window.__require = function e(t, a, i) {
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
                     if (e.canTouchReplay) {
-                        console.log("重新开始，跳转到抽奖页面");
-                        // 确保localStorage已保存
+                        console.log("❌ 退出游戏，返回主页");
+                        // 清除游戏状态，避免重复发放奖励
                         try {
-                            var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
-                            console.log("📊 跳转前状态检查:", {
-                                gameCompleted: localStorage.getItem('gameCompleted'),
-                                isFirstPlay: isFirstPlay,
-                                gameScore: localStorage.getItem('gameScore')
-                            });
+                            localStorage.removeItem('gameCompleted');
+                            localStorage.removeItem('gameScore');
+                            localStorage.removeItem('gameMode');
+                            console.log("🧹 已清除游戏状态，返回主页");
                         } catch (err) {
-                            console.error("读取localStorage失败:", err);
+                            console.error("清除localStorage失败:", err);
                         }
-                        setTimeout(function() {
-                            window.location.href = '/?page=spin';
-                        }, 100);
+                        // 直接返回主页（不跳转抽奖页）
+                        window.location.href = '/';
                     }
                 })
             },
