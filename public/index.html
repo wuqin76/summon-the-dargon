@@ -2215,31 +2215,50 @@
         async function checkTaskProgress() {
             try {
                 if (!authToken || authToken === 'dev-token') {
+                    console.log('⚠️ 未登录，先登录');
                     await login();
                 }
 
+                console.log('📡 获取用户余额...');
                 // 获取用户余额
                 const balanceResponse = await fetch(`${API_BASE}/user/balance`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
+                console.log('📊 余额API响应状态:', balanceResponse.status);
+                
                 if (balanceResponse.ok) {
                     const balanceData = await balanceResponse.json();
+                    console.log('📊 余额API响应数据:', balanceData);
+                    
                     if (balanceData.success) {
-                        updateEnergyBar(balanceData.data.balance || 0);
+                        // 后端返回的是驼峰式：lockedBalance
+                        const balance = balanceData.data.lockedBalance || balanceData.data.locked_balance || 0;
+                        console.log('💵 解析到的余额:', balance);
+                        updateEnergyBar(balance);
+                    } else {
+                        console.error('❌ 余额API返回false:', balanceData);
                     }
+                } else {
+                    console.error('❌ 余额API请求失败:', balanceResponse.status);
                 }
             } catch (error) {
-                console.error('检查任务进度错误:', error);
+                console.error('❌ 检查任务进度错误:', error);
             }
         }
 
         // 更新余额显示
         function updateEnergyBar(balance) {
+            console.log('💰 更新余额显示:', balance);
+            
             // 更新提现按钮区域的余额显示
             const withdrawBalance = document.getElementById('withdrawBalance');
             if (withdrawBalance) {
-                withdrawBalance.textContent = formatPrizeAmount(balance);
+                const formattedBalance = formatPrizeAmount(balance);
+                withdrawBalance.textContent = formattedBalance;
+                console.log('✅ 余额已更新到页面:', formattedBalance);
+            } else {
+                console.error('❌ 找不到 withdrawBalance 元素');
             }
             
             // 保存当前余额到全局变量
@@ -3044,6 +3063,12 @@
             if (pageId === 'leaderboardPage') {
                 loadLeaderboard();
             }
+            
+            // 如果切换到抽奖页面，刷新余额
+            if (pageId === 'spinPage') {
+                console.log('🔄 切换到抽奖页面，刷新余额显示');
+                checkTaskProgress();
+            }
         }
 
         // 随机生成印度名字
@@ -3251,8 +3276,9 @@
                             switchPage('spinPage');
                         }
                         
-                        // 重新加载抽奖次数
+                        // 重新加载抽奖次数和余额
                         await loadAvailableSpins();
+                        await checkTaskProgress(); // 刷新余额显示
                         console.log('✅ 游戏奖励领取成功');
                     } else {
                         console.error('❌ 领取游戏奖励失败:', result);
