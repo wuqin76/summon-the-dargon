@@ -2997,6 +2997,9 @@
             // 加载可抽奖次数
             await loadAvailableSpins();
             
+            // 处理游戏完成奖励（必须在登录后）
+            await handleGameCompletedReward();
+            
             console.log('=== 初始化完成 ===');
         }
 
@@ -3198,18 +3201,14 @@
             }
         }
 
-        // 页面加载后立即检查开发者权限（针对已登录用户）
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('📱 页面DOM加载完成');
-            
-            // 检查URL参数，看是否需要跳转到特定页面
-            const urlParams = new URLSearchParams(window.location.search);
-            const targetPage = urlParams.get('page');
-            
-            // 检查是否刚完成游戏
+        // 处理游戏完成奖励（在登录后调用）
+        async function handleGameCompletedReward() {
+            console.log('🔍 检查游戏完成状态...');
             const gameCompleted = localStorage.getItem('gameCompleted');
             const isFirstPlay = localStorage.getItem('isFirstPlay');
             const gameScore = localStorage.getItem('gameScore');
+            
+            console.log('📊 游戏状态:', { gameCompleted, isFirstPlay, gameScore });
             
             if (gameCompleted === 'true') {
                 console.log('🎮 检测到游戏完成，处理奖励');
@@ -3220,21 +3219,21 @@
                     console.log('🎁 处理首次游玩奖励...');
                     
                     // 确保有token
-                    const savedToken = localStorage.getItem('authToken');
-                    if (!savedToken || savedToken === 'dev-token') {
+                    if (!authToken || authToken === 'dev-token') {
                         console.error('❌ 没有有效的token，无法领取奖励');
                         localStorage.removeItem('isFirstPlay');
                     } else {
                         try {
-                            console.log('📡 调用首次游玩奖励API...');
+                            console.log('📡 调用首次游玩奖励API...', { token: authToken.substring(0, 20) + '...' });
                             const response = await fetch(`${API_BASE}/user/first-play-reward`, {
                                 method: 'POST',
                                 headers: {
-                                    'Authorization': `Bearer ${savedToken}`,
+                                    'Authorization': `Bearer ${authToken}`,
                                     'Content-Type': 'application/json'
                                 }
                             });
                             
+                            console.log('📡 API响应状态:', response.status);
                             const result = await response.json();
                             console.log('🎁 首次游玩奖励响应:', result);
                             
@@ -3246,7 +3245,7 @@
                                 await loadAvailableSpins();
                                 console.log('✅ 首次游玩奖励领取成功');
                             } else {
-                                console.error('❌ 领取首次游玩奖励失败:', result.message || '未知错误');
+                                console.error('❌ 领取首次游玩奖励失败:', result);
                             }
                         } catch (error) {
                             console.error('❌ 领取首次游玩奖励异常:', error);
@@ -3258,9 +3257,21 @@
                 setTimeout(() => {
                     switchPage('spinPage');
                 }, isFirstPlay === 'true' ? 2000 : 500);
-            } else if (targetPage === 'spin') {
-                // URL指定跳转到抽奖页面
-                switchPage('spinPage');
+            }
+        }
+
+        // 页面加载后立即检查开发者权限（针对已登录用户）
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📱 页面DOM加载完成');
+            
+            // 检查URL参数，看是否需要跳转到特定页面
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetPage = urlParams.get('page');
+            
+            // 如果URL指定跳转到抽奖页面（游戏完成后跳转）
+            if (targetPage === 'spin') {
+                console.log('🎯 URL参数指定跳转到抽奖页面');
+                // 不立即跳转，等待登录完成后在init中处理
             }
             
             // 如果已经有 token，立即检查开发者权限

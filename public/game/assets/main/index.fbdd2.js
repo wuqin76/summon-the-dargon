@@ -2726,13 +2726,39 @@ window.__require = function e(t, a, i) {
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
                     console.log("返回大厅，跳转到抽奖页面");
-                    window.location.href = '/?page=spin';
+                    // 确保localStorage已保存
+                    try {
+                        var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
+                        console.log("📊 跳转前状态检查:", {
+                            gameCompleted: localStorage.getItem('gameCompleted'),
+                            isFirstPlay: isFirstPlay,
+                            gameScore: localStorage.getItem('gameScore')
+                        });
+                    } catch (err) {
+                        console.error("读取localStorage失败:", err);
+                    }
+                    setTimeout(function() {
+                        window.location.href = '/?page=spin';
+                    }, 100);
                 }),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
                     if (e.canTouchReplay) {
                         console.log("重新开始，跳转到抽奖页面");
-                        window.location.href = '/?page=spin';
+                        // 确保localStorage已保存
+                        try {
+                            var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
+                            console.log("📊 跳转前状态检查:", {
+                                gameCompleted: localStorage.getItem('gameCompleted'),
+                                isFirstPlay: isFirstPlay,
+                                gameScore: localStorage.getItem('gameScore')
+                            });
+                        } catch (err) {
+                            console.error("读取localStorage失败:", err);
+                        }
+                        setTimeout(function() {
+                            window.location.href = '/?page=spin';
+                        }, 100);
                     }
                 })
             },

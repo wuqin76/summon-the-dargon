@@ -115,14 +115,22 @@ router.post('/first-play-reward', authMiddleware, async (req: Request, res: Resp
             available_spins: user.available_spins
         });
         
-        // 检查是否真的是首次游玩
-        const totalPlays = (user.total_free_plays || 0) + (user.total_paid_plays || 0);
-        if (totalPlays > 0) {
-            logger.warn('⚠️ 用户已经玩过游戏，拒绝重复发放奖励', { userId, totalPlays });
+        // 检查是否已经领取过首次游玩奖励（查询spin_entitlements表）
+        const { db } = await import('../database');
+        const checkResult = await db.query(`
+            SELECT COUNT(*) as count 
+            FROM spin_entitlements 
+            WHERE user_id = $1 AND source_type = 'first_play'
+        `, [userId]);
+        
+        const alreadyGranted = parseInt(checkResult.rows[0].count) > 0;
+        logger.info('🔍 首次奖励领取状态', { userId, alreadyGranted });
+        
+        if (alreadyGranted) {
+            logger.warn('⚠️ 用户已经领取过首次游玩奖励，拒绝重复发放', { userId });
             return res.status(400).json({
                 success: false,
-                error: '您已经玩过游戏了',
-                debug: { totalPlays, total_free_plays: user.total_free_plays, total_paid_plays: user.total_paid_plays }
+                error: '您已经领取过首次游玩奖励了'
             });
         }
 
