@@ -7,35 +7,32 @@ import { Pool } from 'pg';
 const router = Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// 任务奖励配置
-// 前4个任务给抽奖机会(标记为-1),后续任务直接给能量
-const TASK_REWARDS = [
-    88.00000,  // 初始抽奖奖励(第1次抽奖固定88)
-    -1,        // 任务1: 给1次抽奖机会(第2次抽奖固定5)
-    -1,        // 任务2: 给1次抽奖机会(第3次抽奖固定4)
-    -1,        // 任务3: 给1次抽奖机会(第4次抽奖固定2)
-    -1,        // 任务4: 必须付费,给1次抽奖机会(固定0.7)
-    0.20000,   // 任务5
-    0.07000,   // 任务6
-    0.00609,   // 任务7
-    0.00487,   // 任务8
-    0.00390,   // 任务9
-    0.00312,   // 任务10
-    0.00249,   // 任务11
-    0.00199,   // 任务12
-    0.00160,   // 任务13
-    0.00128,   // 任务14
-    0.00102,   // 任务15
-    0.00082,   // 任务16
-    0.00065,   // 任务17
-    0.00052,   // 任务18
-    0.00042,   // 任务19
-    0.00033,   // 任务20
-    0.00027,   // 任务21
-    0.00021,   // 任务22
-    0.00017,   // 任务23
-    0.00014,   // 任务24
-    0.00011    // 任务25
+// 任务奖励配置 - 24个任务，每个完成后抽奖必中对应金额
+export const TASK_REWARDS = [
+    9900,    // 任务1: 进入游戏玩一把 (首次必中9900)
+    99,      // 任务2: 邀请好友 或 付费游玩一局
+    0.5,     // 任务3: 必须付费游玩一局
+    0.4,     // 任务4: 邀请好友 或 付费游玩一局
+    0.05,    // 任务5: 邀请好友 或 付费游玩一局
+    0.04,    // 任务6: 邀请好友 或 付费游玩一局
+    0.001,   // 任务7: 必须付费游玩一局
+    0.001,   // 任务8: 邀请好友 或 付费游玩一局
+    0.001,   // 任务9: 邀请好友 或 付费游玩一局
+    0.001,   // 任务10: 邀请好友 或 付费游玩一局
+    0.001,   // 任务11: 必须付费游玩一局
+    0.001,   // 任务12: 邀请好友 或 付费游玩一局
+    0.0005,  // 任务13: 邀请好友 或 付费游玩一局
+    0.0005,  // 任务14: 邀请好友 或 付费游玩一局
+    0.0005,  // 任务15: 必须付费游玩一局
+    0.0005,  // 任务16: 邀请好友 或 付费游玩一局
+    0.0002,  // 任务17: 邀请好友 或 付费游玩一局
+    0.0002,  // 任务18: 邀请好友 或 付费游玩一局
+    0.0002,  // 任务19: 必须付费游玩一局
+    0.0002,  // 任务20: 邀请好友 或 付费游玩一局
+    0.0001,  // 任务21: 邀请好友 或 付费游玩一局
+    0.0001,  // 任务22: 邀请好友 或 付费游玩一局
+    0.0005,  // 任务23: 必须付费游玩一局
+    0.0005   // 任务24: 必须付费游玩一局
 ];
 
 // 任务类型
@@ -45,19 +42,32 @@ enum TaskType {
     INVITE_OR_GAME = 'invite_or_game'   // 邀请好友或付费游玩
 }
 
-// 任务配置
+// 任务配置 - 24个任务
 const TASK_CONFIG = [
-    { index: 0, type: TaskType.INITIAL_SPIN, required: 1, mandatory: false },
-    { index: 1, type: TaskType.PAID_GAME, required: 1, mandatory: true },
-    { index: 2, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },
-    { index: 3, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },
-    { index: 4, type: TaskType.PAID_GAME, required: 1, mandatory: true },
-    ...Array.from({ length: 21 }, (_, i) => ({
-        index: i + 5,
-        type: TaskType.INVITE_OR_GAME,
-        required: 1,
-        mandatory: false
-    }))
+    { index: 0, type: TaskType.INITIAL_SPIN, required: 1, mandatory: false },    // 任务1: 首次游玩
+    { index: 1, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务2: 邀请或付费
+    { index: 2, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务3: 必须付费
+    { index: 3, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务4
+    { index: 4, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务5
+    { index: 5, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务6
+    { index: 6, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务7: 必须付费
+    { index: 7, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务8
+    { index: 8, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务9
+    { index: 9, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务10
+    { index: 10, type: TaskType.PAID_GAME, required: 1, mandatory: true },       // 任务11: 必须付费
+    { index: 11, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务12
+    { index: 12, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务13
+    { index: 13, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务14
+    { index: 14, type: TaskType.PAID_GAME, required: 1, mandatory: true },       // 任务15: 必须付费
+    { index: 15, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务16
+    { index: 16, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务17
+    { index: 17, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务18
+    { index: 18, type: TaskType.PAID_GAME, required: 1, mandatory: true },       // 任务19: 必须付费
+    { index: 19, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务20
+    { index: 20, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务21
+    { index: 21, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false }, // 任务22
+    { index: 22, type: TaskType.PAID_GAME, required: 1, mandatory: true },       // 任务23: 必须付费
+    { index: 23, type: TaskType.PAID_GAME, required: 1, mandatory: true }        // 任务24: 必须付费
 ];
 
 /**
