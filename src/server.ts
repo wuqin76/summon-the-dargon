@@ -90,7 +90,7 @@ app.use('/api/webhook', webhookRoutes);  // 第三方支付webhook
 app.use('/api/tasks', taskRoutes);        // 任务系统
 app.use('/api/invite', inviteRoutes);     // 邀请系统
 app.use('/api/dev', devRoutes);           // 开发者模式
-app.use('/api/admin', migrationRoutes);   // 数据库迁移（需要管理员权限）
+app.use('/api/migration', migrationRoutes); // 数据库迁移
 
 // Serve static files (frontend)
 app.use(express.static('public'));
