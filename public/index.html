@@ -3205,58 +3205,50 @@
         async function handleGameCompletedReward() {
             console.log('🔍 检查游戏完成状态...');
             const gameCompleted = localStorage.getItem('gameCompleted');
-            const isFirstPlay = localStorage.getItem('isFirstPlay');
             const gameScore = localStorage.getItem('gameScore');
             
-            console.log('📊 游戏状态:', { gameCompleted, isFirstPlay, gameScore });
+            console.log('📊 游戏状态:', { gameCompleted, gameScore });
             
             if (gameCompleted === 'true') {
-                console.log('🎮 检测到游戏完成，处理奖励');
+                console.log('🎮 检测到游戏完成，发放奖励');
                 localStorage.removeItem('gameCompleted');
                 
-                if (isFirstPlay === 'true') {
-                    // 首次游玩，赠送抽奖机会
-                    console.log('🎁 处理首次游玩奖励...');
-                    
-                    // 确保有token
-                    if (!authToken || authToken === 'dev-token') {
-                        console.error('❌ 没有有效的token，无法领取奖励');
-                        localStorage.removeItem('isFirstPlay');
-                    } else {
-                        try {
-                            console.log('📡 调用首次游玩奖励API...', { token: authToken.substring(0, 20) + '...' });
-                            const response = await fetch(`${API_BASE}/user/first-play-reward`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${authToken}`,
-                                    'Content-Type': 'application/json'
-                                }
-                            });
-                            
-                            console.log('📡 API响应状态:', response.status);
-                            const result = await response.json();
-                            console.log('🎁 首次游玩奖励响应:', result);
-                            
-                            if (response.ok && result.success) {
-                                localStorage.removeItem('isFirstPlay');
-                                safeTgAlert('🎉 恭喜完成首次游戏！已获得一次抽奖机会！');
-                                
-                                // 重新加载抽奖次数
-                                await loadAvailableSpins();
-                                console.log('✅ 首次游玩奖励领取成功');
-                            } else {
-                                console.error('❌ 领取首次游玩奖励失败:', result);
+                // 每次游戏完成都赠送抽奖机会
+                if (!authToken || authToken === 'dev-token') {
+                    console.error('❌ 没有有效的token，无法领取奖励');
+                } else {
+                    try {
+                        console.log('📡 调用游戏完成奖励API...');
+                        const response = await fetch(`${API_BASE}/user/game-reward`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json'
                             }
-                        } catch (error) {
-                            console.error('❌ 领取首次游玩奖励异常:', error);
+                        });
+                        
+                        console.log('📡 API响应状态:', response.status);
+                        const result = await response.json();
+                        console.log('🎁 游戏奖励响应:', result);
+                        
+                        if (response.ok && result.success) {
+                            safeTgAlert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
+                            
+                            // 重新加载抽奖次数
+                            await loadAvailableSpins();
+                            console.log('✅ 游戏奖励领取成功');
+                        } else {
+                            console.error('❌ 领取游戏奖励失败:', result);
                         }
+                    } catch (error) {
+                        console.error('❌ 领取游戏奖励异常:', error);
                     }
                 }
                 
                 // 跳转到抽奖页面
                 setTimeout(() => {
                     switchPage('spinPage');
-                }, isFirstPlay === 'true' ? 2000 : 500);
+                }, 1000);
             }
         }
 

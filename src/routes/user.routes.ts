@@ -99,13 +99,13 @@ router.get('/play-status', authMiddleware, async (req: Request, res: Response) =
 });
 
 /**
- * POST /api/user/first-play-reward
- * 首次游玩完成，赠送抽奖机会
+ * POST /api/user/game-reward
+ * 每次游戏完成，赠送抽奖机会（不区分首次还是付费）
  */
-router.post('/first-play-reward', authMiddleware, async (req: Request, res: Response) => {
+router.post('/game-reward', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
-        logger.info('🎁 收到首次游玩奖励请求', { userId });
+        logger.info('🎁 收到游戏完成奖励请求', { userId });
         
         const user = await userService.getUserById(userId);
         logger.info('📊 用户当前状态', { 
@@ -115,40 +115,32 @@ router.post('/first-play-reward', authMiddleware, async (req: Request, res: Resp
             available_spins: user.available_spins
         });
         
-        // 检查是否已经领取过首次游玩奖励（查询spin_entitlements表）
+        // 每次游戏完成都给予1次抽奖机会（使用paid_game类型）
         const { db } = await import('../database');
-        const checkResult = await db.query(`
-            SELECT COUNT(*) as count 
-            FROM spin_entitlements 
-            WHERE user_id = $1 AND source_type = 'first_play'
+        
+        await db.query(`
+            INSERT INTO spin_entitlements (user_id, source_type, spins_granted, created_at)
+            VALUES ($1, 'paid_game', 1, NOW())
         `, [userId]);
         
-        const alreadyGranted = parseInt(checkResult.rows[0].count) > 0;
-        logger.info('🔍 首次奖励领取状态', { userId, alreadyGranted });
+        await db.query(`
+            UPDATE users 
+            SET available_spins = available_spins + 1
+            WHERE id = $1
+        `, [userId]);
         
-        if (alreadyGranted) {
-            logger.warn('⚠️ 用户已经领取过首次游玩奖励，拒绝重复发放', { userId });
-            return res.status(400).json({
-                success: false,
-                error: '您已经领取过首次游玩奖励了'
-            });
-        }
-
-        // 使用事务处理
-        logger.info('✅ 开始发放首次游玩奖励', { userId });
-        await userService.grantFirstPlayReward(userId);
-        logger.info('🎉 首次游玩奖励发放成功', { userId });
+        logger.info('🎉 游戏完成奖励发放成功', { userId });
 
         res.json({
             success: true,
             data: {
                 spinsGranted: 1,
-                message: '恭喜获得一次抽奖机会！'
+                message: '恭喜完成游戏，获得一次抽奖机会！'
             }
         });
 
     } catch (error: any) {
-        logger.error('❌ Grant first play reward error', { error: error.message, stack: error.stack });
+        logger.error('❌ Grant game reward error', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             error: error.message,
