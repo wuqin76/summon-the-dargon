@@ -3211,43 +3211,55 @@
             
             if (gameCompleted === 'true') {
                 console.log('🎮 检测到游戏完成，发放奖励');
+                // ⚠️ 立即清除标记，避免重复发放
                 localStorage.removeItem('gameCompleted');
+                localStorage.removeItem('gameScore');
                 
                 // 每次游戏完成都赠送抽奖机会
                 if (!authToken || authToken === 'dev-token') {
                     console.error('❌ 没有有效的token，无法领取奖励');
-                } else {
-                    try {
-                        console.log('📡 调用游戏完成奖励API...');
-                        const response = await fetch(`${API_BASE}/user/game-reward`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${authToken}`,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        
-                        console.log('📡 API响应状态:', response.status);
-                        const result = await response.json();
-                        console.log('🎁 游戏奖励响应:', result);
-                        
-                        if (response.ok && result.success) {
-                            safeTgAlert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
-                            
-                            // 等待500ms确保数据库已提交，然后重新加载抽奖次数
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                            await loadAvailableSpins();
-                            console.log('✅ 游戏奖励领取成功');
-                        } else {
-                            console.error('❌ 领取游戏奖励失败:', result);
-                        }
-                    } catch (error) {
-                        console.error('❌ 领取游戏奖励异常:', error);
-                    }
+                    return;
                 }
                 
-                // 不需要手动跳转，游戏会通过URL参数跳转并重新加载页面
-                // 页面重新加载时会自动调用 loadAvailableSpins()
+                try {
+                    console.log('📡 调用游戏完成奖励API...');
+                    const response = await fetch(`${API_BASE}/user/game-reward`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    console.log('📡 API响应状态:', response.status);
+                    const result = await response.json();
+                    console.log('🎁 游戏奖励响应:', result);
+                    
+                    if (response.ok && result.success) {
+                        // 使用Telegram弹窗，并在关闭后跳转
+                        if (window.Telegram?.WebApp) {
+                            window.Telegram.WebApp.showPopup({
+                                message: '🎉 恭喜完成游戏！已获得一次抽奖机会！',
+                                buttons: [{type: 'ok', text: '去抽奖'}]
+                            }, function() {
+                                // 弹窗关闭后跳转到抽奖页面
+                                console.log('🎯 用户关闭弹窗，跳转到抽奖页面');
+                                switchPage('spinPage');
+                            });
+                        } else {
+                            alert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
+                            switchPage('spinPage');
+                        }
+                        
+                        // 重新加载抽奖次数
+                        await loadAvailableSpins();
+                        console.log('✅ 游戏奖励领取成功');
+                    } else {
+                        console.error('❌ 领取游戏奖励失败:', result);
+                    }
+                } catch (error) {
+                    console.error('❌ 领取游戏奖励异常:', error);
+                }
             }
         }
 

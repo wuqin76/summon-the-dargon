@@ -140,7 +140,17 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             WHERE id = $1
         `, [entitlement.id]);
 
-        // 3. 创建抽奖记录（固定88 USDT，需要完成任务）
+        // 2.5 检查是否首次抽奖（首次必中9900卢比）
+        const firstSpinCheck = await client.query(`
+            SELECT COUNT(*) as spin_count FROM spins WHERE user_id = $1
+        `, [userId]);
+        
+        const isFirstSpin = parseInt(firstSpinCheck.rows[0].spin_count) === 0;
+        const prizeAmount = isFirstSpin ? 9900 : FIXED_PRIZE;
+        
+        console.log('🎲 抽奖信息:', { userId, isFirstSpin, prizeAmount });
+
+        // 3. 创建抽奖记录（首次9900卢比，后续固定88 USDT，需要完成任务）
         const spinResult = await client.query(`
             INSERT INTO spins (
                 user_id,
@@ -157,7 +167,7 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
         `, [
             userId,
             entitlement.id,
-            FIXED_PRIZE,
+            prizeAmount,
             'cash',
             'locked',  // 锁定状态，需完成任务
             true,      // 需要完成任务
@@ -172,7 +182,7 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             SET locked_balance = locked_balance + $1,
                 updated_at = NOW()
             WHERE id = $2
-        `, [FIXED_PRIZE, userId]);
+        `, [spin.prize_amount, userId]);
 
         // 5. 记录余额变动
         await client.query(`
@@ -186,7 +196,7 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
                 locked_balance - $2, locked_balance,
                 'spin', $3, 'Spin prize locked', NOW()
             FROM users WHERE id = $1
-        `, [userId, FIXED_PRIZE, spin.id]);
+        `, [userId, spin.prize_amount, spin.id]);
 
         // 6. 更新用户可用抽奖次数
         await client.query(`
@@ -221,10 +231,11 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             success: true,
             data: {
                 spin_id: spin.id,
-                prize_amount: FIXED_PRIZE,
-                currency: 'USDT',
+                prize_amount: spin.prize_amount,
+                currency: 'INR',
                 status: 'locked',
-                message: '恭喜你抽中 88 USDT！完成任务后即可提现。'
+                requires_tasks: true,
+                message: `恭喜你抽中 ${spin.prize_amount} 卢比！完成任务后即可提现。`
             }
         });
 
