@@ -1826,6 +1826,22 @@ window.__require = function e(t, a, i) {
                 this.node.runAction(cc.sequence(cc.delayTime(.5), cc.callFunc(this.gameEnd1.bind(this))))
             },
             gameEnd1: function() {
+                // 标记游戏已完成
+                try {
+                    var gameScore = a.gameScore || 0;
+                    var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
+                    console.log("🎮 游戏结束弹窗显示，保存游戏状态 - 分数:", gameScore, "首次游玩:", isFirstPlay);
+                    localStorage.setItem('gameCompleted', 'true');
+                    localStorage.setItem('gameScore', gameScore.toString());
+                    console.log("✅ localStorage已保存:", {
+                        gameCompleted: localStorage.getItem('gameCompleted'),
+                        gameScore: localStorage.getItem('gameScore'),
+                        isFirstPlay: localStorage.getItem('isFirstPlay')
+                    });
+                } catch (err) {
+                    console.error("❌ 保存游戏状态失败:", err);
+                }
+                
                 var e = cc.instantiate(this.blackLayerPre);
                 this.node.addChild(e, 2600),
                 e.width = this.gameWidth,
