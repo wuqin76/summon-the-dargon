@@ -87,7 +87,7 @@ app.use('/api/payout', payoutRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/webhook', webhookRoutes);  // 第三方支付webhook
-app.use('/api/tasks', taskRoutes);        // 任务系统
+app.use('/api/task', taskRoutes);         // 任务系统（单数形式）
 app.use('/api/invite', inviteRoutes);     // 邀请系统
 app.use('/api/dev', devRoutes);           // 开发者模式
 app.use('/api/migration', migrationRoutes); // 数据库迁移
