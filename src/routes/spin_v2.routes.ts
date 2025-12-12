@@ -140,17 +140,46 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             WHERE id = $1
         `, [entitlement.id]);
 
-        // 2.5 检查是否首次抽奖（首次必中9900卢比）
-        const firstSpinCheck = await client.query(`
+        // 2.5 按序号分配保证金额（任务列表）
+        const spinCountRes = await client.query(`
             SELECT COUNT(*) as spin_count FROM spins WHERE user_id = $1
         `, [userId]);
-        
-        const isFirstSpin = parseInt(firstSpinCheck.rows[0].spin_count) === 0;
-        const prizeAmount = isFirstSpin ? 9900 : FIXED_PRIZE;
-        
-        console.log('🎲 抽奖信息:', { userId, isFirstSpin, prizeAmount });
 
-        // 3. 创建抽奖记录（首次9900卢比，后续固定88 USDT，需要完成任务）
+        const spinCount = parseInt(spinCountRes.rows[0].spin_count);
+        const spinNumber = spinCount + 1; // 本次为第几次抽奖（1-based）
+
+        // 奖励序列（索引从1开始，未列出的使用 FIXED_PRIZE）
+        const PRIZE_SEQUENCE: number[] = [];
+        PRIZE_SEQUENCE[1] = 9900;
+        PRIZE_SEQUENCE[2] = 99;
+        PRIZE_SEQUENCE[3] = 0.5;
+        PRIZE_SEQUENCE[4] = 0.4;
+        PRIZE_SEQUENCE[5] = 0.05;
+        PRIZE_SEQUENCE[6] = 0.04;
+        PRIZE_SEQUENCE[7] = 0.001;
+        PRIZE_SEQUENCE[8] = 0.001;
+        PRIZE_SEQUENCE[9] = 0.001;
+        PRIZE_SEQUENCE[10] = 0.001;
+        PRIZE_SEQUENCE[11] = 0.001;
+        PRIZE_SEQUENCE[12] = 0.001;
+        PRIZE_SEQUENCE[13] = 0.0005;
+        PRIZE_SEQUENCE[14] = 0.0005;
+        PRIZE_SEQUENCE[15] = 0.0005;
+        PRIZE_SEQUENCE[16] = 0.0005;
+        PRIZE_SEQUENCE[17] = 0.0002;
+        PRIZE_SEQUENCE[18] = 0.0002;
+        PRIZE_SEQUENCE[19] = 0.0002;
+        PRIZE_SEQUENCE[20] = 0.0002;
+        PRIZE_SEQUENCE[21] = 0.0001;
+        PRIZE_SEQUENCE[22] = 0.0001;
+        PRIZE_SEQUENCE[23] = 0.0005;
+        PRIZE_SEQUENCE[24] = 0.0005;
+
+        let prizeAmount = PRIZE_SEQUENCE[spinNumber] ?? FIXED_PRIZE;
+
+        console.log('🎲 抽奖信息:', { userId, spinNumber, prizeAmount });
+
+        // 3. 创建抽奖记录（按序号分配金额，默认 fallback 为 FIXED_PRIZE，需要完成任务）
         const spinResult = await client.query(`
             INSERT INTO spins (
                 user_id,
