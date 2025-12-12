@@ -118,18 +118,32 @@ router.post('/game-reward', authMiddleware, async (req: Request, res: Response) 
         // 每次游戏完成都给予1次抽奖机会（使用paid_game类型）
         const { db } = await import('../database');
         
-        await db.query(`
-            INSERT INTO spin_entitlements (user_id, source_type, spins_granted, created_at)
-            VALUES ($1, 'paid_game', 1, NOW())
+        logger.info('🔄 开始插入spin_entitlements记录', { userId, source_type: 'paid_game' });
+        
+        const insertResult = await db.query(`
+            INSERT INTO spin_entitlements (user_id, source_type, created_at)
+            VALUES ($1, 'paid_game', NOW())
+            RETURNING id
         `, [userId]);
         
-        await db.query(`
+        logger.info('✅ spin_entitlements记录已插入', { 
+            userId, 
+            entitlementId: insertResult.rows[0].id 
+        });
+        
+        logger.info('🔄 更新用户可抽奖次数 +1', { userId, current_spins: user.available_spins });
+        
+        const updateResult = await db.query(`
             UPDATE users 
             SET available_spins = available_spins + 1
             WHERE id = $1
+            RETURNING available_spins
         `, [userId]);
         
-        logger.info('🎉 游戏完成奖励发放成功', { userId });
+        const newSpins = updateResult.rows[0].available_spins;
+        logger.info('✅ 用户可抽奖次数已更新', { userId, new_spins: newSpins });
+        
+        logger.info('🎉 游戏完成奖励发放成功', { userId, granted_spins: 1, total_spins: newSpins });
 
         res.json({
             success: true,
