@@ -2384,6 +2384,10 @@
 
             const { task_index, task_type, progress, required, total_progress, completed_tasks } = taskData;
 
+            // 获取当前任务奖励金额
+            const rewardAmount = TASK_REWARDS[task_index] || 0;
+            const formattedReward = formatPrizeAmount(rewardAmount);
+
             // 更新总进度
             taskTotalProgress.textContent = `${total_progress.toFixed(2)} / 100 U`;
             taskCompletedCount.textContent = completed_tasks;
@@ -2393,25 +2397,28 @@
             taskProgressFill.style.width = progressPercent + '%';
             taskProgressText.textContent = `进度: ${progress} / ${required}`;
 
+            // 任务序号（从1开始）
+            const taskNumber = task_index + 1;
+
             // 根据任务类型显示不同内容
             if (task_type === TASK_TYPES.INITIAL_SPIN) {
-                // 初始抽奖任务
+                // 任务1: 首次游玩
                 taskTypeBadge.className = 'task-type-badge initial';
                 taskTypeBadge.textContent = '🎰 初始任务';
-                taskName.textContent = '完成首次抽奖';
-                taskDescription.innerHTML = '进行一次付费游玩并完成抽奖<br>完成后即可解锁后续任务系统';
+                taskName.textContent = `任务${taskNumber}：完成首次游玩`;
+                taskDescription.innerHTML = `进入游戏玩一把即可获得抽奖机会<br><strong style="color: #FFD700; font-size: 18px;">抽奖必中 ${formattedReward} 卢比！</strong>`;
                 
                 taskActionButtons.innerHTML = `
-                    <button class="task-action-btn primary" onclick="closeTaskModal(); scrollToSpin();">
-                        🎲 去抽奖
+                    <button class="task-action-btn primary" onclick="closeTaskModal(); scrollToGameModes();">
+                        🎮 去游玩
                     </button>
                 `;
             } else if (task_type === TASK_TYPES.PAID_GAME) {
                 // 必须付费游玩任务
                 taskTypeBadge.className = 'task-type-badge';
                 taskTypeBadge.textContent = '💎 必做任务';
-                taskName.textContent = '付费游玩';
-                taskDescription.innerHTML = '完成一次付费游玩<br>此任务必须完成才能继续';
+                taskName.textContent = `任务${taskNumber}：付费游玩`;
+                taskDescription.innerHTML = `完成一次付费游玩获得抽奖机会<br><strong style="color: #FFD700; font-size: 18px;">抽奖必中 ${formattedReward} 卢比！</strong><br><span style="color: #ff6b6b;">⚠️ 此任务必须完成才能继续</span>`;
                 
                 taskActionButtons.innerHTML = `
                     <button class="task-action-btn primary" onclick="closeTaskModal(); scrollToGameModes();">
@@ -2422,8 +2429,8 @@
                 // 邀请或付费任务
                 taskTypeBadge.className = 'task-type-badge optional';
                 taskTypeBadge.textContent = '✨ 可选任务';
-                taskName.textContent = '邀请好友或付费游玩';
-                taskDescription.innerHTML = '选择以下任意一种方式完成任务：<br>• 邀请1位新好友<br>• 完成一次付费游玩';
+                taskName.textContent = `任务${taskNumber}：邀请好友或付费游玩`;
+                taskDescription.innerHTML = `选择任意一种方式完成任务：<br>• 邀请1位新好友<br>• 完成一次付费游玩<br><strong style="color: #FFD700; font-size: 18px;">抽奖必中 ${formattedReward} 卢比！</strong>`;
                 
                 taskActionButtons.innerHTML = `
                     <button class="task-action-btn" onclick="closeTaskModal(); showInviteLink();">
