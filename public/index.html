@@ -3269,25 +3269,34 @@
                     console.log('🎁 游戏奖励响应:', result);
                     
                     if (response.ok && result.success) {
-                        // 使用Telegram弹窗，并在关闭后跳转
-                        if (window.Telegram?.WebApp) {
-                            window.Telegram.WebApp.showPopup({
-                                message: '🎉 恭喜完成游戏！已获得一次抽奖机会！',
-                                buttons: [{type: 'ok', text: '去抽奖'}]
-                            }, function() {
-                                // 弹窗关闭后跳转到抽奖页面
-                                console.log('🎯 用户关闭弹窗，跳转到抽奖页面');
-                                switchPage('spinPage');
-                            });
-                        } else {
-                            alert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
-                            switchPage('spinPage');
-                        }
-                        
                         // 重新加载抽奖次数和余额
                         await loadAvailableSpins();
                         await checkTaskProgress(); // 刷新余额显示
                         console.log('✅ 游戏奖励领取成功');
+                        
+                        // 使用Telegram弹窗
+                        if (window.Telegram?.WebApp) {
+                            window.Telegram.WebApp.showPopup({
+                                message: '🎉 恭喜完成游戏！已获得一次抽奖机会！',
+                                buttons: [{type: 'ok', text: '好的'}]
+                            }, function() {
+                                console.log('🎯 用户关闭弹窗，确保在抽奖页面');
+                                // 确保在抽奖页面（可能已经在了）
+                                const currentPage = document.querySelector('.page.active');
+                                if (currentPage && currentPage.id !== 'spinPage') {
+                                    switchPage('spinPage');
+                                } else {
+                                    console.log('✅ 已经在抽奖页面，无需切换');
+                                }
+                            });
+                        } else {
+                            alert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
+                            // 确保在抽奖页面
+                            const currentPage = document.querySelector('.page.active');
+                            if (currentPage && currentPage.id !== 'spinPage') {
+                                switchPage('spinPage');
+                            }
+                        }
                     } else {
                         console.error('❌ 领取游戏奖励失败:', result);
                     }
