@@ -2741,26 +2741,30 @@ window.__require = function e(t, a, i) {
                 var e = this;
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.moreBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
-                    console.log("返回大厅，跳转到抽奖页面");
-                    // 确保localStorage已保存
-                    try {
-                        var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
-                        console.log("📊 跳转前状态检查:", {
-                            gameCompleted: localStorage.getItem('gameCompleted'),
-                            isFirstPlay: isFirstPlay,
-                            gameScore: localStorage.getItem('gameScore')
-                        });
-                    } catch (err) {
-                        console.error("读取localStorage失败:", err);
+                    if (e.canTouchReplay) {
+                        e.canTouchReplay = false; // 立即禁用，防止重复点击
+                        console.log("返回大厅，跳转到抽奖页面");
+                        // 确保localStorage已保存
+                        try {
+                            var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
+                            console.log("📊 跳转前状态检查:", {
+                                gameCompleted: localStorage.getItem('gameCompleted'),
+                                isFirstPlay: isFirstPlay,
+                                gameScore: localStorage.getItem('gameScore')
+                            });
+                        } catch (err) {
+                            console.error("读取localStorage失败:", err);
+                        }
+                        setTimeout(function() {
+                            console.log("⏰ 等待2秒后跳转，确保奖励API完成");
+                            window.location.href = '/?page=spin';
+                        }, 2000);
                     }
-                    setTimeout(function() {
-                        console.log("⏰ 等待2秒后跳转，确保奖励API完成");
-                        window.location.href = '/?page=spin';
-                    }, 2000);
                 }),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_END, function() {
                     if (e.canTouchReplay) {
+                        e.canTouchReplay = false; // 立即禁用，防止重复点击
                         console.log("❌ 退出游戏，返回主页");
                         // 清除游戏状态，避免重复发放奖励
                         try {
@@ -2772,7 +2776,9 @@ window.__require = function e(t, a, i) {
                             console.error("清除localStorage失败:", err);
                         }
                         // 直接返回主页（不跳转抽奖页）
-                        window.location.href = '/';
+                        setTimeout(function() {
+                            window.location.href = '/';
+                        }, 100);
                     }
                 })
             },
