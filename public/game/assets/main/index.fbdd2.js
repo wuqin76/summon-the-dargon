@@ -2754,8 +2754,9 @@ window.__require = function e(t, a, i) {
                         console.error("读取localStorage失败:", err);
                     }
                     setTimeout(function() {
+                        console.log("⏰ 等待2秒后跳转，确保奖励API完成");
                         window.location.href = '/?page=spin';
-                    }, 100);
+                    }, 2000);
                 }),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_START, function() {}),
                 e.leftBtn.node.on(cc.Node.EventType.TOUCH_END, function() {

@@ -1761,7 +1761,7 @@
     <div class="result-modal" id="resultModal">
         <div class="result-content">
             <h2>🎉 恭喜中奖！</h2>
-            <div class="prize-amount" id="prizeAmount">88 USDT</div>
+            <div class="prize-amount" id="prizeAmount">9900 卢比</div>
             <div class="result-message" id="prizeMessage">
                 你赢得了奖励！<br>
                 完成任务即可提现！
@@ -3234,7 +3234,8 @@
                         if (response.ok && result.success) {
                             safeTgAlert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
                             
-                            // 重新加载抽奖次数
+                            // 等待500ms确保数据库已提交，然后重新加载抽奖次数
+                            await new Promise(resolve => setTimeout(resolve, 500));
                             await loadAvailableSpins();
                             console.log('✅ 游戏奖励领取成功');
                         } else {
@@ -3245,10 +3246,8 @@
                     }
                 }
                 
-                // 跳转到抽奖页面
-                setTimeout(() => {
-                    switchPage('spinPage');
-                }, 1000);
+                // 不需要手动跳转，游戏会通过URL参数跳转并重新加载页面
+                // 页面重新加载时会自动调用 loadAvailableSpins()
             }
         }
 
