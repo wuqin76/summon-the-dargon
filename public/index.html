@@ -1587,10 +1587,14 @@
                         <li>🎉 多档奖金等你拿</li>
                     </ul>
                     <!-- 游玩机会显示 -->
-                    <div id="playTicketsDisplay" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); display: none;">
-                        <div style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 5px;">💳 我的游玩机会</div>
-                        <div style="font-size: 32px; font-weight: bold; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);" id="playTicketsCount">0</div>
-                        <div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px;">次</div>
+                    <div id="playTicketsDisplay" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 2px solid rgba(255,215,0,0.5); padding: 12px 20px; border-radius: 20px; margin-bottom: 15px; display: none; box-shadow: 0 8px 32px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <span style="font-size: 24px;">🎟️</span>
+                            <div style="text-align: left;">
+                                <div style="font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.2;">游玩机会</div>
+                                <div style="font-size: 28px; font-weight: 900; color: #FFD700; text-shadow: 0 2px 8px rgba(255,215,0,0.5); line-height: 1;" id="playTicketsCount">0</div>
+                            </div>
+                        </div>
                     </div>
                     
                     <button class="play-btn" id="paidPlayBtn" onclick="event.stopPropagation(); handleFirstPlay();" style="background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 18px; font-weight: bold;">
@@ -3192,16 +3196,18 @@
                     
                     // 始终显示游玩机会数量（包括0次）
                     if (playTicketsDisplay && playTicketsCount) {
-                        playTicketsDisplay.style.display = 'block';
+                        playTicketsDisplay.style.display = 'flex';
                         playTicketsCount.textContent = tickets;
                         
-                        // 根据机会数量改变颜色
+                        // 根据机会数量改变颜色和边框
                         if (tickets > 0) {
                             playTicketsCount.style.color = '#FFD700'; // 金色
-                            playTicketsDisplay.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                            playTicketsDisplay.style.borderColor = 'rgba(255,215,0,0.6)';
+                            playTicketsDisplay.style.background = 'rgba(255,255,255,0.15)';
                         } else {
-                            playTicketsCount.style.color = '#FF6B6B'; // 红色
-                            playTicketsDisplay.style.background = 'linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)';
+                            playTicketsCount.style.color = '#FF9999'; // 浅红色
+                            playTicketsDisplay.style.borderColor = 'rgba(255,153,153,0.4)';
+                            playTicketsDisplay.style.background = 'rgba(255,255,255,0.1)';
                         }
                     }
                     
