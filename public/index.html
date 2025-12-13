@@ -228,11 +228,16 @@
             font-weight: 900;
             margin-bottom: 15px;
             text-shadow: 
-                0 4px 15px rgba(0, 0, 0, 0.6),
-                0 0 30px rgba(255, 153, 51, 0.8),
-                0 0 60px rgba(255, 215, 0, 0.4);
+                0 2px 4px rgba(0, 0, 0, 0.9),
+                0 4px 8px rgba(0, 0, 0, 0.7),
+                0 0 30px rgba(255, 153, 51, 1),
+                0 0 60px rgba(255, 215, 0, 0.6);
             animation: pulse 2s ease-in-out infinite;
-            color: #FFFFFF;
+            color: #FFD700;
+            background: linear-gradient(135deg, #FF9933 0%, #FFD700 50%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             position: relative;
             display: flex;
             align-items: center;
@@ -275,15 +280,15 @@
 
         .invite-tip {
             text-align: center;
-            font-size: clamp(13px, 3.5vw, 16px);
+            font-size: clamp(14px, 3.5vw, 17px);
             margin-bottom: clamp(15px, 4vw, 22px);
             padding: clamp(10px, 2.5vw, 14px) clamp(15px, 4vw, 22px);
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 153, 51, 0.25);
             border-radius: 25px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 215, 0, 0.5);
             animation: tipGlow 2s ease-in-out infinite;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -292,6 +297,9 @@
             line-height: 1.4;
             position: relative;
             z-index: 50;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 1);
         }
         
         @media (max-width: 480px) {
@@ -608,12 +616,17 @@
 
         .spin-status {
             text-align: center;
-            font-size: 16px;
+            font-size: 18px;
             margin-top: 15px;
-            padding: 12px 20px;
-            background: rgba(255, 255, 255, 0.1);
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(255, 153, 51, 0.3), rgba(255, 215, 0, 0.2));
             border-radius: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            color: #FFD700;
+            font-weight: 800;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 153, 51, 0.6);
+            box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
         }
 
         .header {
@@ -2192,12 +2205,15 @@
                     playSound(winSound);
 
                     const formattedAmount = formatPrizeAmount(prizeAmount);
-                    spinStatus.textContent = `🎉 恭喜获得 ${formattedAmount} 卢比！`;
+                    
+                    // 生成鼓励话语
+                    const encouragementMessage = generateEncouragementMessage(prizeAmount);
+                    spinStatus.textContent = `🎉 恭喜获得 ${formattedAmount} 卢比！${encouragementMessage}`;
                     
                     // 显示弹窗
                     const message = result.requires_tasks 
-                        ? `恭喜获得 ${formattedAmount} 卢比！完成任务后即可解锁提现。`
-                        : `恭喜获得 ${formattedAmount} 卢比！`;
+                        ? `🎉 恭喜获得 ${formattedAmount} 卢比！\n\n${encouragementMessage}\n\n完成任务后即可解锁提现。`
+                        : `🎉 恭喜获得 ${formattedAmount} 卢比！\n\n${encouragementMessage}`;
                     showResultModal(prizeAmount, message);
                     
                     isSpinning = false;
@@ -2215,6 +2231,60 @@
                 isSpinning = false;
                 spinBtn.disabled = false;
             }
+        }
+
+        // 生成鼓励话语
+        function generateEncouragementMessage(prizeAmount) {
+            const balance = window.currentBalance || 0;
+            const totalBalance = balance + prizeAmount;
+            const withdrawThreshold = 100; // 提现门槛 ₹100
+            
+            const messages = {
+                highPrize: [
+                    '🎊 太棒了！大奖来了！',
+                    '💎 运气爆棚！继续加油！',
+                    '🌟 幸运女神眷顾你！',
+                    '🔥 手气火热！再接再厉！'
+                ],
+                nearWithdraw: [
+                    '💪 加油！马上就能提现了！',
+                    '🎯 还差一点点就到100卢比了！',
+                    '⭐ 坚持住！提现在望！',
+                    '🚀 再来几次就能提现了！'
+                ],
+                canWithdraw: [
+                    '🎉 恭喜！已达到提现门槛！',
+                    '💰 太好了！可以去提现了！',
+                    '✨ 完美！赶快去提现吧！',
+                    '🎊 成功！快去领取你的奖励！'
+                ],
+                encouragement: [
+                    '🌈 继续努力！好运连连！',
+                    '💫 积少成多！坚持就是胜利！',
+                    '🎯 每一次都在接近目标！',
+                    '⚡ 加油！下次会更好！',
+                    '🍀 幸运正在路上！',
+                    '🎪 继续游戏！大奖等你！'
+                ]
+            };
+            
+            // 大奖（超过50卢比）
+            if (prizeAmount >= 50) {
+                return messages.highPrize[Math.floor(Math.random() * messages.highPrize.length)];
+            }
+            
+            // 已达到提现门槛
+            if (totalBalance >= withdrawThreshold) {
+                return messages.canWithdraw[Math.floor(Math.random() * messages.canWithdraw.length)];
+            }
+            
+            // 接近提现门槛（还差20卢比以内）
+            if (withdrawThreshold - totalBalance <= 20) {
+                return messages.nearWithdraw[Math.floor(Math.random() * messages.nearWithdraw.length)];
+            }
+            
+            // 普通鼓励
+            return messages.encouragement[Math.floor(Math.random() * messages.encouragement.length)];
         }
 
         // 登录
@@ -3599,8 +3669,8 @@
                         // 使用Telegram弹窗
                         if (window.Telegram?.WebApp) {
                             window.Telegram.WebApp.showPopup({
-                                message: '🎉 恭喜完成游戏！已获得一次抽奖机会！',
-                                buttons: [{type: 'ok', text: '好的'}]
+                                message: '�🎉 恭喜完成游戏！🎉🎊\n\n✨ 已获得一次抽奖机会！\n\n🪔 马上去转盘试试手气吧！',
+                                buttons: [{type: 'ok', text: '立即抽奖'}]
                             }, function() {
                                 console.log('🎯 用户关闭弹窗，确保在抽奖页面');
                                 // 清除URL中的page参数，避免刷新后再次触发跳转
