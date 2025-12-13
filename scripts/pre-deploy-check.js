@@ -22,8 +22,8 @@ const requiredFiles = [
   'tsconfig.json',
   'src/server.ts',
   'database/schema_v2.sql',
-  'database/add_task_system.sql',
-  'public/index.html'
+  'public/index.html',
+  'scripts/add-ip-columns.js'
 ];
 
 console.log('📁 检查必需文件...');
