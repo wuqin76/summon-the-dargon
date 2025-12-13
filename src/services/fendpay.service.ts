@@ -46,6 +46,24 @@ interface QueryOrderResponse {
     } | null;
 }
 
+interface CreatePayoutParams {
+    outTradeNo: string;      // 商户订单号
+    amount: string;          // 代付金额（保留两位小数）
+    notifyUrl: string;       // 回调地址
+    upi: string;             // UPI地址
+    mobileNo: string;        // 手机号
+}
+
+interface PayoutResponse {
+    uuid: string;
+    code: string;
+    msg: string;
+    data: {
+        orderNo: string;     // 平台单号
+        status: string;      // 0=提交成功，其他=失败
+    } | null;
+}
+
 export class FendPayService {
     private config: FendPayConfig;
 
@@ -265,6 +283,81 @@ export class FendPayService {
                 stack: error.stack,
             });
             throw new Error('查询订单失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 创建UPI代付订单
+     */
+    async createPayout(params: CreatePayoutParams): Promise<PayoutResponse> {
+        try {
+            // 确保金额格式正确（两位小数）
+            const amount = parseFloat(params.amount).toFixed(2);
+
+            const requestBody = {
+                merchantNumber: this.config.merchantNumber,
+                outTradeNo: params.outTradeNo,
+                amount: amount,
+                notifyUrl: params.notifyUrl,
+                upi: params.upi,
+                mobileNo: params.mobileNo,
+            };
+
+            // 生成签名
+            const sign = this.generateSign(requestBody);
+            const requestData = { ...requestBody, sign };
+
+            logger.info('FendPay创建代付订单请求', {
+                url: `${this.config.apiUrl}/pay/upi/payout`,
+                requestBody: {
+                    ...requestBody,
+                    merchantNumber: this.config.merchantNumber.substring(0, 4) + '***',
+                    sign: sign.substring(0, 10) + '...'
+                }
+            });
+
+            // 发送请求
+            const response = await fetch(`${this.config.apiUrl}/pay/upi/payout`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            const httpStatus = response.status;
+            const result = await response.json() as PayoutResponse;
+
+            logger.info('FendPay创建代付订单响应', {
+                httpStatus,
+                code: result.code,
+                msg: result.msg,
+                uuid: result.uuid,
+                hasData: !!result.data,
+                status: result.data?.status
+            });
+
+            if (result.code === '200' && result.data) {
+                logger.info('FendPay代付订单创建成功', {
+                    orderNo: result.data.orderNo,
+                    status: result.data.status,
+                });
+            } else {
+                logger.error('FendPay代付订单创建失败', {
+                    code: result.code,
+                    msg: result.msg,
+                    uuid: result.uuid,
+                });
+            }
+
+            return result;
+
+        } catch (error: any) {
+            logger.error('FendPay创建代付订单异常', {
+                error: error.message,
+                stack: error.stack,
+            });
+            throw new Error('创建代付订单失败: ' + error.message);
         }
     }
 

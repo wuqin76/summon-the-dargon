@@ -361,122 +361,6 @@
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
-        /* 开发者面板样式 */
-        .dev-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dev-modal.show {
-            display: flex;
-        }
-
-        .dev-modal-content {
-            background: white;
-            border-radius: 25px;
-            padding: clamp(25px, 6vw, 35px);
-            width: 90%;
-            max-width: 450px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
-            animation: slideUpDev 0.3s ease;
-        }
-
-        @keyframes slideUpDev {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .dev-modal-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .dev-modal-header h2 {
-            margin: 0;
-            font-size: clamp(22px, 5.5vw, 28px);
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .dev-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .dev-action-btn {
-            padding: 15px 20px;
-            border: none;
-            border-radius: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-        }
-
-        .dev-action-btn.grant {
-            background: linear-gradient(135deg, #11998e, #38ef7d);
-        }
-
-        .dev-action-btn.complete {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-        }
-
-        .dev-action-btn.reset {
-            background: linear-gradient(135deg, #fa709a, #fee140);
-        }
-
-        .dev-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .dev-action-btn:active {
-            transform: translateY(0);
-        }
-
-        .dev-info {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin-top: 15px;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .close-dev-modal-btn {
-            width: 100%;
-            padding: 12px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-
         /* 转盘容器 - 方块格子样式 */
         .wheel-container {
             position: relative;
@@ -1788,9 +1672,6 @@
                         <button class="invite-btn" onclick="showTaskModal()" style="flex: 1; min-width: 140px; max-width: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
                             📋 查看任务
                         </button>
-                        <button class="dev-btn" id="devBtn" onclick="toggleDevPanel()" style="display: none; flex: 1; min-width: 140px; max-width: 200px;">
-                            🛠️ 开发者
-                        </button>
                     </div>
 
                     <!-- 提现按钮区域 -->
@@ -1804,6 +1685,17 @@
                                 💰 申请提现
                             </button>
                         </div>
+                    </div>
+
+                    <!-- 测试代付按钮 -->
+                    <div style="margin-top: 20px; padding: 20px; background: rgba(102, 126, 234, 0.15); border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 5px;">🧪 测试代付功能</div>
+                            <div style="font-size: 13px; color: rgba(255,255,255,0.7);">填写UPI信息，立即收到₹10测试转账</div>
+                        </div>
+                        <button class="invite-btn" onclick="showPayoutTestModal()" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; font-size: 16px; font-weight: bold;">
+                            💸 领取测试转账
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1907,61 +1799,6 @@
         </div>
     </div>
 
-    <!-- 开发者面板 -->
-    <div class="dev-modal" id="devModal">
-        <div class="dev-modal-content">
-            <div class="dev-modal-header">
-                <h2>🛠️ 开发者模式</h2>
-                <p style="font-size: 14px; color: #666; margin-top: 8px;">快速测试所有功能</p>
-            </div>
-            
-            <div class="dev-buttons">
-                <button class="dev-action-btn grant" onclick="quickAddSpins()" style="background: linear-gradient(135deg, #ff6b6b, #ee5a6f); font-size: 18px; padding: 20px;">
-                    🎲 快速添加1次抽奖
-                    <span style="display: block; font-size: 12px; opacity: 0.9; margin-top: 4px;">
-                        点击立即获得1次抽奖机会
-                    </span>
-                </button>
-                
-                <button class="dev-action-btn grant" onclick="grantTestAccess()">
-                    ⚡ 授予测试权限
-                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
-                        余额150U + 10次抽奖机会
-                    </span>
-                </button>
-                
-                <button class="dev-action-btn complete" onclick="completeAllTasks()">
-                    ✅ 完成所有任务
-                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
-                        自动完成所有可用任务
-                    </span>
-                </button>
-                
-                <button class="dev-action-btn reset" onclick="resetAccount()">
-                    🔄 重置账号
-                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
-                        恢复到初始状态
-                    </span>
-                </button>
-                
-                <button class="dev-action-btn" onclick="syncSpins()" style="background: linear-gradient(135deg, #f093fb, #f5576c);">
-                    🔧 修复抽奖次数
-                    <span style="display: block; font-size: 12px; opacity: 0.8; margin-top: 4px;">
-                        同步数据库和显示不一致
-                    </span>
-                </button>
-            </div>
-            
-            <div class="dev-info" id="devInfo">
-                <div style="text-align: center; color: #999; padding: 20px;">
-                    加载中...
-                </div>
-            </div>
-            
-            <button class="close-dev-modal-btn" onclick="closeDevModal()">关闭</button>
-        </div>
-    </div>
-
     <!-- 提现提示弹窗 -->
     <div class="result-modal" id="withdrawTipModal">
         <div class="result-content" style="max-width: 400px;">
@@ -2006,6 +1843,39 @@
 
 
             <button class="close-task-modal-btn" onclick="closeTaskModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 测试代付弹窗 -->
+    <div class="result-modal" id="payoutTestModal">
+        <div class="result-content" style="max-width: 400px;">
+            <h2 style="font-size: 24px; margin-bottom: 15px;">💸 测试代付</h2>
+            <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px;">
+                填写您的UPI信息，系统将自动向您转账₹10作为测试
+            </p>
+            
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.9);">
+                    UPI地址 *
+                </label>
+                <input type="text" id="payoutUpi" placeholder="例如: 9887415157@iob" 
+                    style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 14px; box-sizing: border-box;">
+                
+                <label style="display: block; font-size: 14px; font-weight: bold; margin: 15px 0 8px; color: rgba(255,255,255,0.9);">
+                    手机号 *
+                </label>
+                <input type="tel" id="payoutMobile" placeholder="例如: 9887415157" 
+                    style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 14px; box-sizing: border-box;">
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button class="close-modal-btn" onclick="closePayoutTestModal()" style="flex: 1; background: #6c757d;">
+                    取消
+                </button>
+                <button class="close-modal-btn" onclick="submitPayoutTest()" style="flex: 2; background: linear-gradient(135deg, #667eea, #764ba2);">
+                    提交转账
+                </button>
+            </div>
         </div>
     </div>
 
@@ -2335,9 +2205,6 @@
                     authToken = data.data.token;
                     localStorage.setItem('authToken', authToken);
                     console.log('✅ 登录成功，token已保存');
-                    
-                    // 检查开发者权限
-                    await checkDevAccess();
                 } else {
                     console.error('❌ 登录失败:', data.error || data.message);
                     throw new Error(data.error || data.message || '登录失败，未返回有效token');
@@ -2807,239 +2674,89 @@
             modal.classList.remove('show');
         }
 
-        // 开发者模式函数
-        let isDevMode = false;
-
-        // 检查开发者权限
-        async function checkDevAccess() {
-            try {
-                console.log('🔍 检查开发者权限...');
-                
-                const response = await fetch(`${API_BASE}/dev/info`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                console.log('开发者权限检查响应:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('开发者权限数据:', data);
-                    
-                    if (data.success && data.data.isDev) {
-                        isDevMode = true;
-                        const devBtn = document.getElementById('devBtn');
-                        if (devBtn) {
-                            devBtn.style.display = 'inline-block';
-                            console.log('🛠️ 开发者模式已启用');
-                        } else {
-                            console.error('❌ 找不到 devBtn 元素');
-                        }
-                    } else {
-                        console.log('非开发者用户');
-                    }
-                } else {
-                    console.log('开发者权限检查失败:', response.status);
-                }
-            } catch (error) {
-                console.error('检查开发者权限出错:', error);
-            }
-        }
-
-        // 切换开发者面板
-        async function toggleDevPanel() {
-            const modal = document.getElementById('devModal');
+        // 显示代付测试弹窗
+        function showPayoutTestModal() {
+            const modal = document.getElementById('payoutTestModal');
             modal.classList.add('show');
             
-            // 加载当前状态
-            try {
-                const response = await fetch(`${API_BASE}/user/profile`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const user = data.data.user;
-                    
-                    // 获取可用抽奖次数
-                    const spinsResponse = await fetch(`${API_BASE}/spin/available`, {
-                        headers: { 'Authorization': `Bearer ${authToken}` }
-                    });
-                    let availableSpins = 0;
-                    if (spinsResponse.ok) {
-                        const spinsData = await spinsResponse.json();
-                        availableSpins = spinsData.data?.available_spins || 0;
-                    }
-                    
-                    document.getElementById('devInfo').innerHTML = `
-                        <div style="font-size: 13px; line-height: 1.8;">
-                            <div><strong>当前状态：</strong></div>
-                            <div>💰 余额: ₹${user.gameBalance || 0}</div>
-                            <div>🎲 已完成抽奖: ${data.data.stats?.total_spins || 0}</div>
-                            <div>🎯 可抽奖次数: ${availableSpins}</div>
-                            <div>👥 邀请人数: ${user.totalInvites || 0} (有效: ${user.validInvites || 0})</div>
-                            <div>✅ 提现资格: ${user.withdrawalEligible ? '已解锁' : '未解锁'}</div>
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('加载状态失败:', error);
-            }
+            // 清空输入
+            document.getElementById('payoutUpi').value = '';
+            document.getElementById('payoutMobile').value = '';
         }
 
-        // 关闭开发者面板
-        function closeDevModal() {
-            const modal = document.getElementById('devModal');
+        // 关闭代付测试弹窗
+        function closePayoutTestModal() {
+            const modal = document.getElementById('payoutTestModal');
             modal.classList.remove('show');
         }
 
-        // 快速添加抽奖次数（最简单直接）
-        async function quickAddSpins() {
+        // 提交代付测试
+        async function submitPayoutTest() {
+            const upi = document.getElementById('payoutUpi').value.trim();
+            const mobileNo = document.getElementById('payoutMobile').value.trim();
+
+            // 验证输入
+            if (!upi) {
+                safeTgAlert('请输入UPI地址');
+                return;
+            }
+
+            if (!mobileNo) {
+                safeTgAlert('请输入手机号');
+                return;
+            }
+
+            // 验证UPI格式（简单验证）
+            if (!upi.includes('@')) {
+                safeTgAlert('UPI地址格式不正确，应该类似：9887415157@iob');
+                return;
+            }
+
+            // 验证手机号格式（印度手机号10位数字）
+            if (!/^\d{10}$/.test(mobileNo)) {
+                safeTgAlert('手机号格式不正确，应该是10位数字');
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_BASE}/dev/add-spins`, {
+                // 显示加载提示
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showPopup({
+                        message: '正在提交代付请求，请稍候...',
+                        buttons: [{ type: 'ok', text: '好的' }]
+                    });
+                }
+
+                const response = await fetch(`${API_BASE}/payment/v2/payout/test`, {
                     method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ count: 1 })
+                    body: JSON.stringify({
+                        upi,
+                        mobileNo
+                    })
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    await loadAvailableSpins(); // 刷新显示
-                    await toggleDevPanel(); // 刷新开发者面板
-                    safeTgAlert(`✅ ${data.message}\n\n当前总次数: ${data.data.total}`);
-                } else {
-                    safeTgAlert('操作失败: ' + data.error);
-                }
-            } catch (error) {
-                console.error('添加抽奖次数失败:', error);
-                safeTgAlert('操作失败: ' + error.message);
-            }
-        }
 
-        // 授予测试权限
-        async function grantTestAccess() {
-            if (!confirm('确定要授予测试权限吗？\n\n将会设置：\n- 余额 150U\n- 10次抽奖记录\n- 3个邀请好友\n- 解锁提现功能')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/dev/grant-test-access`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
                 const data = await response.json();
-                
-                if (data.success) {
-                    // 刷新可抽奖次数
-                    await loadAvailableSpins();
-                    alert(data.message + '\n\n页面即将刷新显示最新状态');
-                    window.location.reload();
-                } else {
-                    alert('操作失败: ' + data.error);
-                }
-            } catch (error) {
-                alert('操作失败: ' + error.message);
-            }
-        }
 
-        // 完成所有任务
-        async function completeAllTasks() {
-            if (!confirm('确定要完成所有任务吗？\n\n将会自动完成所有可用的任务')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/dev/complete-all-tasks`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
                 if (data.success) {
-                    alert(data.message + '\n\n页面即将刷新显示最新状态');
-                    window.location.reload();
-                } else {
-                    alert('操作失败: ' + data.error);
-                }
-            } catch (error) {
-                alert('操作失败: ' + error.message);
-            }
-        }
-
-        // 重置账号
-        async function resetAccount() {
-            if (!confirm('⚠️ 警告！\n\n确定要重置账号吗？\n\n这将清空所有数据，包括：\n- 余额\n- 抽奖记录\n- 任务进度\n- 邀请记录\n\n此操作不可恢复！')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE}/dev/reset-account`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(data.message + '\n\n页面即将刷新');
-                    window.location.reload();
-                } else {
-                    alert('操作失败: ' + data.error);
-                }
-            } catch (error) {
-                alert('操作失败: ' + error.message);
-            }
-        }
-        
-        // 同步抽奖次数（修复数据不一致）
-        async function syncSpins() {
-            try {
-                const response = await fetch(`${API_BASE}/dev/sync-spins`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    await loadAvailableSpins(); // 刷新显示
-                    await toggleDevPanel(); // 刷新开发者面板
+                    closePayoutTestModal();
                     
-                    let message = data.message;
-                    if (data.data) {
-                        message += '\n\n详细信息：';
-                        if (data.data.before) {
-                            message += `\n修复前：users表=${data.data.before.userSpins}, 资格表=${data.data.before.entitlementsCount}`;
-                        }
-                        if (data.data.after) {
-                            message += `\n修复后：已同步`;
-                        }
-                    }
-                    
-                    safeTgAlert(message);
+                    safeTgAlert(
+                        `✅ 代付请求已提交！\n\n` +
+                        `订单号：${data.data.order_id}\n` +
+                        `金额：₹${data.data.amount}\n` +
+                        `状态：${data.data.message}\n\n` +
+                        `请查收您的UPI账户，预计1-5分钟到账。`
+                    );
                 } else {
-                    safeTgAlert('操作失败: ' + data.error);
+                    safeTgAlert('提交失败：' + (data.message || '未知错误'));
                 }
             } catch (error) {
-                console.error('同步抽奖次数失败:', error);
-                safeTgAlert('操作失败: ' + error.message);
+                console.error('提交代付测试失败:', error);
+                safeTgAlert('提交失败：' + error.message);
             }
         }
 
@@ -3711,14 +3428,6 @@
             if (targetPage === 'spin') {
                 console.log('🎯 URL参数指定跳转到抽奖页面');
                 // 不立即跳转，等待登录完成后在init中处理
-            }
-            
-            // 如果已经有 token，立即检查开发者权限
-            const savedToken = localStorage.getItem('authToken');
-            if (savedToken) {
-                console.log('🔑 发现已保存的 token，立即检查开发者权限');
-                authToken = savedToken;
-                await checkDevAccess();
             }
             
             // 初始化提现通知

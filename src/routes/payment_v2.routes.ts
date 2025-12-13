@@ -427,4 +427,86 @@ router.get('/status/:orderId', authMiddleware, async (req: Request, res: Respons
     }
 });
 
+/**
+ * 创建测试代付订单（给玩家转账10卢比）
+ * POST /api/payment/v2/payout/test
+ */
+router.post('/payout/test', authMiddleware, async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id;
+    const { upi, mobileNo } = req.body;
+
+    try {
+        // 验证参数
+        if (!upi || !mobileNo) {
+            return res.status(400).json({
+                success: false,
+                message: '请提供UPI地址和手机号'
+            });
+        }
+
+        // 生成商户订单号（唯一）
+        const outTradeNo = `PAYOUT_${Date.now()}_${userId.substring(0, 8)}`;
+
+        console.log('[Payout] 创建测试代付订单', { userId, outTradeNo, upi, mobileNo });
+
+        // 调用FendPay API创建代付订单
+        const { fendPayService } = await import('../services/fendpay.service');
+        
+        const baseUrl = process.env.BASE_URL || 'https://dragon-spin-game-production.up.railway.app';
+        const notifyUrl = `${baseUrl}/api/webhook/fendpay-payout`;
+
+        const fendPayResult = await fendPayService.createPayout({
+            outTradeNo,
+            amount: '10.00',  // 测试金额：10卢比
+            notifyUrl,
+            upi,
+            mobileNo,
+        });
+
+        console.log('[Payout] FendPay代付API返回结果', {
+            code: fendPayResult.code,
+            msg: fendPayResult.msg,
+            hasData: !!fendPayResult.data
+        });
+
+        if (fendPayResult.code !== '200' || !fendPayResult.data) {
+            const errorMsg = fendPayResult.msg || '创建代付订单失败';
+            console.error('[Payout] FendPay代付订单创建失败', {
+                code: fendPayResult.code,
+                msg: fendPayResult.msg,
+                uuid: fendPayResult.uuid
+            });
+            return res.status(500).json({
+                success: false,
+                message: `FendPay: ${errorMsg} (code: ${fendPayResult.code})`
+            });
+        }
+
+        console.log('[Payout] FendPay代付订单创建成功', {
+            outTradeNo,
+            orderNo: fendPayResult.data.orderNo,
+            status: fendPayResult.data.status,
+        });
+
+        res.json({
+            success: true,
+            data: {
+                order_id: outTradeNo,
+                fendpay_order_no: fendPayResult.data.orderNo,
+                amount: '10.00',
+                currency: 'INR',
+                status: fendPayResult.data.status === '0' ? 'processing' : 'failed',
+                message: fendPayResult.data.status === '0' ? '代付订单已提交，处理中' : '代付订单提交失败'
+            }
+        });
+
+    } catch (error: any) {
+        console.error('[Payout] Create test payout error:', error);
+        res.status(500).json({
+            success: false,
+            message: '创建代付订单失败: ' + error.message
+        });
+    }
+});
+
 export default router;

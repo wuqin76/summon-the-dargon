@@ -225,4 +225,88 @@ if (process.env.NODE_ENV === 'development') {
     });
 }
 
+/**
+ * FendPay 代付回调接口
+ * POST /api/webhook/fendpay-payout
+ * 
+ * 回调参数：
+ * {
+ *   "utr": "流水号",  // 可选
+ *   "outTradeNo": "商户订单号",
+ *   "orderNo": "平台订单号",
+ *   "amount": "金额",
+ *   "status": 1,  // 0=处理中，1=成功，其他=失败
+ *   "sign": "签名"
+ * }
+ */
+router.post('/fendpay-payout', async (req: Request, res: Response) => {
+    try {
+        const {
+            outTradeNo,
+            orderNo,
+            amount,
+            status,
+            utr
+        } = req.body;
+
+        logger.info('[FendPay Payout Webhook] 收到代付回调', {
+            outTradeNo,
+            orderNo,
+            amount,
+            status,
+            utr,
+        });
+
+        // 1. 验证签名
+        const isValid = fendPayService.verifySign(req.body);
+        if (!isValid) {
+            logger.error('[FendPay Payout Webhook] 签名验证失败');
+            return res.status(400).send('签名验证失败');
+        }
+
+        logger.info('[FendPay Payout Webhook] 签名验证成功', {
+            outTradeNo,
+            status,
+            utr
+        });
+
+        // 2. 记录代付结果（可以保存到数据库）
+        // 这里暂时只记录日志，后续可以扩展
+
+        // 3. 根据状态处理
+        if (status === 1 || status === '1') {
+            logger.info('[FendPay Payout Webhook] 代付成功', {
+                outTradeNo,
+                orderNo,
+                amount,
+                utr
+            });
+        } else if (status === 0 || status === '0') {
+            logger.info('[FendPay Payout Webhook] 代付处理中', {
+                outTradeNo,
+                orderNo
+            });
+        } else {
+            logger.warn('[FendPay Payout Webhook] 代付失败', {
+                outTradeNo,
+                orderNo,
+                status
+            });
+        }
+
+        // 4. 必须返回 "success" 字符串
+        res.send('success');
+
+    } catch (error: any) {
+        logger.error('[FendPay Payout Webhook] 处理异常', {
+            error: error.message,
+            stack: error.stack,
+            body: req.body
+        });
+        
+        // 即使出错也返回success，避免FendPay重复回调
+        res.send('success');
+    }
+});
+
 export default router;
