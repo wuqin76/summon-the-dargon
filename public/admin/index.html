@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon 游戏管理后台</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>🐲 Dragon 管理后台</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-page="dashboard">
+                    <span class="icon">📊</span>
+                    <span>数据总览</span>
+                </a>
+                <a href="#users" class="nav-item" data-page="users">
+                    <span class="icon">👥</span>
+                    <span>用户管理</span>
+                </a>
+                <a href="#payments" class="nav-item" data-page="payments">
+                    <span class="icon">💰</span>
+                    <span>支付记录</span>
+                </a>
+                <a href="#games" class="nav-item" data-page="games">
+                    <span class="icon">🎮</span>
+                    <span>游戏记录</span>
+                </a>
+                <a href="#spins" class="nav-item" data-page="spins">
+                    <span class="icon">🎰</span>
+                    <span>抽奖记录</span>
+                </a>
+                <a href="#payouts" class="nav-item" data-page="payouts">
+                    <span class="icon">💸</span>
+                    <span>提现管理</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span id="admin-name">管理员</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">退出登录</button>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 数据总览页面 -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1>数据总览</h1>
+                    <p class="subtitle">系统运营数据概览</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-info">
+                            <div class="stat-label">总用户数</div>
+                            <div class="stat-value" id="total-users">-</div>
+                            <div class="stat-detail">
+                                今日新增: <span id="users-24h">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon green">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-label">总收入 (USDT)</div>
+                            <div class="stat-value" id="total-revenue">-</div>
+                            <div class="stat-detail">
+                                近7日支付: <span id="payments-7d">-</span> 笔
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon purple">🎮</div>
+                        <div class="stat-info">
+                            <div class="stat-label">游戏总场次</div>
+                            <div class="stat-value" id="total-games">-</div>
+                            <div class="stat-detail">
+                                总抽奖: <span id="total-spins">-</span> 次
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon orange">💸</div>
+                        <div class="stat-info">
+                            <div class="stat-label">待处理提现</div>
+                            <div class="stat-value" id="pending-payouts">-</div>
+                            <div class="stat-detail">
+                                金额: <span id="pending-amount">-</span> USDT
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h2>快捷操作</h2>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="navigateTo('payouts')">
+                            <span class="icon">💸</span>
+                            处理提现申请
+                        </button>
+                        <button class="action-btn" onclick="navigateTo('users')">
+                            <span class="icon">👥</span>
+                            管理用户
+                        </button>
+                        <button class="action-btn" onclick="loadDashboard()">
+                            <span class="icon">🔄</span>
+                            刷新数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理页面 -->
+            <div id="users-page" class="page">
+                <div class="page-header">
+                    <h1>用户管理</h1>
+                    <div class="page-actions">
+                        <input type="text" id="user-search" class="search-input" placeholder="搜索用户名或ID...">
+                        <button class="btn-primary" onclick="loadUsers()">刷新</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>用户ID</th>
+                                <th>用户名</th>
+                                <th>姓名</th>
+                                <th>余额(USDT)</th>
+                                <th>可用抽奖</th>
+                                <th>邀请人数</th>
+                                <th>付费游戏</th>
+                                <th>免费游戏</th>
+                                <th>注册时间</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="11" class="text-center">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="users-pagination"></div>
+            </div>
+
+            <!-- 支付记录页面 -->
+            <div id="payments-page" class="page">
+                <div class="page-header">
+                    <h1>支付记录</h1>
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="loadPayments()">刷新</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>订单ID</th>
+                                <th>交易号</th>
+                                <th>用户</th>
+                                <th>金额</th>
+                                <th>货币</th>
+                                <th>状态</th>
+                                <th>是否使用</th>
+                                <th>创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-table-body">
+                            <tr><td colspan="8" class="text-center">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="payments-pagination"></div>
+            </div>
+
+            <!-- 游戏记录页面 -->
+            <div id="games-page" class="page">
+                <div class="page-header">
+                    <h1>游戏记录</h1>
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="loadGames()">刷新</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>游戏ID</th>
+                                <th>用户</th>
+                                <th>游戏模式</th>
+                                <th>是否完成</th>
+                                <th>获得抽奖</th>
+                                <th>开始时间</th>
+                                <th>完成时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="games-table-body">
+                            <tr><td colspan="7" class="text-center">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="games-pagination"></div>
+            </div>
+
+            <!-- 抽奖记录页面 -->
+            <div id="spins-page" class="page">
+                <div class="page-header">
+                    <h1>抽奖记录</h1>
+                    <div class="page-actions">
+                        <button class="btn-primary" onclick="loadSpins()">刷新</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>抽奖ID</th>
+                                <th>用户</th>
+                                <th>奖金(USDT)</th>
+                                <th>状态</th>
+                                <th>需要审核</th>
+                                <th>已审核</th>
+                                <th>创建时间</th>
+                                <th>完成时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spins-table-body">
+                            <tr><td colspan="8" class="text-center">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="spins-pagination"></div>
+            </div>
+
+            <!-- 提现管理页面 -->
+            <div id="payouts-page" class="page">
+                <div class="page-header">
+                    <h1>提现管理</h1>
+                    <div class="page-actions">
+                        <select id="payout-status-filter" onchange="loadPayouts()">
+                            <option value="">全部状态</option>
+                            <option value="pending">待审核</option>
+                            <option value="approved">已批准</option>
+                            <option value="processing">处理中</option>
+                            <option value="completed">已完成</option>
+                            <option value="rejected">已拒绝</option>
+                        </select>
+                        <button class="btn-primary" onclick="loadPayouts()">刷新</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>申请ID</th>
+                                <th>用户</th>
+                                <th>申请金额</th>
+                                <th>手续费</th>
+                                <th>实际到账</th>
+                                <th>提现方式</th>
+                                <th>提现地址</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payouts-table-body">
+                            <tr><td colspan="10" class="text-center">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="payouts-pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 提现操作模态框 -->
+    <div id="payout-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>提现操作</h2>
+                <span class="close" onclick="closePayoutModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="payout-modal-body">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>加载中...</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

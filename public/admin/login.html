@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon 管理后台登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            padding: 50px 40px;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .login-subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            font-size: 18px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: #7f8c8d;
+            cursor: pointer;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .login-footer p {
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-button.loading .button-text {
+            display: none;
+        }
+
+        .login-button.loading .loading-spinner {
+            display: block;
+        }
+
+        .demo-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .demo-info h4 {
+            color: #1976d2;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .demo-info p {
+            color: #1976d2;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">🐲</div>
+            <h1 class="login-title">Dragon 管理后台</h1>
+            <p class="login-subtitle">请使用管理员账号登录</p>
+        </div>
+
+        <div class="demo-info">
+            <h4>📢 说明</h4>
+            <p>请使用您的管理员 Token 登录系统。Token 可以从后端 API 的 <code>/api/auth/login</code> 接口获取。</p>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="admin-token">管理员 Token</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔑</span>
+                    <input 
+                        type="password" 
+                        id="admin-token" 
+                        class="form-input" 
+                        placeholder="请输入管理员 Token"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="remember-me">
+                <input type="checkbox" id="remember" checked>
+                <label for="remember">记住我的登录状态</label>
+            </div>
+
+            <button type="submit" class="login-button" id="login-button">
+                <span class="button-text">登录</span>
+                <div class="loading-spinner"></div>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>© 2024 Dragon 游戏管理系统</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = '/api';
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = document.getElementById('admin-token').value;
+            const remember = document.getElementById('remember').checked;
+            const errorMessage = document.getElementById('error-message');
+            const loginButton = document.getElementById('login-button');
+            
+            // 隐藏错误消息
+            errorMessage.classList.remove('show');
+            
+            // 显示加载状态
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+            
+            try {
+                // 验证 Token
+                const response = await fetch(`${API_BASE_URL}/admin/dashboard/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    // Token 有效，保存并跳转
+                    if (remember) {
+                        localStorage.setItem('adminToken', token);
+                    } else {
+                        sessionStorage.setItem('adminToken', token);
+                    }
+                    
+                    // 跳转到管理后台
+                    window.location.href = '/admin/index.html';
+                } else if (response.status === 401) {
+                    throw new Error('Token 无效或已过期，请检查后重试');
+                } else {
+                    throw new Error('登录失败，请稍后重试');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                errorMessage.textContent = error.message;
+                errorMessage.classList.add('show');
+                
+                loginButton.classList.remove('loading');
+                loginButton.disabled = false;
+            }
+        });
+
+        // 检查是否已登录
+        const existingToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+        if (existingToken) {
+            // 验证现有 Token
+            fetch(`${API_BASE_URL}/admin/dashboard/stats`, {
+                headers: {
+                    'Authorization': `Bearer ${existingToken}`
+                }
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/admin/index.html';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

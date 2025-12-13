@@ -266,4 +266,339 @@ router.post('/users/ban', async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * GET /api/admin/dashboard/stats
+ * 获取仪表板统计数据
+ */
+router.get('/dashboard/stats', async (_req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+        const stats = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM users) as total_users,
+                (SELECT COUNT(*) FROM users WHERE created_at > NOW() - INTERVAL '7 days') as users_last_7d,
+                (SELECT COUNT(*) FROM users WHERE created_at > NOW() - INTERVAL '24 hours') as users_last_24h,
+                (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success') as total_revenue,
+                (SELECT COUNT(*) FROM payments WHERE status = 'success' AND created_at > NOW() - INTERVAL '7 days') as payments_last_7d,
+                (SELECT COUNT(*) FROM game_sessions WHERE completed = true) as total_games_played,
+                (SELECT COUNT(*) FROM spins) as total_spins,
+                (SELECT COUNT(*) FROM payout_requests WHERE status = 'pending') as pending_payouts,
+                (SELECT COALESCE(SUM(amount), 0) FROM payout_requests WHERE status = 'pending') as pending_payout_amount
+        `);
+
+        res.json({
+            success: true,
+            data: stats.rows[0],
+        });
+
+    } catch (error: any) {
+        logger.error('Get dashboard stats error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/admin/users/list
+ * 获取用户列表
+ */
+router.get('/users/list', async (req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query(`
+            SELECT 
+                u.id,
+                u.telegram_id,
+                u.username,
+                u.first_name,
+                u.balance,
+                u.available_spins,
+                u.total_invited,
+                u.total_paid_plays,
+                u.total_free_plays,
+                u.is_banned,
+                u.created_at,
+                u.last_active_at,
+                (SELECT COUNT(*) FROM invitations WHERE inviter_id = u.id) as invite_count,
+                (SELECT COUNT(*) FROM game_sessions WHERE user_id = u.id AND completed = true) as completed_games,
+                (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE user_id = u.id AND status = 'success') as total_paid
+            FROM users u
+            ORDER BY u.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+
+        const countResult = await pool.query('SELECT COUNT(*) FROM users');
+        const totalUsers = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: {
+                users: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalUsers,
+                    pages: Math.ceil(totalUsers / limit),
+                },
+            },
+        });
+
+    } catch (error: any) {
+        logger.error('Get users list error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/admin/payments/list
+ * 获取支付记录列表
+ */
+router.get('/payments/list', async (req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query(`
+            SELECT 
+                p.id,
+                p.provider_tx_id,
+                p.amount,
+                p.currency,
+                p.status,
+                p.used,
+                p.created_at,
+                u.telegram_id,
+                u.username,
+                u.first_name
+            FROM payments p
+            LEFT JOIN users u ON p.user_id = u.id
+            ORDER BY p.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+
+        const countResult = await pool.query('SELECT COUNT(*) FROM payments');
+        const totalPayments = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: {
+                payments: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalPayments,
+                    pages: Math.ceil(totalPayments / limit),
+                },
+            },
+        });
+
+    } catch (error: any) {
+        logger.error('Get payments list error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/admin/games/list
+ * 获取游戏记录列表
+ */
+router.get('/games/list', async (req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query(`
+            SELECT 
+                g.id,
+                g.game_mode,
+                g.completed,
+                g.earned_spin,
+                g.created_at,
+                g.completed_at,
+                u.telegram_id,
+                u.username,
+                u.first_name
+            FROM game_sessions g
+            LEFT JOIN users u ON g.user_id = u.id
+            ORDER BY g.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+
+        const countResult = await pool.query('SELECT COUNT(*) FROM game_sessions');
+        const totalGames = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: {
+                games: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalGames,
+                    pages: Math.ceil(totalGames / limit),
+                },
+            },
+        });
+
+    } catch (error: any) {
+        logger.error('Get games list error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/admin/spins/list
+ * 获取抽奖记录列表
+ */
+router.get('/spins/list', async (req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = (page - 1) * limit;
+
+        const result = await pool.query(`
+            SELECT 
+                s.id,
+                s.prize_amount,
+                s.status,
+                s.requires_manual_review,
+                s.reviewed,
+                s.created_at,
+                s.completed_at,
+                u.telegram_id,
+                u.username,
+                u.first_name
+            FROM spins s
+            LEFT JOIN users u ON s.user_id = u.id
+            ORDER BY s.created_at DESC
+            LIMIT $1 OFFSET $2
+        `, [limit, offset]);
+
+        const countResult = await pool.query('SELECT COUNT(*) FROM spins');
+        const totalSpins = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: {
+                spins: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalSpins,
+                    pages: Math.ceil(totalSpins / limit),
+                },
+            },
+        });
+
+    } catch (error: any) {
+        logger.error('Get spins list error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/admin/payouts/list
+ * 获取提现申请列表
+ */
+router.get('/payouts/list', async (req: Request, res: Response) => {
+    try {
+        const { Pool } = require('pg');
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 50;
+        const offset = (page - 1) * limit;
+        const status = req.query.status as string;
+
+        let query = `
+            SELECT 
+                pr.id,
+                pr.amount,
+                pr.fee,
+                pr.net_amount,
+                pr.withdrawal_method,
+                pr.withdrawal_address,
+                pr.status,
+                pr.created_at,
+                pr.approved_at,
+                pr.completed_at,
+                u.telegram_id,
+                u.username,
+                u.first_name
+            FROM payout_requests pr
+            LEFT JOIN users u ON pr.user_id = u.id
+        `;
+
+        const params: any[] = [limit, offset];
+        if (status) {
+            query += ` WHERE pr.status = $3`;
+            params.push(status);
+        }
+
+        query += ` ORDER BY pr.created_at DESC LIMIT $1 OFFSET $2`;
+
+        const result = await pool.query(query, params);
+
+        const countQuery = status 
+            ? 'SELECT COUNT(*) FROM payout_requests WHERE status = $1' 
+            : 'SELECT COUNT(*) FROM payout_requests';
+        const countParams = status ? [status] : [];
+        const countResult = await pool.query(countQuery, countParams);
+        const totalPayouts = parseInt(countResult.rows[0].count);
+
+        res.json({
+            success: true,
+            data: {
+                payouts: result.rows,
+                pagination: {
+                    page,
+                    limit,
+                    total: totalPayouts,
+                    pages: Math.ceil(totalPayouts / limit),
+                },
+            },
+        });
+
+    } catch (error: any) {
+        logger.error('Get payouts list error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 export default router;
