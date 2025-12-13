@@ -2895,8 +2895,8 @@
                 const ticketsData = await ticketsResponse.json();
                 
                 if (ticketsData.success && ticketsData.data.has_tickets) {
-                    // 有游玩机会，直接使用
-                    safeTgAlert(`✨ 您有 ${ticketsData.data.paid_play_tickets} 次游玩机会\n\n正在进入游戏...`);
+                    // 有游玩机会，直接使用（不显示弹窗，直接进入游戏）
+                    console.log(`✨ 您有 ${ticketsData.data.paid_play_tickets} 次游玩机会，正在进入游戏...`);
                     await usePlayTicketAndEnterGame();
                     return;
                 }
