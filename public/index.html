@@ -1807,6 +1807,69 @@
         </div>
     </div>
 
+    <!-- 提现申请弹窗 -->
+    <div class="result-modal" id="withdrawModal">
+        <div class="result-content" style="max-width: 500px; background: white; color: #333;">
+            <!-- 顶部标题 -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; margin: -30px -30px 20px -30px; border-radius: 15px 15px 0 0;">
+                <h2 style="font-size: 24px; margin: 0; color: white; text-align: center;">💰 提现申请</h2>
+            </div>
+
+            <!-- 提现金额显示 -->
+            <div style="text-align: center; margin-bottom: 25px;">
+                <p style="font-size: 14px; color: #666; margin-bottom: 8px;">提现金额</p>
+                <p style="font-size: 36px; font-weight: bold; color: #667eea; margin: 0;" id="withdrawModalAmount">₹0</p>
+            </div>
+
+            <!-- 提现信息表单 -->
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">
+                    UPI地址 <span style="color: #ff4444;">*</span>
+                </label>
+                <input type="text" id="withdrawUpiId" placeholder="例如: 9876543210@paytm" 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e0e0e0; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;">
+                
+                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">
+                    手机号 <span style="color: #ff4444;">*</span>
+                </label>
+                <input type="tel" id="withdrawMobile" placeholder="例如: 9876543210" 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e0e0e0; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;">
+                
+                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">
+                    银行账号（可选）
+                </label>
+                <input type="text" id="withdrawBankAccount" placeholder="例如: 123456789012" 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e0e0e0; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;">
+                
+                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #333;">
+                    IFSC代码（可选）
+                </label>
+                <input type="text" id="withdrawIfsc" placeholder="例如: SBIN0001234" 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e0e0e0; font-size: 14px; box-sizing: border-box;">
+            </div>
+
+            <!-- 提示信息 -->
+            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+                <p style="font-size: 12px; color: #856404; margin: 0; line-height: 1.5;">
+                    <strong>📌 温馨提示：</strong><br>
+                    • 提现金额必须达到 ₹10,000 才能申请<br>
+                    • 审核通过后24小时内到账<br>
+                    • 请确保提供的信息准确无误
+                </p>
+            </div>
+
+            <!-- 按钮区域 -->
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeWithdrawModal()" style="flex: 1; padding: 14px; background: #6c757d; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer;">
+                    取消
+                </button>
+                <button onclick="submitWithdrawRequest()" style="flex: 2; padding: 14px; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    提交申请
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 任务弹窗 -->
     <div class="task-modal" id="taskModal">
         <div class="task-modal-content">
@@ -2225,20 +2288,124 @@
 
         // 处理提现按钮点击
         async function handleWithdraw() {
-            const threshold = 10000;
             const balance = window.currentBalance || 0;
+            console.log('[Withdraw] 开始处理提现请求，余额:', balance);
             
-            if (balance < threshold) {
-                const remaining = threshold - balance;
-                showWithdrawTipModal(balance, remaining);
-                return;
-            }
-            
-            // 余额足够，显示任务弹窗
-            showTaskModal();
+            // 直接显示提现申请弹窗（在弹窗内检查余额）
+            showWithdrawModal(balance);
         }
 
-        // 显示提现提示弹窗
+        // 显示提现申请弹窗
+        function showWithdrawModal(balance) {
+            const modal = document.getElementById('withdrawModal');
+            const amountDisplay = document.getElementById('withdrawModalAmount');
+            
+            if (modal && amountDisplay) {
+                amountDisplay.textContent = formatPrizeAmount(balance);
+                modal.style.display = 'flex';
+                console.log('[Withdraw] 显示提现申请弹窗，余额:', balance);
+            }
+        }
+
+        // 关闭提现申请弹窗
+        function closeWithdrawModal() {
+            const modal = document.getElementById('withdrawModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // 清空表单
+                document.getElementById('withdrawUpiId').value = '';
+                document.getElementById('withdrawMobile').value = '';
+                document.getElementById('withdrawBankAccount').value = '';
+                document.getElementById('withdrawIfsc').value = '';
+                console.log('[Withdraw] 关闭提现申请弹窗');
+            }
+        }
+
+        // 提交提现申请
+        async function submitWithdrawRequest() {
+            try {
+                // 获取表单数据
+                const upiId = document.getElementById('withdrawUpiId').value.trim();
+                const mobile = document.getElementById('withdrawMobile').value.trim();
+                const bankAccount = document.getElementById('withdrawBankAccount').value.trim();
+                const ifsc = document.getElementById('withdrawIfsc').value.trim();
+                const balance = window.currentBalance || 0;
+
+                // 验证必填字段
+                if (!upiId) {
+                    showToast('❌ 请输入UPI地址');
+                    return;
+                }
+
+                // 验证UPI格式（必须包含@符号）
+                if (!upiId.includes('@')) {
+                    showToast('❌ UPI地址格式错误，应包含@符号');
+                    return;
+                }
+
+                if (!mobile) {
+                    showToast('❌ 请输入手机号');
+                    return;
+                }
+
+                // 验证印度手机号格式（10位数字，以6-9开头）
+                if (!/^[6-9]\d{9}$/.test(mobile)) {
+                    showToast('❌ 请输入有效的印度手机号（10位数字）');
+                    return;
+                }
+
+                // 检查提现金额
+                const minWithdrawAmount = 10000;
+                if (balance < minWithdrawAmount) {
+                    const remaining = minWithdrawAmount - balance;
+                    showToast(`❌ 提现金额不足！\n还需 ${formatPrizeAmount(remaining)} 才能申请提现\n\n💡 继续完成任务和邀请好友来增加奖金吧！`);
+                    return;
+                }
+
+                // 准备提交数据
+                const withdrawData = {
+                    upiId: upiId,
+                    mobile: mobile,
+                    bankAccount: bankAccount || null,
+                    ifsc: ifsc || null,
+                    amount: balance
+                };
+
+                console.log('[Withdraw] 提交提现申请:', withdrawData);
+
+                // TODO: 调用后端API提交提现申请
+                // const response = await fetch(`${API_BASE}/withdrawal/request`, {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //         'Authorization': `Bearer ${authToken}`
+                //     },
+                //     body: JSON.stringify(withdrawData)
+                // });
+                //
+                // if (!response.ok) {
+                //     throw new Error('提现申请提交失败');
+                // }
+                //
+                // const result = await response.json();
+                // if (!result.success) {
+                //     throw new Error(result.error || '提现申请失败');
+                // }
+
+                // 暂时模拟成功
+                showToast('✅ 提现申请已提交！\n\n我们会在24小时内完成审核并转账到您的账户。');
+                closeWithdrawModal();
+                
+                // TODO: 刷新用户余额等数据
+                // await checkTaskProgress();
+
+            } catch (error) {
+                console.error('[Withdraw] 提现申请提交失败:', error);
+                showToast('❌ 提现申请提交失败，请稍后重试');
+            }
+        }
+
+        // 显示提现提示弹窗（保留原有功能）
         function showWithdrawTipModal(currentBalance, remaining) {
             const modal = document.getElementById('withdrawTipModal');
             const content = document.getElementById('withdrawTipContent');
@@ -2263,11 +2430,6 @@
         function closeWithdrawTipModal() {
             const modal = document.getElementById('withdrawTipModal');
             modal.classList.remove('show');
-        }
-
-        // 显示提现弹窗
-        function showWithdrawModal() {
-            alert('提现功能即将开放！\n\n请准备好以下信息：\n- 银行卡号\n- 联系电话\n\n我们会在审核后24小时内完成转账。');
         }
 
         // 显示任务弹窗
