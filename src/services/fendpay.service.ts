@@ -53,7 +53,7 @@ export class FendPayService {
         this.config = {
             merchantNumber: process.env.FENDPAY_MERCHANT_NUMBER || '',
             secret: process.env.FENDPAY_SECRET || '',
-            apiUrl: process.env.FENDPAY_API_URL || 'https://kspay.shop',
+            apiUrl: process.env.FENDPAY_API_BASE_URL || 'https://kspay.shop',
         };
 
         if (!this.config.merchantNumber || !this.config.secret) {
