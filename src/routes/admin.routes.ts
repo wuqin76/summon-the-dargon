@@ -10,35 +10,49 @@ const router = Router();
 /**
  * POST /api/admin/generate-token
  * 为管理员生成登录 Token（无需认证）
+ * 如果用户不存在会自动创建
  */
 router.post('/generate-token', async (req: Request, res: Response) => {
     try {
         const { telegramId } = req.body;
         
         if (!telegramId) {
-            return res.status(400).json({ error: 'Telegram ID 是必填项' });
+            return res.status(400).json({ 
+                success: false,
+                error: 'Telegram ID 是必填项' 
+            });
         }
 
         // 检查是否为管理员
         const adminIds = process.env.ADMIN_TELEGRAM_IDS?.split(',') || [];
         if (!adminIds.includes(telegramId.toString())) {
-            return res.status(403).json({ error: '您不是管理员，无权访问管理后台' });
+            return res.status(403).json({ 
+                success: false,
+                error: '您不是管理员，无权访问管理后台' 
+            });
         }
 
         const jwt = require('jsonwebtoken');
         const { Pool } = require('pg');
         const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-        // 查找用户
-        const userResult = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+        // 查找或创建用户
+        let userResult = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
         
+        let userData;
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: '用户不存在。请先通过 Telegram Bot 玩一次游戏来创建账号。' });
+            // 自动创建管理员账号
+            const createResult = await pool.query(`
+                INSERT INTO users (telegram_id, username, first_name, invite_code)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *
+            `, [telegramId, 'admin', 'Admin', 'ADMIN_' + telegramId]);
+            userData = createResult.rows[0];
+        } else {
+            userData = userResult.rows[0];
         }
 
-        const userData = userResult.rows[0];
-
-        // 生成 Token
+        // 生成永久 Token
         const token = jwt.sign(
             { 
                 id: userData.id,
@@ -46,7 +60,7 @@ router.post('/generate-token', async (req: Request, res: Response) => {
                 isAdmin: true
             },
             process.env.JWT_SECRET || 'change-this-secret-in-production',
-            { expiresIn: '30d' }
+            { expiresIn: '365d' }
         );
 
         res.json({
@@ -328,67 +342,7 @@ router.post('/users/ban', async (req: Request, res: Response) => {
     }
 });
 
-/**
- * POST /api/admin/generate-token
- * 为管理员生成登录 Token（简化版）
- */
-router.post('/generate-token', async (req: Request, res: Response) => {
-    try {
-        const { telegramId } = req.body;
-        
-        if (!telegramId) {
-            return res.status(400).json({ error: 'Telegram ID is required' });
-        }
 
-        // 检查是否为管理员
-        const adminIds = process.env.ADMIN_TELEGRAM_IDS?.split(',') || [];
-        if (!adminIds.includes(telegramId.toString())) {
-            return res.status(403).json({ error: '您不是管理员，无权访问' });
-        }
-
-        const jwt = require('jsonwebtoken');
-        const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-        // 查找或创建用户
-        let user = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
-        
-        if (user.rows.length === 0) {
-            return res.status(404).json({ error: '用户不存在，请先在游戏中登录一次' });
-        }
-
-        const userData = user.rows[0];
-
-        // 生成 Token
-        const token = jwt.sign(
-            { 
-                id: userData.id,
-                telegramId: userData.telegram_id,
-                isAdmin: true
-            },
-            process.env.JWT_SECRET || 'change-this-secret-in-production',
-            { expiresIn: '30d' }
-        );
-
-        res.json({
-            success: true,
-            token: token,
-            user: {
-                id: userData.id,
-                telegramId: userData.telegram_id,
-                username: userData.username,
-                firstName: userData.first_name
-            }
-        });
-
-    } catch (error: any) {
-        logger.error('Generate token error', { error: error.message });
-        res.status(500).json({
-            success: false,
-            error: error.message,
-        });
-    }
-});
 
 /**
  * GET /api/admin/dashboard/stats

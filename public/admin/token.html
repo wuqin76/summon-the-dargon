@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取 Token - 超级简单</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 20px; font-size: 28px; }
+        .big-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        .big-btn:hover { transform: translateY(-2px); }
+        .big-btn:active { transform: translateY(0); }
+        .token-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 11px;
+            display: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .token-box.show { display: block; }
+        .success {
+            color: #2e7d32;
+            font-weight: 600;
+            margin: 15px 0;
+            display: none;
+        }
+        .success.show { display: block; }
+        .copy-btn { background: #4CAF50; }
+        .login-btn { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A6F 100%); }
+        .hint {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            color: #1565c0;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🔑 一键获取 Token</h1>
+        
+        <div class="hint">
+            <strong>您的 Telegram ID:</strong> 8498203261
+        </div>
+
+        <button class="big-btn" onclick="getToken()">
+            ⚡ 点击生成 Token
+        </button>
+
+        <p class="success" id="success">✅ Token 已生成！</p>
+        
+        <div class="token-box" id="tokenBox"></div>
+
+        <button class="big-btn copy-btn" id="copyBtn" onclick="copyToken()" style="display:none;">
+            📋 复制 Token
+        </button>
+
+        <button class="big-btn login-btn" onclick="goLogin()" style="display:none;" id="loginBtn">
+            🚪 去登录
+        </button>
+    </div>
+
+    <script>
+        let token = '';
+
+        async function getToken() {
+            event.target.disabled = true;
+            event.target.textContent = '⏳ 生成中...';
+
+            try {
+                const res = await fetch('/api/admin/generate-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegramId: '8498203261' })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    token = data.token;
+                    document.getElementById('tokenBox').textContent = token;
+                    document.getElementById('tokenBox').classList.add('show');
+                    document.getElementById('success').classList.add('show');
+                    document.getElementById('copyBtn').style.display = 'block';
+                    document.getElementById('loginBtn').style.display = 'block';
+                    event.target.style.display = 'none';
+                } else {
+                    alert('失败: ' + data.error);
+                    event.target.disabled = false;
+                    event.target.textContent = '⚡ 点击生成 Token';
+                }
+            } catch (err) {
+                alert('网络错误');
+                event.target.disabled = false;
+                event.target.textContent = '⚡ 点击生成 Token';
+            }
+        }
+
+        function copyToken() {
+            navigator.clipboard.writeText(token).then(() => {
+                const btn = event.target;
+                btn.textContent = '✅ 已复制！';
+                setTimeout(() => { btn.textContent = '📋 复制 Token'; }, 2000);
+            });
+        }
+
+        function goLogin() {
+            window.location.href = '/admin/login.html';
+        }
+    </script>
+</body>
+</html>
