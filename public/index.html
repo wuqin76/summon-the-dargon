@@ -80,6 +80,56 @@
             100% { top: 110vh; right: 20%; transform: rotate(360deg) scaleX(-1); }
         }
 
+        /* 音乐控制按钮 */
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.85);
+            border-color: rgba(255, 215, 0, 0.8);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .music-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .music-icon {
+            font-size: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .music-toggle.playing .music-icon {
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -1641,10 +1691,69 @@
                 transform: translateX(-100%); 
             }
         }
+        /* 音乐控制按钮 */
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .music-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.85);
+            border-color: rgba(255, 215, 0, 0.8);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .music-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .music-icon {
+            font-size: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .music-toggle.playing .music-icon {
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 
 <body>
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" loop>
+        <source src="/music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 音乐控制按钮 -->
+    <button id="musicToggle" class="music-toggle" onclick="toggleMusic()">
+        <span class="music-icon">🔇</span>
+    </button>
+
     <!-- 漂浮装饰元素容器 -->
     <div class="floating-elements"></div>
     
@@ -2086,6 +2195,49 @@
         const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('authToken');
         let isSpinning = false;
+
+        // 音乐控制
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        const musicIcon = musicToggle.querySelector('.music-icon');
+        let isMusicPlaying = false;
+
+        // 切换音乐播放状态
+        function toggleMusic() {
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                musicIcon.textContent = '🔇';
+                musicToggle.classList.remove('playing');
+                localStorage.setItem('musicPlaying', 'false');
+            } else {
+                bgMusic.play().then(() => {
+                    musicIcon.textContent = '🎵';
+                    musicToggle.classList.add('playing');
+                    localStorage.setItem('musicPlaying', 'true');
+                }).catch(error => {
+                    console.error('音乐播放失败:', error);
+                });
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // 初始化音乐状态
+        function initMusic() {
+            const savedState = localStorage.getItem('musicPlaying');
+            if (savedState === 'true') {
+                // 用户之前开启了音乐，尝试自动播放
+                setTimeout(() => {
+                    bgMusic.play().then(() => {
+                        isMusicPlaying = true;
+                        musicIcon.textContent = '🎵';
+                        musicToggle.classList.add('playing');
+                    }).catch(() => {
+                        // 自动播放被阻止，保持静音状态
+                        isMusicPlaying = false;
+                    });
+                }, 500);
+            }
+        }
 
         // 安全的 Telegram API 包装函数
         function safeTgAlert(message) {
@@ -3317,6 +3469,9 @@
             if (authToken) {
                 startInvitePolling();
             }
+
+            // 初始化背景音乐
+            initMusic();
         }
 
         // 页面切换函数
