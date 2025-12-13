@@ -382,10 +382,39 @@ router.get('/status/:orderId', authMiddleware, async (req: Request, res: Respons
         if (fendPayResult.code === '200' && fendPayResult.data) {
             const paymentData = fendPayResult.data;
             
-            // 如果FendPay显示支付成功但本地还没记录，更新本地状态
+            // 如果FendPay显示支付成功但本地还没记录，主动给用户增加游玩机会
             if (paymentData.status === 1 && localResult.rows.length === 0) {
-                console.log('[Payment] FendPay显示成功但本地无记录，可能webhook延迟');
-                // 可以选择在这里触发webhook处理逻辑，或等待webhook到达
+                console.log('[Payment] FendPay显示成功但本地无记录，主动给用户增加游玩机会');
+                
+                try {
+                    // 查询订单对应的用户ID
+                    const sessionQuery = await pool.query(
+                        'SELECT user_id FROM game_sessions WHERE external_order_id = $1',
+                        [orderId]
+                    );
+                    
+                    if (sessionQuery.rows.length > 0) {
+                        const targetUserId = sessionQuery.rows[0].user_id;
+                        
+                        // 增加用户游玩机会（幂等：先检查当前值）
+                        await pool.query(`
+                            UPDATE users
+                            SET 
+                                paid_play_tickets = paid_play_tickets + 1,
+                                total_paid_plays = total_paid_plays + 1,
+                                updated_at = NOW()
+                            WHERE id = $1
+                        `, [targetUserId]);
+                        
+                        console.log('[Payment] 已为用户增加游玩机会（备份机制）', { 
+                            userId: targetUserId, 
+                            orderId 
+                        });
+                    }
+                } catch (err) {
+                    console.error('[Payment] 备份机制增加游玩机会失败', err);
+                    // 不影响主流程，继续返回支付成功状态
+                }
             }
 
             return res.json({

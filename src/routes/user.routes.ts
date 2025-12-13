@@ -304,6 +304,126 @@ router.get('/play-tickets', authMiddleware, async (req: Request, res: Response) 
 });
 
 /**
+ * POST /api/user/claim-ticket-for-payment
+ * 确保支付成功的订单获得游玩机会（幂等操作）
+ */
+router.post('/claim-ticket-for-payment', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { orderId } = req.body;
+        
+        if (!orderId) {
+            return res.status(400).json({
+                success: false,
+                error: '缺少订单号'
+            });
+        }
+        
+        const db = require('../database').db;
+        const client = await db.pool.connect();
+        
+        try {
+            await client.query('BEGIN');
+            
+            // 1. 检查订单是否存在且已支付
+            const sessionResult = await client.query(`
+                SELECT gs.id, gs.user_id, gs.payment_status, gs.ticket_claimed
+                FROM game_sessions gs
+                WHERE gs.external_order_id = $1 AND gs.user_id = $2
+            `, [orderId, userId]);
+            
+            if (sessionResult.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(404).json({
+                    success: false,
+                    error: '订单不存在'
+                });
+            }
+            
+            const session = sessionResult.rows[0];
+            
+            if (session.payment_status !== 'confirmed') {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    error: '订单尚未支付成功',
+                    payment_status: session.payment_status
+                });
+            }
+            
+            // 2. 检查是否已经领取过游玩机会（幂等性）
+            if (session.ticket_claimed) {
+                const userTickets = await client.query(
+                    'SELECT paid_play_tickets FROM users WHERE id = $1',
+                    [userId]
+                );
+                
+                await client.query('ROLLBACK');
+                return res.json({
+                    success: true,
+                    data: {
+                        already_claimed: true,
+                        current_tickets: userTickets.rows[0]?.paid_play_tickets || 0
+                    },
+                    message: '该订单的游玩机会已经领取过了'
+                });
+            }
+            
+            // 3. 增加游玩机会并标记已领取
+            await client.query(`
+                UPDATE users
+                SET 
+                    paid_play_tickets = paid_play_tickets + 1,
+                    total_paid_plays = total_paid_plays + 1,
+                    updated_at = NOW()
+                WHERE id = $1
+            `, [userId]);
+            
+            await client.query(`
+                UPDATE game_sessions
+                SET ticket_claimed = TRUE, updated_at = NOW()
+                WHERE id = $1
+            `, [session.id]);
+            
+            await client.query('COMMIT');
+            
+            const userTickets = await client.query(
+                'SELECT paid_play_tickets FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            logger.info('[ClaimTicket] 用户领取游玩机会', { 
+                userId, 
+                orderId,
+                newTickets: userTickets.rows[0]?.paid_play_tickets || 0
+            });
+            
+            res.json({
+                success: true,
+                data: {
+                    current_tickets: userTickets.rows[0]?.paid_play_tickets || 0,
+                    claimed: true
+                },
+                message: '游玩机会已成功领取！'
+            });
+            
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+        
+    } catch (error: any) {
+        logger.error('Claim ticket error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+/**
  * POST /api/user/use-play-ticket
  * 使用一次游玩机会（进入游戏时调用）
  */

@@ -54,19 +54,7 @@ router.post('/fendpay', async (req: Request, res: Response) => {
             return res.send('success');
         }
 
-        // 2. 幂等性检查：查询是否已处理过此订单
-        const existingPayment = await client.query(
-            'SELECT id, status, used FROM payments WHERE provider_order_id = $1',
-            [outTradeNo]
-        );
-
-        if (existingPayment.rows.length > 0) {
-            logger.info('[FendPay Webhook] 订单已处理', { outTradeNo });
-            // FendPay要求返回success
-            return res.send('success');
-        }
-
-        // 3. 查询订单信息，获取user_id
+        // 2. 查询订单信息，获取user_id
         const orderInfo = await client.query(
             'SELECT user_id FROM game_sessions WHERE external_order_id = $1 OR id::text = $1',
             [outTradeNo]
@@ -79,6 +67,43 @@ router.post('/fendpay', async (req: Request, res: Response) => {
         }
 
         const userId = orderInfo.rows[0].user_id;
+        logger.info('[FendPay Webhook] 找到订单用户', { userId, outTradeNo });
+
+        // 3. 幂等性检查：查询是否已处理过此订单
+        const existingPayment = await client.query(
+            'SELECT id, status FROM payments WHERE provider_order_id = $1',
+            [outTradeNo]
+        );
+
+        if (existingPayment.rows.length > 0) {
+            logger.info('[FendPay Webhook] 订单已处理过，检查游玩机会', { outTradeNo });
+            
+            // 即使订单已处理，也确保用户有游玩机会
+            const userTickets = await client.query(
+                'SELECT paid_play_tickets FROM users WHERE id = $1',
+                [userId]
+            );
+            
+            if (userTickets.rows.length > 0) {
+                const currentTickets = userTickets.rows[0].paid_play_tickets || 0;
+                logger.info('[FendPay Webhook] 用户当前游玩机会', { userId, currentTickets });
+                
+                // 如果用户没有游玩机会，补发一次
+                if (currentTickets === 0) {
+                    await client.query(`
+                        UPDATE users
+                        SET paid_play_tickets = paid_play_tickets + 1,
+                            total_paid_plays = total_paid_plays + 1,
+                            updated_at = NOW()
+                        WHERE id = $1
+                    `, [userId]);
+                    logger.info('[FendPay Webhook] 补发游玩机会', { userId, outTradeNo });
+                }
+            }
+            
+            // FendPay要求返回success
+            return res.send('success');
+        }
 
         // 4. 判断支付是否成功（status = "1" 字符串）
         const paymentStatus = String(status) === '1' ? 'confirmed' : 'failed';

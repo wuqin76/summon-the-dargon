@@ -2988,16 +2988,27 @@
                     
                     // 跳转到第三方支付页面
                     if (data.data.payment_url) {
+                        console.log('[Payment] 订单创建成功，跳转支付页面', {
+                            orderId: data.data.order_id,
+                            amount: data.data.amount
+                        });
+                        
                         // 使用Telegram WebApp的方式打开支付链接
                         if (window.Telegram?.WebApp) {
                             window.Telegram.WebApp.openLink(data.data.payment_url);
                             
                             // 开始轮询支付状态（后台持续检测）
                             startPaymentStatusPolling(data.data.order_id);
+                            
+                            // 延迟2秒后提示用户
+                            setTimeout(() => {
+                                console.log('[Payment] 💡 提示：请在新打开的页面完成支付');
+                            }, 2000);
                         } else {
                             // 浏览器环境直接打开新窗口
                             window.open(data.data.payment_url, '_blank');
                             startPaymentStatusPolling(data.data.order_id);
+                            alert('💡 请在新打开的窗口完成支付\n\n支付成功后会自动检测到');
                         }
                     } else {
                         throw new Error('未获取到支付链接');
@@ -3073,8 +3084,10 @@
             stopPaymentStatusPolling();
             
             // 每3秒查询一次支付状态
+            let pollCount = 0;
             paymentPollingInterval = setInterval(async () => {
                 try {
+                    pollCount++;
                     const response = await fetch(`${API_BASE}/payment/v2/status/${orderId}`, {
                         headers: {
                             'Authorization': `Bearer ${authToken}`
@@ -3083,15 +3096,22 @@
                     
                     const data = await response.json();
                     
+                    console.log(`[Payment] 轮询第${pollCount}次 - 订单状态:`, data.data?.status || 'unknown');
+                    
                     if (data.success && data.data) {
                         if (data.data.status === 'confirmed') {
                             // 支付成功
+                            console.log('[Payment] ✅ 检测到支付成功！');
                             stopPaymentStatusPolling();
                             handlePaymentSuccess(orderId);
                         } else if (data.data.status === 'failed' || data.data.status === 'expired') {
                             // 支付失败或过期
+                            console.log('[Payment] ❌ 支付失败或过期:', data.data.status);
                             stopPaymentStatusPolling();
                             handlePaymentFailed(data.data.status);
+                        } else {
+                            // 仍在pending状态
+                            console.log('[Payment] ⏳ 订单仍在等待支付中...');
                         }
                     }
                 } catch (error) {
@@ -3107,6 +3127,95 @@
             }
         }
         
+        // 调试工具：手动检查订单状态
+        // 使用方法：在控制台输入 debugCheckOrder() 或 debugCheckOrder('订单号')
+        window.debugCheckOrder = async function(orderId) {
+            if (!orderId) {
+                orderId = localStorage.getItem('pendingOrderId');
+            }
+            
+            if (!orderId) {
+                console.log('❌ 没有待支付订单');
+                console.log('💡 使用方法: debugCheckOrder("订单号")');
+                return;
+            }
+            
+            console.log('🔍 检查订单:', orderId);
+            
+            const response = await fetch(`${API_BASE}/payment/v2/status/${orderId}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+            
+            const data = await response.json();
+            console.log('📊 订单完整信息:', data);
+            
+            if (data.data) {
+                console.log('═══════════════════════════════════');
+                console.log('订单号:', data.data.order_id);
+                console.log('状态:', data.data.status, data.data.status === 'pending' ? '⏳ 待支付' : data.data.status === 'confirmed' ? '✅ 已支付' : '❌ 失败');
+                console.log('金额:', data.data.amount);
+                console.log('FendPay订单号:', data.data.fendpay_order_no);
+                console.log('═══════════════════════════════════');
+                
+                if (data.data.status === 'pending') {
+                    console.log('💡 订单还在等待支付中');
+                    console.log('📝 请确保在支付页面完成了支付操作');
+                } else if (data.data.status === 'confirmed') {
+                    console.log('✅ 订单已支付成功！');
+                    console.log('🎟️ 检查游玩机会...');
+                    await loadPlayTickets();
+                }
+            }
+            
+            return data;
+        };
+        
+        // 调试工具：手动领取游玩机会
+        window.debugClaimTicket = async function(orderId) {
+            if (!orderId) {
+                orderId = localStorage.getItem('pendingOrderId');
+            }
+            
+            if (!orderId) {
+                console.log('❌ 没有订单号');
+                console.log('💡 使用方法: debugClaimTicket("订单号")');
+                return;
+            }
+            
+            console.log('🎟️ 尝试领取订单的游玩机会:', orderId);
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/claim-ticket-for-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                
+                const data = await response.json();
+                console.log('📊 领取结果:', data);
+                
+                if (data.success) {
+                    console.log('✅ 领取成功！当前游玩机会:', data.data.current_tickets);
+                    await loadPlayTickets();
+                } else {
+                    console.log('❌ 领取失败:', data.error);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('❌ 请求失败:', error);
+            }
+        };
+        
+        // 输出调试工具说明
+        console.log('🛠️ 调试工具已加载：');
+        console.log('  - debugCheckOrder() : 检查当前待支付订单');
+        console.log('  - debugCheckOrder("订单号") : 检查指定订单');
+        console.log('  - debugClaimTicket("订单号") : 手动领取游玩机会');
+        
         // 支付成功处理
         async function handlePaymentSuccess(orderId) {
             // 关闭等待弹窗
@@ -3119,19 +3228,54 @@
             localStorage.removeItem('pendingOrderId');
             localStorage.removeItem('paymentAmount');
             
-            console.log('[Payment] ✅ 支付成功确认，等待游玩机会到账...');
+            console.log('[Payment] ✅ 支付成功确认，主动领取游玩机会...');
             
-            // 显示等待提示
-            safeTgAlert('✅ 支付成功！正在确认游玩机会...');
-            
-            // 轮询检查游玩机会是否到账（最多等待30秒）
-            let checkCount = 0;
-            const maxChecks = 30; // 30次 × 1秒 = 30秒
+            try {
+                // 主动调用API领取游玩机会（幂等操作，多次调用也安全）
+                const claimResponse = await fetch(`${API_BASE}/user/claim-ticket-for-payment`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                });
+                
+                const claimData = await claimResponse.json();
+                
+                if (claimData.success) {
+                    console.log('[Payment] ✅ 游玩机会领取成功', claimData.data);
+                    await loadPlayTickets();
+                    
+                    const currentTickets = claimData.data.current_tickets || 0;
+                    safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
+                } else {
+                    console.warn('[Payment] ⚠️ 领取游玩机会失败:', claimData.error);
+                    
+                    // 如果API失败，回退到轮询等待机制
+                    console.log('[Payment] 使用备用方案：轮询等待webhook处理...');
+                    await waitForTicketsByPolling(orderId);
+                }
+            } catch (error) {
+                console.error('[Payment] 领取游玩机会出错:', error);
+                
+                // 出错时使用轮询等待机制
+                console.log('[Payment] 使用备用方案：轮询等待webhook处理...');
+                await waitForTicketsByPolling(orderId);
+            }
+        }
+        
+        // 备用方案：轮询等待游玩机会到账
+        async function waitForTicketsByPolling(orderId) {
             const initialTickets = await getPlayTicketsCount();
+            let checkCount = 0;
+            const maxChecks = 30; // 30秒
             
             const checkInterval = setInterval(async () => {
                 checkCount++;
                 const currentTickets = await getPlayTicketsCount();
+                
+                console.log(`[Payment] 轮询检查游玩机会 (${checkCount}/${maxChecks}): ${currentTickets}次`);
                 
                 // 如果游玩机会增加了，说明webhook已处理
                 if (currentTickets > initialTickets) {
@@ -3145,11 +3289,11 @@
                 // 超时仍未到账
                 if (checkCount >= maxChecks) {
                     clearInterval(checkInterval);
-                    console.warn('[Payment] ⚠️ 游玩机会确认超时，请刷新页面或联系客服');
+                    console.warn('[Payment] ⚠️ 游玩机会确认超时');
                     await loadPlayTickets();
                     safeTgAlert('⚠️ 支付已成功，但游玩机会确认中\n\n请稍后刷新页面，或联系客服确认');
                 }
-            }, 1000); // 每秒检查一次
+            }, 1000);
         }
         
         // 获取当前游玩机会数量（不更新UI，仅返回数值）
