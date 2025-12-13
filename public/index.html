@@ -80,56 +80,6 @@
             100% { top: 110vh; right: 20%; transform: rotate(360deg) scaleX(-1); }
         }
 
-        /* 音乐控制按钮 */
-        .music-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid rgba(255, 215, 0, 0.5);
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .music-toggle:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.85);
-            border-color: rgba(255, 215, 0, 0.8);
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-        }
-
-        .music-toggle:active {
-            transform: scale(0.95);
-        }
-
-        .music-icon {
-            font-size: 24px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .music-toggle.playing .music-icon {
-            animation: rotate 3s linear infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -1434,69 +1384,6 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
-        /* 银行信息弹窗样式 */
-        .bank-info-modal {
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .bank-info-form {
-            padding: 20px 0;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .form-group label .required {
-            color: #ff6b6b;
-            margin-right: 3px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            color: white;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #4CAF50;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .form-group input::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .form-group small {
-            display: block;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-
         .checkbox-group input[type="checkbox"] {
             width: auto;
             margin-right: 10px;
@@ -1756,11 +1643,6 @@
     <audio id="winSound" preload="auto">
         <source src="/music/win.mp3" type="audio/mpeg">
     </audio>
-
-    <!-- 音乐控制按钮 -->
-    <button id="musicToggle" class="music-toggle" onclick="toggleMusic()">
-        <span class="music-icon">🔇</span>
-    </button>
 
     <!-- 漂浮装饰元素容器 -->
     <div class="floating-elements"></div>
@@ -2127,73 +2009,6 @@
         </div>
     </div>
 
-    <!-- 银行信息收集弹窗 -->
-    <div class="modal" id="bankInfoModal">
-        <div class="modal-content bank-info-modal">
-            <div class="modal-header">
-                <h2>🎉 恭喜完成所有任务！</h2>
-                <p>请填写您的银行信息以便提现</p>
-            </div>
-
-            <form id="bankInfoForm" class="bank-info-form">
-                <div class="form-group">
-                    <label for="fullName">
-                        <span class="required">*</span> 完整姓名
-                    </label>
-                    <input type="text" id="fullName" name="fullName" required placeholder="请输入您的完整姓名">
-                </div>
-
-                <div class="form-group">
-                    <label for="phoneNumber">
-                        <span class="required">*</span> 手机号码
-                    </label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="例如: +91 98765 43210" pattern="[\+]?[0-9\s\-]{10,15}">
-                </div>
-
-                <div class="form-group">
-                    <label for="accountNumber">
-                        <span class="required">*</span> 银行账号
-                    </label>
-                    <input type="text" id="accountNumber" name="accountNumber" required placeholder="请输入银行账号" pattern="[0-9]{9,18}">
-                </div>
-
-                <div class="form-group">
-                    <label for="ifscCode">
-                        <span class="required">*</span> IFSC代码
-                    </label>
-                    <input type="text" id="ifscCode" name="ifscCode" required placeholder="例如: SBIN0001234" pattern="[A-Z]{4}0[A-Z0-9]{6}">
-                    <small>印度银行IFSC代码，通常为11位</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="bankName">
-                        <span class="required">*</span> 银行名称
-                    </label>
-                    <input type="text" id="bankName" name="bankName" required placeholder="例如: State Bank of India">
-                </div>
-
-                <div class="form-group">
-                    <label for="branchName">
-                        分行名称（可选）
-                    </label>
-                    <input type="text" id="branchName" name="branchName" placeholder="例如: Mumbai Main Branch">
-                </div>
-
-                <div class="form-group checkbox-group">
-                    <label>
-                        <input type="checkbox" id="agreeTerms" required>
-                        <span>我确认以上信息真实有效，并同意平台的提现条款</span>
-                    </label>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeBankInfoModal()">稍后填写</button>
-                    <button type="submit" class="btn-primary">提交信息</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -2206,9 +2021,6 @@
 
         // 音乐控制
         const bgMusic = document.getElementById('bgMusic');
-        const musicToggle = document.getElementById('musicToggle');
-        const musicIcon = musicToggle.querySelector('.music-icon');
-        let isMusicPlaying = false;
 
         // 音效控制
         const spinSound = document.getElementById('spinSound');
@@ -2229,41 +2041,18 @@
             }
         }
 
-        // 切换音乐播放状态
-        function toggleMusic() {
-            if (isMusicPlaying) {
-                bgMusic.pause();
-                musicIcon.textContent = '🔇';
-                musicToggle.classList.remove('playing');
-                localStorage.setItem('musicPlaying', 'false');
-            } else {
-                bgMusic.play().then(() => {
-                    musicIcon.textContent = '🎵';
-                    musicToggle.classList.add('playing');
-                    localStorage.setItem('musicPlaying', 'true');
-                }).catch(error => {
-                    console.error('音乐播放失败:', error);
-                });
-            }
-            isMusicPlaying = !isMusicPlaying;
-        }
-
-        // 初始化音乐状态
+        // 初始化音乐状态 - 自动播放背景音乐
         function initMusic() {
-            const savedState = localStorage.getItem('musicPlaying');
-            if (savedState === 'true') {
-                // 用户之前开启了音乐，尝试自动播放
-                setTimeout(() => {
-                    bgMusic.play().then(() => {
-                        isMusicPlaying = true;
-                        musicIcon.textContent = '🎵';
-                        musicToggle.classList.add('playing');
-                    }).catch(() => {
-                        // 自动播放被阻止，保持静音状态
-                        isMusicPlaying = false;
-                    });
-                }, 500);
-            }
+            // 延迟一下，确保页面加载完成后播放
+            setTimeout(() => {
+                bgMusic.play().catch(error => {
+                    // 自动播放被阻止，尝试在用户交互后播放
+                    document.addEventListener('click', function playOnInteraction() {
+                        bgMusic.play().catch(() => {});
+                        document.removeEventListener('click', playOnInteraction);
+                    }, { once: true });
+                });
+            }, 500);
         }
 
         // 安全的 Telegram API 包装函数
@@ -2807,87 +2596,6 @@
             const modesSection = document.querySelector('.modes-container');
             if (modesSection) {
                 modesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        // 显示银行信息收集弹窗
-        function showBankInfoModal() {
-            const modal = document.getElementById('bankInfoModal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
-        }
-
-        // 关闭银行信息弹窗
-        function closeBankInfoModal() {
-            const modal = document.getElementById('bankInfoModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        // 处理银行信息表单提交
-        async function handleBankInfoSubmit(event) {
-            event.preventDefault();
-            
-            const form = event.target;
-            const formData = {
-                fullName: form.fullName.value.trim(),
-                phoneNumber: form.phoneNumber.value.trim(),
-                accountNumber: form.accountNumber.value.trim(),
-                ifscCode: form.ifscCode.value.trim().toUpperCase(),
-                bankName: form.bankName.value.trim(),
-                branchName: form.branchName.value.trim()
-            };
-
-            try {
-                if (!authToken) {
-                    await login();
-                }
-
-                const response = await fetch(`${API_BASE}/user/bank-info`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        // 保存提交状态
-                        localStorage.setItem('bankInfoSubmitted', 'true');
-                        
-                        // 关闭弹窗
-                        closeBankInfoModal();
-                        
-                        // 显示成功提示
-                        if (window.Telegram?.WebApp) {
-                            window.Telegram.WebApp.showPopup({
-                                message: '✅ 银行信息已保存！\n\n您现在可以申请提现了。',
-                                buttons: [{type: 'ok', text: '好的'}]
-                            });
-                        } else {
-                            alert('✅ 银行信息已保存！\n\n您现在可以申请提现了。');
-                        }
-                        
-                        // 刷新页面显示
-                        await checkTaskProgress();
-                    } else {
-                        throw new Error(data.message || '保存失败');
-                    }
-                } else {
-                    throw new Error('网络请求失败');
-                }
-            } catch (error) {
-                console.error('❌ 提交银行信息失败:', error);
-                if (window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.showAlert('提交失败，请稍后重试：' + error.message);
-                } else {
-                    alert('提交失败，请稍后重试：' + error.message);
-                }
             }
         }
 
@@ -3827,12 +3535,6 @@
             
             // 初始化提现通知
             updateWithdrawalNotice();
-
-            // 绑定银行信息表单提交事件
-            const bankInfoForm = document.getElementById('bankInfoForm');
-            if (bankInfoForm) {
-                bankInfoForm.addEventListener('submit', handleBankInfoSubmit);
-            }
         });
 
         init();
