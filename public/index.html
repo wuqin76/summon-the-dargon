@@ -1384,6 +1384,113 @@
             border-color: rgba(255, 255, 255, 0.3);
         }
 
+        /* 银行信息弹窗样式 */
+        .bank-info-modal {
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .bank-info-form {
+            padding: 20px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .form-group label .required {
+            color: #ff6b6b;
+            margin-right: 3px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group small {
+            display: block;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         .task-hint {
             text-align: center;
             font-size: 13px;
@@ -1903,6 +2010,73 @@
         </div>
     </div>
 
+    <!-- 银行信息收集弹窗 -->
+    <div class="modal" id="bankInfoModal">
+        <div class="modal-content bank-info-modal">
+            <div class="modal-header">
+                <h2>🎉 恭喜完成所有任务！</h2>
+                <p>请填写您的银行信息以便提现</p>
+            </div>
+
+            <form id="bankInfoForm" class="bank-info-form">
+                <div class="form-group">
+                    <label for="fullName">
+                        <span class="required">*</span> 完整姓名
+                    </label>
+                    <input type="text" id="fullName" name="fullName" required placeholder="请输入您的完整姓名">
+                </div>
+
+                <div class="form-group">
+                    <label for="phoneNumber">
+                        <span class="required">*</span> 手机号码
+                    </label>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" required placeholder="例如: +91 98765 43210" pattern="[\+]?[0-9\s\-]{10,15}">
+                </div>
+
+                <div class="form-group">
+                    <label for="accountNumber">
+                        <span class="required">*</span> 银行账号
+                    </label>
+                    <input type="text" id="accountNumber" name="accountNumber" required placeholder="请输入银行账号" pattern="[0-9]{9,18}">
+                </div>
+
+                <div class="form-group">
+                    <label for="ifscCode">
+                        <span class="required">*</span> IFSC代码
+                    </label>
+                    <input type="text" id="ifscCode" name="ifscCode" required placeholder="例如: SBIN0001234" pattern="[A-Z]{4}0[A-Z0-9]{6}">
+                    <small>印度银行IFSC代码，通常为11位</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="bankName">
+                        <span class="required">*</span> 银行名称
+                    </label>
+                    <input type="text" id="bankName" name="bankName" required placeholder="例如: State Bank of India">
+                </div>
+
+                <div class="form-group">
+                    <label for="branchName">
+                        分行名称（可选）
+                    </label>
+                    <input type="text" id="branchName" name="branchName" placeholder="例如: Mumbai Main Branch">
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span>我确认以上信息真实有效，并同意平台的提现条款</span>
+                    </label>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeBankInfoModal()">稍后填写</button>
+                    <button type="submit" class="btn-primary">提交信息</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -2358,6 +2532,18 @@
 
             const { task_index, task_type, progress, required, total_progress, completed_tasks } = taskData;
 
+            // 检查是否完成所有任务（总共24个任务）
+            if (completed_tasks >= 24) {
+                // 检查是否已经提交过银行信息
+                const hasBankInfo = localStorage.getItem('bankInfoSubmitted');
+                if (!hasBankInfo) {
+                    // 延迟1秒后显示银行信息弹窗
+                    setTimeout(() => {
+                        showBankInfoModal();
+                    }, 1000);
+                }
+            }
+
             // 获取当前任务奖励金额
             const rewardAmount = TASK_REWARDS[task_index] || 0;
             // 直接显示准确数字，不使用格式化（避免9900变成9.9K）
@@ -2427,6 +2613,87 @@
             const modesSection = document.querySelector('.modes-container');
             if (modesSection) {
                 modesSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // 显示银行信息收集弹窗
+        function showBankInfoModal() {
+            const modal = document.getElementById('bankInfoModal');
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        // 关闭银行信息弹窗
+        function closeBankInfoModal() {
+            const modal = document.getElementById('bankInfoModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 处理银行信息表单提交
+        async function handleBankInfoSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = {
+                fullName: form.fullName.value.trim(),
+                phoneNumber: form.phoneNumber.value.trim(),
+                accountNumber: form.accountNumber.value.trim(),
+                ifscCode: form.ifscCode.value.trim().toUpperCase(),
+                bankName: form.bankName.value.trim(),
+                branchName: form.branchName.value.trim()
+            };
+
+            try {
+                if (!authToken) {
+                    await login();
+                }
+
+                const response = await fetch(`${API_BASE}/user/bank-info`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        // 保存提交状态
+                        localStorage.setItem('bankInfoSubmitted', 'true');
+                        
+                        // 关闭弹窗
+                        closeBankInfoModal();
+                        
+                        // 显示成功提示
+                        if (window.Telegram?.WebApp) {
+                            window.Telegram.WebApp.showPopup({
+                                message: '✅ 银行信息已保存！\n\n您现在可以申请提现了。',
+                                buttons: [{type: 'ok', text: '好的'}]
+                            });
+                        } else {
+                            alert('✅ 银行信息已保存！\n\n您现在可以申请提现了。');
+                        }
+                        
+                        // 刷新页面显示
+                        await checkTaskProgress();
+                    } else {
+                        throw new Error(data.message || '保存失败');
+                    }
+                } else {
+                    throw new Error('网络请求失败');
+                }
+            } catch (error) {
+                console.error('❌ 提交银行信息失败:', error);
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showAlert('提交失败，请稍后重试：' + error.message);
+                } else {
+                    alert('提交失败，请稍后重试：' + error.message);
+                }
             }
         }
 
@@ -3363,6 +3630,12 @@
             
             // 初始化提现通知
             updateWithdrawalNotice();
+
+            // 绑定银行信息表单提交事件
+            const bankInfoForm = document.getElementById('bankInfoForm');
+            if (bankInfoForm) {
+                bankInfoForm.addEventListener('submit', handleBankInfoSubmit);
+            }
         });
 
         init();

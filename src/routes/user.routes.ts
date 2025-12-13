@@ -179,4 +179,74 @@ router.post('/game-reward', authMiddleware, async (req: Request, res: Response) 
     }
 });
 
+/**
+ * POST /api/user/bank-info
+ * 保存用户银行信息
+ */
+router.post('/bank-info', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { fullName, phoneNumber, accountNumber, ifscCode, bankName, branchName } = req.body;
+
+        // 验证必填字段
+        if (!fullName || !phoneNumber || !accountNumber || !ifscCode || !bankName) {
+            return res.status(400).json({
+                success: false,
+                error: '请填写所有必填字段',
+            });
+        }
+
+        // 验证IFSC代码格式（印度银行IFSC代码格式：4位字母+0+6位字母或数字）
+        const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+        if (!ifscRegex.test(ifscCode)) {
+            return res.status(400).json({
+                success: false,
+                error: 'IFSC代码格式不正确，请检查',
+            });
+        }
+
+        // 验证账号格式（9-18位数字）
+        const accountRegex = /^[0-9]{9,18}$/;
+        if (!accountRegex.test(accountNumber)) {
+            return res.status(400).json({
+                success: false,
+                error: '银行账号格式不正确，请检查',
+            });
+        }
+
+        logger.info('💳 保存用户银行信息', { userId, fullName, bankName });
+
+        // 保存到数据库
+        const db = require('../database').db;
+        await db.query(`
+            INSERT INTO user_bank_info 
+            (user_id, full_name, phone_number, account_number, ifsc_code, bank_name, branch_name, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            ON CONFLICT (user_id) 
+            DO UPDATE SET 
+                full_name = $2,
+                phone_number = $3,
+                account_number = $4,
+                ifsc_code = $5,
+                bank_name = $6,
+                branch_name = $7,
+                updated_at = NOW()
+        `, [userId, fullName, phoneNumber, accountNumber, ifscCode, bankName, branchName || null]);
+
+        logger.info('✅ 银行信息保存成功', { userId });
+
+        res.json({
+            success: true,
+            message: '银行信息已保存',
+        });
+
+    } catch (error: any) {
+        logger.error('❌ Save bank info error', { error: error.message, stack: error.stack });
+        res.status(500).json({
+            success: false,
+            error: error.message,
+        });
+    }
+});
+
 export default router;
