@@ -145,7 +145,7 @@ router.post('/fendpay', async (req: Request, res: Response) => {
             UPDATE game_sessions
             SET 
                 payment_id = $1,
-                payment_status = 'confirmed',
+                payment_status = 'paid',
                 updated_at = NOW()
             WHERE external_order_id = $2
         `, [paymentId, outTradeNo]);

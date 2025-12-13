@@ -356,7 +356,7 @@ router.post('/claim-ticket-for-payment', authMiddleware, async (req: Request, re
             const session = sessionResult.rows[0];
             
             // 3. 检查支付状态（优先payments表，其次game_sessions表）
-            if (!paymentConfirmed && session.payment_status !== 'confirmed') {
+            if (!paymentConfirmed && session.payment_status !== 'paid') {
                 await client.query('ROLLBACK');
                 return res.status(400).json({
                     success: false,
@@ -470,11 +470,11 @@ router.post('/use-play-ticket', authMiddleware, async (req: Request, res: Respon
                 });
             }
             
-            // 创建游戏会话
+            // 创建游戏会话（使用游玩机会，不设置payment_status，因为门票已预付）
             const sessionResult = await client.query(`
                 INSERT INTO game_sessions 
-                (user_id, game_mode, payment_status, created_at)
-                VALUES ($1, 'paid', 'confirmed', NOW())
+                (user_id, game_mode, created_at)
+                VALUES ($1, 'paid', NOW())
                 RETURNING id
             `, [userId]);
             

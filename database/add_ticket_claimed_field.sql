@@ -22,10 +22,10 @@ END $$;
 -- 为已存在的已支付订单标记为已领取（避免重复领取）
 UPDATE game_sessions 
 SET ticket_claimed = TRUE 
-WHERE payment_status = 'confirmed' 
+WHERE payment_status = 'paid' 
 AND ticket_claimed IS NULL;
 
 -- 创建索引以提升查询性能
 CREATE INDEX IF NOT EXISTS idx_game_sessions_ticket_claimed 
 ON game_sessions(ticket_claimed) 
-WHERE payment_status = 'confirmed';
+WHERE payment_status = 'paid';
