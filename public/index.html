@@ -1908,13 +1908,9 @@
         tg.ready();
         tg.expand();
 
-        const APP_VERSION = '1.2.0'; // 版本号，用于调试
-        console.log('🚀 应用版本:', APP_VERSION);
-        console.log('📱 Telegram WebApp 版本:', tg.version);
-        
-        const isDevelopment = !tg.initData;
+        const APP_VERSION = '1.2.0';
         const API_BASE = window.location.origin + '/api';
-        let authToken = localStorage.getItem('authToken') || 'dev-token';
+        let authToken = localStorage.getItem('authToken');
         let isSpinning = false;
 
         // 安全的 Telegram API 包装函数
@@ -2031,7 +2027,7 @@
                 spinStatus.textContent = '检查抽奖资格...';
 
                 // 登录
-                if (!authToken || authToken === 'dev-token') {
+                if (!authToken) {
                     await login();
                 }
 
@@ -2156,25 +2152,11 @@
         // 登录
         async function login() {
             try {
-                console.log('=== 登录调试 ===');
-                console.log('isDevelopment:', isDevelopment);
-                
-                if (isDevelopment) {
-                    console.log('⚠️ 开发模式：无法登录（不在 Telegram 环境）');
-                    authToken = 'dev-token';
-                    return;
-                }
-
-                console.log('获取 Telegram initData...');
                 const initData = tg.initData;
                 
                 if (!initData) {
-                    console.error('❌ 没有 initData');
                     throw new Error('无法获取 Telegram 数据，请确保在 Telegram 内打开应用');
                 }
-                
-                console.log('initData 长度:', initData.length);
-                console.log('发送登录请求到:', `${API_BASE}/auth/login`);
                 
                 const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
@@ -2215,22 +2197,16 @@
         // 检查任务进度并更新能量条
         async function checkTaskProgress() {
             try {
-                if (!authToken || authToken === 'dev-token') {
-                    console.log('⚠️ 未登录，先登录');
+                if (!authToken) {
                     await login();
                 }
 
-                console.log('📡 获取用户余额...');
-                // 获取用户余额
                 const balanceResponse = await fetch(`${API_BASE}/user/balance`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
-                console.log('📊 余额API响应状态:', balanceResponse.status);
-                
                 if (balanceResponse.ok) {
                     const balanceData = await balanceResponse.json();
-                    console.log('📊 余额API响应数据:', balanceData);
                     
                     if (balanceData.success) {
                         // 后端返回的是驼峰式：lockedBalance
@@ -2332,7 +2308,7 @@
         // 加载当前任务
         async function loadCurrentTask() {
             try {
-                if (!authToken || authToken === 'dev-token') {
+                if (!authToken) {
                     await login();
                 }
 
@@ -2491,14 +2467,12 @@
             invitePollingInterval = setInterval(() => {
                 checkInviteUpdates();
             }, 20000);
-            
-            console.log('✅ 邀请轮询已启动，每20秒检查一次');
         }
 
         // 检查邀请更新
         async function checkInviteUpdates() {
             try {
-                if (!authToken || authToken === 'dev-token') {
+                if (!authToken) {
                     return;
                 }
 
@@ -2512,10 +2486,8 @@
                     if (data.success) {
                         const currentInviteCount = data.data.total_invites || 0;
                         
-                        // 检查是否有新邀请
                         if (lastInviteCount > 0 && currentInviteCount > lastInviteCount) {
                             const newInvites = currentInviteCount - lastInviteCount;
-                            console.log(`🎉 检测到 ${newInvites} 个新邀请！`);
                             
                             // 显示弹窗通知
                             if (window.Telegram?.WebApp) {
@@ -2551,32 +2523,15 @@
 
         // 显示邀请链接
         async function showInviteLink() {
-            console.log('🔔 showInviteLink() 函数被调用');
-            
             const modal = document.getElementById('inviteModal');
             const inviteLinkInput = document.getElementById('inviteLink');
             const inviteCountEl = document.getElementById('inviteCount');
             const inviteRewardEl = document.getElementById('inviteReward');
 
             try {
-                console.log('=== 邀请功能调试 ===');
-                console.log('isDevelopment:', isDevelopment);
-                console.log('tg.initData:', tg.initData ? '存在' : '不存在');
-                console.log('authToken:', authToken);
-                console.log('Modal element:', modal ? '找到' : '未找到');
-
-                // 检查是否在 Telegram 环境中
-                if (isDevelopment) {
-                    alert('⚠️ 请在 Telegram 内打开应用\n\n当前在浏览器中打开，无法使用邀请功能。\n\n正确步骤：\n1. 打开 Telegram 应用\n2. 搜索 @summondargon_bot\n3. 点击菜单按钮\n4. 在 Telegram 内打开应用');
-                    return;
-                }
-
-                // 尝试登录（如果还没有有效的 token）
-                if (!authToken || authToken === 'dev-token') {
-                    console.log('需要登录，开始登录流程...');
+                if (!authToken) {
                     try {
                         await login();
-                        console.log('登录完成，token:', authToken ? '已设置' : '未设置');
                     } catch (loginError) {
                         console.error('登录失败:', loginError);
                         safeTgAlert('登录失败，请重新打开应用再试');
@@ -2614,7 +2569,6 @@
                 }
                 
                 const data = await response.json();
-                console.log('API响应数据:', data);
                 
                 if (data.success) {
                     const inviteCode = data.data.invite_code;
@@ -2952,7 +2906,7 @@
                     console.log('✅ 发现邀请码:', inviteCode);
                     
                     // 登录
-                    if (!authToken || authToken === 'dev-token') {
+                    if (!authToken) {
                         await login();
                     }
 
@@ -3028,7 +2982,7 @@
         // 加载可抽奖次数
         async function loadAvailableSpins() {
             try {
-                if (!authToken || authToken === 'dev-token') {
+                if (!authToken) {
                     console.log('未登录，跳过加载抽奖次数');
                     return;
                 }
@@ -3066,23 +3020,18 @@
         // 初始化
         async function init() {
             console.log('=== 应用初始化 ===');
-            console.log('isDevelopment:', isDevelopment);
             console.log('tg.initData存在:', !!tg.initData);
             
-            if (isDevelopment) {
-                console.log('⚠️ Development mode - 在浏览器中打开');
-            } else {
-                console.log('✅ Telegram 环境');
-                
-                // 尝试自动登录
-                try {
-                    console.log('开始自动登录...');
-                    await login();
-                    console.log('✅ 自动登录成功');
-                } catch (error) {
-                    console.error('❌ 自动登录失败:', error);
-                    // 登录失败不阻止页面加载，用户操作时会重试
-                }
+            console.log('✅ Telegram 环境');
+            
+            // 尝试自动登录
+            try {
+                console.log('开始自动登录...');
+                await login();
+                console.log('✅ 自动登录成功');
+            } catch (error) {
+                console.error('❌ 自动登录失败:', error);
+                // 登录失败不阻止页面加载，用户操作时会重试
             }
             
             // 检查邀请码
@@ -3097,18 +3046,14 @@
             // 处理游戏完成奖励（必须在登录后）
             await handleGameCompletedReward();
             
-            // 启动邀请统计轮询（每30秒检查一次）
-            if (!isDevelopment && authToken) {
+            // 启动邀请统计轮询（每20秒检查一次）
+            if (authToken) {
                 startInvitePolling();
             }
-            
-            console.log('=== 初始化完成 ===');
         }
 
         // 页面切换函数
         function switchPage(pageId, event) {
-            console.log('切换到页面:', pageId);
-            
             // 隐藏所有页面
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
@@ -3149,7 +3094,6 @@
             
             // 如果切换到抽奖页面，刷新余额
             if (pageId === 'spinPage') {
-                console.log('🔄 切换到抽奖页面，刷新余额显示');
                 checkTaskProgress();
             }
             
@@ -3330,7 +3274,7 @@
                 localStorage.removeItem('gameScore');
                 
                 // 每次游戏完成都赠送抽奖机会
-                if (!authToken || authToken === 'dev-token') {
+                if (!authToken) {
                     console.error('❌ 没有有效的token，无法领取奖励');
                     return;
                 }
@@ -3411,7 +3355,7 @@
             
             // 如果已经有 token，立即检查开发者权限
             const savedToken = localStorage.getItem('authToken');
-            if (savedToken && savedToken !== 'dev-token') {
+            if (savedToken) {
                 console.log('🔑 发现已保存的 token，立即检查开发者权限');
                 authToken = savedToken;
                 await checkDevAccess();
