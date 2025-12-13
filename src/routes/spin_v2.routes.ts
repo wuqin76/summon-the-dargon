@@ -233,11 +233,27 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             true
         ]);
 
-        // 8. 更新任务进度（抽奖计为一次任务进展）
+        // 8. 更新任务进度（根据抽奖资格来源决定任务完成方式）
         const { updateTaskProgressV2 } = await import('./task.routes');
         try {
-            console.log('🎯 抽奖完成，更新任务进度...');
-            await updateTaskProgressV2(userId, 'spin', client);
+            console.log('🎯 抽奖完成，更新任务进度...', { 
+                entitlementSource: entitlement.source_type 
+            });
+            
+            // 根据抽奖资格来源确定任务完成方式
+            // first_game/paid_game -> 'paid_game' 任务
+            // invite -> 'invite' 任务
+            // 默认使用 'spin'
+            let taskMethod: 'spin' | 'paid_game' | 'invite' = 'spin';
+            
+            if (entitlement.source_type === 'paid_game' || entitlement.source_type === 'first_game') {
+                taskMethod = 'paid_game';
+            } else if (entitlement.source_type === 'invite') {
+                taskMethod = 'invite';
+            }
+            
+            console.log('📋 任务完成方式:', taskMethod);
+            await updateTaskProgressV2(userId, taskMethod, client);
             console.log('✅ 任务进度已更新');
         } catch (taskError) {
             console.error('⚠️ 更新任务进度失败（不影响抽奖）:', taskError);

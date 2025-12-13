@@ -1994,16 +1994,26 @@
                 // Lakh (十万)
                 const lakh = amount / 100000;
                 return `₹${lakh.toFixed(1)}L`;
-            } else if (amount >= 1000) {
-                // Thousand
+            } else if (amount >= 10000) {
+                // 只有 >= 10000 才显示为K格式
                 const thousand = amount / 1000;
-                // 特殊处理9900显示为9.9K
-                if (amount === 9900) {
-                    return `₹9.9K`;
-                }
                 return `₹${thousand.toFixed(1)}K`.replace('.0K', 'K');
+            } else if (amount >= 1000) {
+                // 1000-9999 显示具体数值，保留小数
+                if (amount % 1 === 0) {
+                    // 整数，不显示小数
+                    return `₹${amount.toLocaleString('en-IN')}`;
+                } else {
+                    // 有小数，保留至多2位
+                    return `₹${amount.toFixed(2).replace(/\.?0+$/, '')}`;
+                }
+            } else if (amount >= 1) {
+                // 小于1000的，保留小数
+                return `₹${amount.toFixed(2).replace(/\.?0+$/, '')}`;
+            } else {
+                // 小于1的，保留6位小数
+                return `₹${amount.toFixed(6).replace(/\.?0+$/, '')}`;
             }
-            return `₹${amount.toLocaleString('en-IN')}`;
         }
 
         // 抽奖功能（基于 available_spins）
