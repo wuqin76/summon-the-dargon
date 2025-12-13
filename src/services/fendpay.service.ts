@@ -155,7 +155,7 @@ export class FendPayService {
                 body: JSON.stringify(requestData),
             });
 
-            const result: OrderResponse = await response.json();
+            const result = await response.json() as OrderResponse;
 
             logger.info('FendPay创建订单响应', {
                 code: result.code,
@@ -207,7 +207,7 @@ export class FendPayService {
                 body: JSON.stringify(requestData),
             });
 
-            const result: QueryOrderResponse = await response.json();
+            const result = await response.json() as QueryOrderResponse;
 
             logger.info('FendPay查询订单响应', {
                 code: result.code,
