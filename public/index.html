@@ -3634,12 +3634,19 @@
                 
                 try {
                     console.log('📡 调用游戏完成奖励API...');
+                    // 获取游戏模式
+                    const gameMode = localStorage.getItem('gameMode') || 'first-time-free';
+                    console.log('📊 当前游戏模式:', gameMode);
+                    
                     const response = await fetch(`${API_BASE}/user/game-reward`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${authToken}`,
                             'Content-Type': 'application/json'
-                        }
+                        },
+                        body: JSON.stringify({
+                            gameMode: gameMode
+                        })
                     });
                     
                     console.log('📡 API响应状态:', response.status);

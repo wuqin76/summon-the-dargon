@@ -122,7 +122,9 @@ router.get('/play-status', authMiddleware, async (req: Request, res: Response) =
 router.post('/game-reward', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
-        logger.info('🎁 收到游戏完成奖励请求', { userId });
+        const { gameMode } = req.body; // 接收游戏模式：'first-time-free' 或 'paid'
+        
+        logger.info('🎁 收到游戏完成奖励请求', { userId, gameMode });
         
         const user = await userService.getUserById(userId);
         logger.info('📊 用户当前状态', { 
@@ -148,17 +150,29 @@ router.post('/game-reward', authMiddleware, async (req: Request, res: Response) 
             entitlementId: insertResult.rows[0].id 
         });
         
-        logger.info('🔄 更新用户可抽奖次数 +1', { userId, current_spins: user.available_spins });
+        logger.info('🔄 更新用户可抽奖次数和游玩次数', { userId, current_spins: user.available_spins, gameMode });
         
+        // 根据游戏模式更新不同的计数器
+        const isFirstTimeFree = gameMode === 'first-time-free';
         const updateResult = await db.query(`
             UPDATE users 
-            SET available_spins = available_spins + 1
+            SET available_spins = available_spins + 1,
+                total_free_plays = total_free_plays + $2,
+                total_paid_plays = total_paid_plays + $3,
+                updated_at = NOW()
             WHERE id = $1
-            RETURNING available_spins
-        `, [userId]);
+            RETURNING available_spins, total_free_plays, total_paid_plays
+        `, [userId, isFirstTimeFree ? 1 : 0, isFirstTimeFree ? 0 : 1]);
         
         const newSpins = updateResult.rows[0].available_spins;
-        logger.info('✅ 用户可抽奖次数已更新', { userId, new_spins: newSpins });
+        const newFreePlays = updateResult.rows[0].total_free_plays;
+        const newPaidPlays = updateResult.rows[0].total_paid_plays;
+        logger.info('✅ 用户统计已更新', { 
+            userId, 
+            new_spins: newSpins, 
+            new_free_plays: newFreePlays,
+            new_paid_plays: newPaidPlays
+        });
         
         logger.info('🎉 游戏完成奖励发放成功', { userId, granted_spins: 1, total_spins: newSpins });
 
