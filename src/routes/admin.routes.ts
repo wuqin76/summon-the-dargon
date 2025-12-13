@@ -17,7 +17,7 @@ router.post('/simple-login', async (req: Request, res: Response) => {
         const { username, password } = req.body;
 
         // 简单的管理员账号验证
-        if (username === 'admin' && password === 'DragonAdmin2024') {
+        if (username === 'admin' && password === '1234') {
             // 为管理员生成 Token
             const token = jwt.sign(
                 { 
