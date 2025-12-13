@@ -1986,33 +1986,37 @@
 
         // 格式化奖金显示 - 使用印度数字系统
         function formatPrizeAmount(amount) {
-            if (amount >= 10000000) {
+            // 确保转换为数字类型
+            const num = parseFloat(amount);
+            if (isNaN(num)) {
+                return '₹0';
+            }
+            
+            if (num >= 10000000) {
                 // Crore (千万)
-                const crore = amount / 10000000;
-                return `₹${crore.toFixed(2)}Cr`;
-            } else if (amount >= 100000) {
+                const crore = num / 10000000;
+                return `₹${crore.toFixed(2).replace(/\.?0+$/, '')}Cr`;
+            } else if (num >= 100000) {
                 // Lakh (十万)
-                const lakh = amount / 100000;
-                return `₹${lakh.toFixed(1)}L`;
-            } else if (amount >= 10000) {
+                const lakh = num / 100000;
+                return `₹${lakh.toFixed(1).replace(/\.?0+$/, '')}L`;
+            } else if (num >= 10000) {
                 // 只有 >= 10000 才显示为K格式
-                const thousand = amount / 1000;
-                return `₹${thousand.toFixed(1)}K`.replace('.0K', 'K');
-            } else if (amount >= 1000) {
-                // 1000-9999 显示具体数值，保留小数
-                if (amount % 1 === 0) {
-                    // 整数，不显示小数
-                    return `₹${amount.toLocaleString('en-IN')}`;
+                const thousand = num / 1000;
+                return `₹${thousand.toFixed(1).replace(/\.?0+$/, '')}K`;
+            } else if (num >= 1) {
+                // 1-9999：只在小数不为0时显示小数
+                const hasDecimal = num % 1 !== 0;
+                if (hasDecimal) {
+                    // 有小数：去掉末尾的0
+                    return `₹${num.toFixed(6).replace(/\.?0+$/, '')}`;
                 } else {
-                    // 有小数，保留至多2位
-                    return `₹${amount.toFixed(2).replace(/\.?0+$/, '')}`;
+                    // 整数：直接显示，使用印度数字格式
+                    return `₹${Math.floor(num).toLocaleString('en-IN')}`;
                 }
-            } else if (amount >= 1) {
-                // 小于1000的，保留小数
-                return `₹${amount.toFixed(2).replace(/\.?0+$/, '')}`;
             } else {
-                // 小于1的，保留6位小数
-                return `₹${amount.toFixed(6).replace(/\.?0+$/, '')}`;
+                // 小于1的：保留小数，去掉末尾的0
+                return `₹${num.toFixed(6).replace(/\.?0+$/, '')}`;
             }
         }
 
@@ -3275,6 +3279,10 @@
                                 buttons: [{type: 'ok', text: '好的'}]
                             }, function() {
                                 console.log('🎯 用户关闭弹窗，确保在抽奖页面');
+                                // 清除URL中的page参数，避免刷新后再次触发跳转
+                                if (window.location.search.includes('page=')) {
+                                    window.history.replaceState({}, '', window.location.pathname);
+                                }
                                 // 确保在抽奖页面（可能已经在了）
                                 const currentPage = document.querySelector('.page.active');
                                 if (currentPage && currentPage.id !== 'spinPage') {
@@ -3285,6 +3293,10 @@
                             });
                         } else {
                             alert('🎉 恭喜完成游戏！已获得一次抽奖机会！');
+                            // 清除URL中的page参数
+                            if (window.location.search.includes('page=')) {
+                                window.history.replaceState({}, '', window.location.pathname);
+                            }
                             // 确保在抽奖页面
                             const currentPage = document.querySelector('.page.active');
                             if (currentPage && currentPage.id !== 'spinPage') {
