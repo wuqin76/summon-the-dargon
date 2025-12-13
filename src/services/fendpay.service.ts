@@ -56,8 +56,24 @@ export class FendPayService {
             apiUrl: process.env.FENDPAY_API_BASE_URL || 'https://kspay.shop',
         };
 
+        // 启动时记录配置状态（隐藏敏感信息）
+        logger.info('FendPay服务初始化', {
+            merchantNumber: this.config.merchantNumber ? this.config.merchantNumber.substring(0, 4) + '***' : 'NOT_SET',
+            secretConfigured: !!this.config.secret,
+            secretLength: this.config.secret ? this.config.secret.length : 0,
+            apiUrl: this.config.apiUrl,
+            envVars: {
+                FENDPAY_MERCHANT_NUMBER: !!process.env.FENDPAY_MERCHANT_NUMBER,
+                FENDPAY_SECRET: !!process.env.FENDPAY_SECRET,
+                FENDPAY_API_BASE_URL: !!process.env.FENDPAY_API_BASE_URL
+            }
+        });
+
         if (!this.config.merchantNumber || !this.config.secret) {
-            logger.warn('FendPay配置不完整，请检查环境变量');
+            logger.error('FendPay配置不完整！请检查环境变量', {
+                hasMerchantNumber: !!this.config.merchantNumber,
+                hasSecret: !!this.config.secret
+            });
         }
     }
 
@@ -142,8 +158,13 @@ export class FendPayService {
             const requestData = { ...requestBody, sign };
 
             logger.info('FendPay创建订单请求', {
-                outTradeNo: params.outTradeNo,
-                amount: amount,
+                url: `${this.config.apiUrl}/pay/payment`,
+                requestBody: {
+                    ...requestBody,
+                    merchantNumber: this.config.merchantNumber.substring(0, 4) + '***',
+                    sign: sign.substring(0, 10) + '...'
+                },
+                fullRequest: requestData
             });
 
             // 发送请求
@@ -155,12 +176,16 @@ export class FendPayService {
                 body: JSON.stringify(requestData),
             });
 
+            const httpStatus = response.status;
             const result = await response.json() as OrderResponse;
 
             logger.info('FendPay创建订单响应', {
+                httpStatus,
                 code: result.code,
                 msg: result.msg,
+                uuid: result.uuid,
                 hasData: !!result.data,
+                fullResponse: result
             });
 
             if (result.code === '200' && result.data) {
@@ -169,7 +194,13 @@ export class FendPayService {
                     payUrl: result.data.payUrl,
                 });
             } else {
-                logger.error('FendPay订单创建失败', result);
+                logger.error('FendPay订单创建失败', {
+                    code: result.code,
+                    msg: result.msg,
+                    uuid: result.uuid,
+                    data: result.data,
+                    fullResponse: result
+                });
             }
 
             return result;

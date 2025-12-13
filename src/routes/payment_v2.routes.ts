@@ -43,7 +43,8 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
     const client = await pool.connect();
 
     try {
-        const { amount = 10 } = req.body;
+        // 默认支付金额: 1000印度卢比
+        const { amount = 1000 } = req.body;
 
         // 生成商户订单号（唯一）
         const outTradeNo = `GAME_${Date.now()}_${userId.substring(0, 8)}`;
@@ -74,11 +75,27 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
         const telegramWebAppUrl = process.env.TELEGRAM_WEBAPP_URL || `${baseUrl}/`;
         const callbackUrl = telegramWebAppUrl;
 
-        const fendPayResult = await fendPayService.createOrder({
+        const formattedAmount = fendPayService.formatAmount(amount);
+        console.log('[Payment] 准备调用FendPay API', {
             outTradeNo,
-            amount: fendPayService.formatAmount(amount),
+            amount,
+            formattedAmount,
             notifyUrl,
             callbackUrl,
+            merchantNumber: process.env.FENDPAY_MERCHANT_NUMBER
+        });
+
+        const fendPayResult = await fendPayService.createOrder({
+            outTradeNo,
+            amount: formattedAmount,
+            notifyUrl,
+            callbackUrl,
+        });
+
+        console.log('[Payment] FendPay API返回结果', {
+            code: fendPayResult.code,
+            msg: fendPayResult.msg,
+            hasData: !!fendPayResult.data
         });
 
         if (fendPayResult.code !== '200' || !fendPayResult.data) {
