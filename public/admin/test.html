@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>API 测试</h1>
+    
+    <button onclick="testHealth()">测试健康检查</button>
+    <button onclick="testLogin()">测试登录</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function showResult(text) {
+            document.getElementById('result').textContent = text;
+        }
+
+        async function testHealth() {
+            try {
+                const res = await fetch('/health');
+                const data = await res.json();
+                showResult('健康检查成功:\n' + JSON.stringify(data, null, 2));
+            } catch (err) {
+                showResult('健康检查失败:\n' + err.message);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const res = await fetch('/api/admin/simple-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'DragonAdmin2024'
+                    })
+                });
+                const data = await res.json();
+                showResult('登录响应:\n' + JSON.stringify(data, null, 2));
+            } catch (err) {
+                showResult('登录失败:\n' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
