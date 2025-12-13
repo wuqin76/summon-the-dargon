@@ -80,10 +80,9 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
         const baseUrl = process.env.BASE_URL || 'https://dragon-spin-game-production.up.railway.app';
         const notifyUrl = `${baseUrl}/api/webhook/fendpay`;
         
-        // Telegram WebApp URL - 用户支付成功后返回的地址
-        // 格式: https://t.me/你的机器人名/你的游戏名
-        const telegramWebAppUrl = process.env.TELEGRAM_WEBAPP_URL || `${baseUrl}/`;
-        const callbackUrl = telegramWebAppUrl;
+        // 用户支付成功后返回的地址 - 直接返回到WebApp主页
+        // 注意：不要用 t.me 链接，要用你的实际域名，这样才能直接在Telegram内打开
+        const callbackUrl = `${baseUrl}/`;
 
         const formattedAmount = fendPayService.formatAmount(amount);
         console.log('[Payment] 准备调用FendPay API', {
