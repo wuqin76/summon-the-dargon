@@ -1586,6 +1586,13 @@
                         <li>💰 最高可赢 ₹8.88Cr 卢比</li>
                         <li>🎉 多档奖金等你拿</li>
                     </ul>
+                    <!-- 游玩机会显示 -->
+                    <div id="playTicketsDisplay" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); display: none;">
+                        <div style="font-size: 14px; color: rgba(255,255,255,0.9); margin-bottom: 5px;">💳 我的游玩机会</div>
+                        <div style="font-size: 32px; font-weight: bold; color: #FFD700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);" id="playTicketsCount">0</div>
+                        <div style="font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 5px;">次</div>
+                    </div>
+                    
                     <button class="play-btn" id="paidPlayBtn" onclick="event.stopPropagation(); handleFirstPlay();" style="background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 18px; font-weight: bold;">
                         🎮 <span id="playBtnText">立即免费游玩</span>
                     </button>
@@ -2943,7 +2950,23 @@
 
         // 处理付费模式
         async function handlePaidMode() {
+            // 防重复点击
+            if (isCreatingPayment) {
+                console.log('[Payment] 正在创建订单中，请勿重复点击');
+                return;
+            }
+            
+            // 检查是否已有待支付订单
+            const pendingOrderId = localStorage.getItem('pendingOrderId');
+            if (pendingOrderId) {
+                console.log('[Payment] 检测到待支付订单，请先完成或取消', pendingOrderId);
+                safeTgAlert('❌ 您有一个待完成的支付订单\n\n请先完成支付或等待订单过期');
+                return;
+            }
+            
             try {
+                isCreatingPayment = true; // 设置标志
+                
                 // 显示加载提示
                 safeTgAlert('正在创建支付订单，请稍候...');
                 
@@ -2989,6 +3012,8 @@
             } catch (error) {
                 console.error('创建支付订单失败:', error);
                 safeTgAlert('创建支付订单失败：' + error.message);
+            } finally {
+                isCreatingPayment = false; // 无论成功失败都重置标志
             }
         }
         
@@ -3034,6 +3059,7 @@
         
         // 支付状态轮询
         let paymentPollingInterval = null;
+        let isCreatingPayment = false; // 防重复点击标志
         
         function startPaymentStatusPolling(orderId) {
             // 清除之前的轮询
@@ -3086,14 +3112,60 @@
             localStorage.removeItem('pendingOrderId');
             localStorage.removeItem('paymentAmount');
             
-            // 显示成功提示
-            safeTgAlert('✅ 支付成功！已获得1次游玩机会');
+            console.log('[Payment] ✅ 支付成功确认，等待游玩机会到账...');
             
-            // 重新加载游玩机会数量
-            await loadPlayTickets();
+            // 显示等待提示
+            safeTgAlert('✅ 支付成功！正在确认游玩机会...');
             
-            // 不再自动跳转游戏，让用户选择何时使用游玩机会
-            console.log('✅ 支付完成，游玩机会已到账');
+            // 轮询检查游玩机会是否到账（最多等待30秒）
+            let checkCount = 0;
+            const maxChecks = 30; // 30次 × 1秒 = 30秒
+            const initialTickets = await getPlayTicketsCount();
+            
+            const checkInterval = setInterval(async () => {
+                checkCount++;
+                const currentTickets = await getPlayTicketsCount();
+                
+                // 如果游玩机会增加了，说明webhook已处理
+                if (currentTickets > initialTickets) {
+                    clearInterval(checkInterval);
+                    console.log(`[Payment] ✅ 游玩机会已到账：${currentTickets}次`);
+                    await loadPlayTickets();
+                    safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
+                    return;
+                }
+                
+                // 超时仍未到账
+                if (checkCount >= maxChecks) {
+                    clearInterval(checkInterval);
+                    console.warn('[Payment] ⚠️ 游玩机会确认超时，请刷新页面或联系客服');
+                    await loadPlayTickets();
+                    safeTgAlert('⚠️ 支付已成功，但游玩机会确认中\n\n请稍后刷新页面，或联系客服确认');
+                }
+            }, 1000); // 每秒检查一次
+        }
+        
+        // 获取当前游玩机会数量（不更新UI，仅返回数值）
+        async function getPlayTicketsCount() {
+            if (!authToken) return 0;
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/play-tickets`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data.data.paid_play_tickets || 0;
+                }
+            } catch (error) {
+                console.error('[getPlayTicketsCount] 查询失败:', error);
+            }
+            
+            return 0;
         }
         
         // 加载游玩机会数量
@@ -3112,15 +3184,35 @@
                 if (data.success) {
                     const tickets = data.data.paid_play_tickets || 0;
                     
-                    // 更新按钮文本
+                    // 更新游玩机会显示区域
+                    const playTicketsDisplay = document.getElementById('playTicketsDisplay');
+                    const playTicketsCount = document.getElementById('playTicketsCount');
                     const playBtnText = document.getElementById('playBtnText');
                     const paymentNotice = document.getElementById('paymentNotice');
                     
+                    // 始终显示游玩机会数量（包括0次）
+                    if (playTicketsDisplay && playTicketsCount) {
+                        playTicketsDisplay.style.display = 'block';
+                        playTicketsCount.textContent = tickets;
+                        
+                        // 根据机会数量改变颜色
+                        if (tickets > 0) {
+                            playTicketsCount.style.color = '#FFD700'; // 金色
+                            playTicketsDisplay.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                        } else {
+                            playTicketsCount.style.color = '#FF6B6B'; // 红色
+                            playTicketsDisplay.style.background = 'linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%)';
+                        }
+                    }
+                    
+                    // 更新按钮文本
                     if (tickets > 0) {
                         playBtnText.textContent = `🎟️ 使用游玩机会 (剩余${tickets}次)`;
                         if (paymentNotice) {
                             paymentNotice.style.display = 'none';
                         }
+                    } else {
+                        playBtnText.textContent = '立即免费游玩';
                     }
                     
                     console.log(`✅ 当前游玩机会: ${tickets}次`);
