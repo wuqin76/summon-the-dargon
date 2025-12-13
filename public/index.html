@@ -3143,9 +3143,190 @@
         }
 
         // 处理付费模式
-        function handlePaidMode() {
-            safeTgAlert('即将跳转到第三方支付页面，支付完成后返回即可开始游戏');
-            // 第三方支付集成（待实现）
+        async function handlePaidMode() {
+            try {
+                // 显示加载提示
+                safeTgAlert('正在创建支付订单，请稍候...');
+                
+                // 调用后端API创建支付订单
+                const response = await fetch(`${API_BASE}/payment/v2/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        amount: 10,  // 支付金额（USDT）
+                        purpose: 'game_ticket'  // 支付目的：游戏门票
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    // 保存订单信息到本地
+                    localStorage.setItem('pendingOrderId', data.data.order_id);
+                    localStorage.setItem('paymentAmount', data.data.amount);
+                    
+                    // 跳转到第三方支付页面
+                    if (data.data.payment_url) {
+                        // 使用Telegram WebApp的方式打开支付链接
+                        if (window.Telegram?.WebApp) {
+                            window.Telegram.WebApp.openLink(data.data.payment_url);
+                            
+                            // 开始轮询支付状态
+                            startPaymentStatusPolling(data.data.order_id);
+                            
+                            // 显示支付等待界面
+                            showPaymentWaitingModal(data.data.order_id, data.data.amount);
+                        } else {
+                            // 浏览器环境直接打开新窗口
+                            window.open(data.data.payment_url, '_blank');
+                            startPaymentStatusPolling(data.data.order_id);
+                            showPaymentWaitingModal(data.data.order_id, data.data.amount);
+                        }
+                    } else {
+                        throw new Error('未获取到支付链接');
+                    }
+                } else {
+                    throw new Error(data.message || '创建支付订单失败');
+                }
+            } catch (error) {
+                console.error('创建支付订单失败:', error);
+                safeTgAlert('创建支付订单失败：' + error.message);
+            }
+        }
+        
+        // 显示支付等待弹窗
+        function showPaymentWaitingModal(orderId, amount) {
+            // 创建弹窗HTML
+            const modalHtml = `
+                <div class="modal" id="paymentWaitingModal" style="display: flex;">
+                    <div class="modal-content" style="max-width: 400px;">
+                        <div class="modal-header">
+                            <h2>⏳ 等待支付完成</h2>
+                        </div>
+                        <div style="padding: 30px; text-align: center;">
+                            <div style="font-size: 48px; margin-bottom: 20px;">💳</div>
+                            <p style="font-size: 16px; margin-bottom: 10px;">支付金额：<strong>${amount} USDT</strong></p>
+                            <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 20px;">
+                                订单号：${orderId}
+                            </p>
+                            <div style="margin: 30px 0;">
+                                <div class="spinner" style="margin: 0 auto; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #FFD700; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            </div>
+                            <p style="font-size: 14px; color: rgba(255,255,255,0.8);">
+                                请在新打开的页面完成支付<br>
+                                支付完成后会自动跳转游戏
+                            </p>
+                            <button onclick="cancelPayment()" style="margin-top: 20px; padding: 12px 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; cursor: pointer;">
+                                取消支付
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到页面
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHtml;
+            document.body.appendChild(modalContainer);
+        }
+        
+        // 取消支付
+        function cancelPayment() {
+            stopPaymentStatusPolling();
+            const modal = document.getElementById('paymentWaitingModal');
+            if (modal) {
+                modal.remove();
+            }
+            localStorage.removeItem('pendingOrderId');
+            localStorage.removeItem('paymentAmount');
+        }
+        
+        // 支付状态轮询
+        let paymentPollingInterval = null;
+        
+        function startPaymentStatusPolling(orderId) {
+            // 清除之前的轮询
+            stopPaymentStatusPolling();
+            
+            // 每3秒查询一次支付状态
+            paymentPollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/payment/v2/status/${orderId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        if (data.data.status === 'confirmed') {
+                            // 支付成功
+                            stopPaymentStatusPolling();
+                            handlePaymentSuccess(orderId);
+                        } else if (data.data.status === 'failed' || data.data.status === 'expired') {
+                            // 支付失败或过期
+                            stopPaymentStatusPolling();
+                            handlePaymentFailed(data.data.status);
+                        }
+                    }
+                } catch (error) {
+                    console.error('查询支付状态失败:', error);
+                }
+            }, 3000);
+        }
+        
+        function stopPaymentStatusPolling() {
+            if (paymentPollingInterval) {
+                clearInterval(paymentPollingInterval);
+                paymentPollingInterval = null;
+            }
+        }
+        
+        // 支付成功处理
+        function handlePaymentSuccess(orderId) {
+            // 关闭等待弹窗
+            const modal = document.getElementById('paymentWaitingModal');
+            if (modal) {
+                modal.remove();
+            }
+            
+            // 清除订单信息
+            localStorage.removeItem('pendingOrderId');
+            localStorage.removeItem('paymentAmount');
+            
+            // 显示成功提示
+            safeTgAlert('✅ 支付成功！正在进入游戏...');
+            
+            // 设置游戏模式为付费模式
+            localStorage.setItem('gameMode', 'paid');
+            localStorage.setItem('paymentOrderId', orderId);
+            localStorage.removeItem('gameCompleted');
+            
+            // 延迟1秒后跳转游戏
+            setTimeout(() => {
+                window.location.href = '/game/index.html';
+            }, 1000);
+        }
+        
+        // 支付失败处理
+        function handlePaymentFailed(status) {
+            // 关闭等待弹窗
+            const modal = document.getElementById('paymentWaitingModal');
+            if (modal) {
+                modal.remove();
+            }
+            
+            // 清除订单信息
+            localStorage.removeItem('pendingOrderId');
+            localStorage.removeItem('paymentAmount');
+            
+            // 显示失败提示
+            const message = status === 'expired' ? '支付已超时，请重新支付' : '支付失败，请重试';
+            safeTgAlert('❌ ' + message);
         }
 
         // 加载可抽奖次数
