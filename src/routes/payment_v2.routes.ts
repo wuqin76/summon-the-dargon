@@ -122,9 +122,7 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
         // 3. 更新会话记录
         await client.query(`
             UPDATE game_sessions
-            SET 
-                fendpay_order_no = $1,
-                updated_at = NOW()
+            SET fendpay_order_no = $1
             WHERE id = $2
         `, [fendPayResult.data.orderNo, sessionId]);
 
