@@ -40,21 +40,47 @@ TELEGRAM_WEBAPP_URL=https://t.me/summondragon_bot/dragongame
 
 ## 常见错误排查
 
-### "channel error please connect custom service"
+### 🔴 错误码 10004: "channel error please connect custom service"
 
-**原因：**
+**诊断结果（从日志）：**
 
-- 商户号错误或未配置
-- 支付通道未开通
-- 金额超出限制
-- 签名验证失败
+```
+✅ 环境变量配置正确
+✅ 签名生成正确
+❌ FendPay返回 code: 10004
+```
 
-**解决方法：**
+**根本原因（需联系FendPay确认）：**
 
-1. 检查 `FENDPAY_MERCHANT_NUMBER` 是否为 `2020213`
-2. 检查 `FENDPAY_SECRET` 是否正确
-3. 确认FendPay账户状态是否正常
-4. 查看服务器日志中的详细错误信息
+1. ⚠️ **支付通道未开通**（最可能）
+   - 商户号 2020213 的代收通道可能未激活
+   - 需要在FendPay商户后台开通
+
+2. 💰 **金额限制**
+   - 当前测试金额：10 INR
+   - FendPay可能要求最小金额（如100或1000 INR）
+
+3. 🔧 **商户状态**
+   - 账户可能需要完成KYC认证
+   - 商户类型配置可能不正确
+
+**🚨 必须采取的行动：**
+
+**立即联系FendPay客服：**
+
+- 登录: https://fend.kspay.shop
+- 商户号: `2020213`
+- 询问内容:
+  1. ✅ 代收支付通道是否已开通？
+  2. ✅ 支付金额限制范围（最小/最大）？
+  3. ✅ 账户状态是否正常？需要什么认证？
+  4. ✅ 错误码10004的具体含义？
+
+**临时解决：**
+
+- 等待FendPay确认通道状态
+- 根据反馈调整支付金额
+- 完成必要的商户认证
 
 ### "FendPay支付服务未配置"
 
