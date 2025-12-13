@@ -1749,6 +1749,14 @@
         <source src="/music/background.mp3" type="audio/mpeg">
     </audio>
 
+    <!-- 抽奖音效 -->
+    <audio id="spinSound" preload="auto">
+        <source src="/music/spin.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winSound" preload="auto">
+        <source src="/music/win.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- 音乐控制按钮 -->
     <button id="musicToggle" class="music-toggle" onclick="toggleMusic()">
         <span class="music-icon">🔇</span>
@@ -2202,6 +2210,20 @@
         const musicIcon = musicToggle.querySelector('.music-icon');
         let isMusicPlaying = false;
 
+        // 音效控制
+        const spinSound = document.getElementById('spinSound');
+        const winSound = document.getElementById('winSound');
+
+        // 播放音效函数
+        function playSound(sound) {
+            try {
+                sound.currentTime = 0;
+                sound.play().catch(err => console.log('音效播放失败:', err));
+            } catch (error) {
+                console.log('音效播放错误:', error);
+            }
+        }
+
         // 切换音乐播放状态
         function toggleMusic() {
             if (isMusicPlaying) {
@@ -2411,6 +2433,9 @@
                     }
                 }
                 
+                // 播放抽奖音效
+                playSound(spinSound);
+
                 // 老虎机跳动动画
                 const sectors = wheel.querySelectorAll('.sector');
                 let currentIndex = 0;
@@ -2439,6 +2464,11 @@
                         const delay = cycles >= totalCycles ? speed + (currentIndex * 30) : speed;
                         setTimeout(jump, delay);
                     } else {
+                        
+                        // 播放中奖音效
+                        setTimeout(() => {
+                            playSound(winSound);
+                        }, 200);
                         // 确保停在目标位置
                         sectors.forEach(s => s.classList.remove('active'));
                         sectors[targetSector].classList.add('active');
