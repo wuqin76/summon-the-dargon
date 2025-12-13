@@ -68,7 +68,11 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
         
         const baseUrl = process.env.BASE_URL || 'https://dragon-spin-game-production.up.railway.app';
         const notifyUrl = `${baseUrl}/api/webhook/fendpay`;
-        const callbackUrl = `${baseUrl}/`;
+        
+        // Telegram WebApp URL - 用户支付成功后返回的地址
+        // 格式: https://t.me/你的机器人名/你的游戏名
+        const telegramWebAppUrl = process.env.TELEGRAM_WEBAPP_URL || `${baseUrl}/`;
+        const callbackUrl = telegramWebAppUrl;
 
         const fendPayResult = await fendPayService.createOrder({
             outTradeNo,
