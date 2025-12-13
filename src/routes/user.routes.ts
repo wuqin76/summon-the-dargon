@@ -263,4 +263,120 @@ router.post('/bank-info', authMiddleware, async (req: Request, res: Response) =>
     }
 });
 
+/**
+ * GET /api/user/play-tickets
+ * 获取用户可用的游玩机会数量
+ */
+router.get('/play-tickets', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        
+        const db = require('../database').db;
+        const result = await db.query(
+            'SELECT paid_play_tickets FROM users WHERE id = $1',
+            [userId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+        
+        const paidPlayTickets = result.rows[0].paid_play_tickets || 0;
+        
+        res.json({
+            success: true,
+            data: {
+                paid_play_tickets: paidPlayTickets,
+                has_tickets: paidPlayTickets > 0
+            }
+        });
+        
+    } catch (error: any) {
+        logger.error('Get play tickets error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/user/use-play-ticket
+ * 使用一次游玩机会（进入游戏时调用）
+ */
+router.post('/use-play-ticket', authMiddleware, async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        
+        const db = require('../database').db;
+        
+        // 使用事务确保原子性
+        const client = await db.pool.connect();
+        
+        try {
+            await client.query('BEGIN');
+            
+            // 检查并扣减游玩机会
+            const result = await client.query(`
+                UPDATE users
+                SET paid_play_tickets = paid_play_tickets - 1
+                WHERE id = $1 AND paid_play_tickets > 0
+                RETURNING paid_play_tickets
+            `, [userId]);
+            
+            if (result.rows.length === 0) {
+                await client.query('ROLLBACK');
+                return res.status(400).json({
+                    success: false,
+                    error: '没有可用的游玩机会'
+                });
+            }
+            
+            // 创建游戏会话
+            const sessionResult = await client.query(`
+                INSERT INTO game_sessions 
+                (user_id, game_mode, payment_status, created_at)
+                VALUES ($1, 'paid', 'confirmed', NOW())
+                RETURNING id
+            `, [userId]);
+            
+            await client.query('COMMIT');
+            
+            const remainingTickets = result.rows[0].paid_play_tickets;
+            const sessionId = sessionResult.rows[0].id;
+            
+            logger.info('✅ 用户使用游玩机会', { 
+                userId, 
+                sessionId,
+                remainingTickets 
+            });
+            
+            res.json({
+                success: true,
+                data: {
+                    session_id: sessionId,
+                    remaining_tickets: remainingTickets
+                },
+                message: '游玩机会已使用，祝您游戏愉快！'
+            });
+            
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+        
+    } catch (error: any) {
+        logger.error('Use play ticket error', { error: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 export default router;

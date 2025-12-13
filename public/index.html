@@ -2701,17 +2701,33 @@
         // 处理首次游玩（免费）或后续付费游玩
         async function handleFirstPlay() {
             try {
-                // 检查用户是否已经玩过
-                const response = await fetch(`${API_BASE}/user/play-status`, {
+                // 1. 先检查是否有可用的游玩机会
+                const ticketsResponse = await fetch(`${API_BASE}/user/play-tickets`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
                 });
                 
-                const data = await response.json();
+                const ticketsData = await ticketsResponse.json();
                 
-                if (data.hasPlayed) {
-                    // 已经玩过，需要付费
+                if (ticketsData.success && ticketsData.data.has_tickets) {
+                    // 有游玩机会，直接使用
+                    safeTgAlert(`✨ 您有 ${ticketsData.data.paid_play_tickets} 次游玩机会\n\n正在进入游戏...`);
+                    await usePlayTicketAndEnterGame();
+                    return;
+                }
+                
+                // 2. 没有游玩机会，检查是否首次游玩
+                const statusResponse = await fetch(`${API_BASE}/user/play-status`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const statusData = await statusResponse.json();
+                
+                if (statusData.hasPlayed) {
+                    // 已经玩过，需要付费购买游玩机会
                     handlePaidMode();
                 } else {
                     // 首次游玩，免费
@@ -2722,11 +2738,44 @@
                 }
             } catch (error) {
                 console.error('检查游玩状态失败:', error);
-                // 默认允许游玩
-                localStorage.setItem('gameMode', 'first-time-free');
-                localStorage.setItem('isFirstPlay', 'true');
-                localStorage.removeItem('gameCompleted');
-                window.location.href = '/game/index.html';
+                safeTgAlert('检查游玩状态失败，请重试');
+            }
+        }
+        
+        // 使用游玩机会并进入游戏
+        async function usePlayTicketAndEnterGame() {
+            try {
+                const response = await fetch(`${API_BASE}/user/use-play-ticket`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 设置游戏模式为付费模式
+                    localStorage.setItem('gameMode', 'paid');
+                    localStorage.setItem('gameSessionId', data.data.session_id);
+                    localStorage.removeItem('gameCompleted');
+                    
+                    // 显示剩余次数
+                    if (data.data.remaining_tickets > 0) {
+                        console.log(`✅ 游玩机会已使用，剩余 ${data.data.remaining_tickets} 次`);
+                    } else {
+                        console.log('✅ 游玩机会已使用，这是您的最后一次机会');
+                    }
+                    
+                    // 进入游戏
+                    window.location.href = '/game/index.html';
+                } else {
+                    safeTgAlert('❌ ' + (data.error || '使用游玩机会失败'));
+                }
+            } catch (error) {
+                console.error('使用游玩机会失败:', error);
+                safeTgAlert('使用游玩机会失败，请重试');
             }
         }
 
@@ -2917,7 +2966,7 @@
         }
         
         // 支付成功处理
-        function handlePaymentSuccess(orderId) {
+        async function handlePaymentSuccess(orderId) {
             // 关闭等待弹窗
             const modal = document.getElementById('paymentWaitingModal');
             if (modal) {
@@ -2929,17 +2978,47 @@
             localStorage.removeItem('paymentAmount');
             
             // 显示成功提示
-            safeTgAlert('✅ 支付成功！正在进入游戏...');
+            safeTgAlert('✅ 支付成功！已获得1次游玩机会');
             
-            // 设置游戏模式为付费模式
-            localStorage.setItem('gameMode', 'paid');
-            localStorage.setItem('paymentOrderId', orderId);
-            localStorage.removeItem('gameCompleted');
+            // 重新加载游玩机会数量
+            await loadPlayTickets();
             
-            // 延迟1秒后跳转游戏
-            setTimeout(() => {
-                window.location.href = '/game/index.html';
-            }, 1000);
+            // 不再自动跳转游戏，让用户选择何时使用游玩机会
+            console.log('✅ 支付完成，游玩机会已到账');
+        }
+        
+        // 加载游玩机会数量
+        async function loadPlayTickets() {
+            if (!authToken) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/user/play-tickets`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const tickets = data.data.paid_play_tickets || 0;
+                    
+                    // 更新按钮文本
+                    const playBtnText = document.getElementById('playBtnText');
+                    const paymentNotice = document.getElementById('paymentNotice');
+                    
+                    if (tickets > 0) {
+                        playBtnText.textContent = `🎟️ 使用游玩机会 (剩余${tickets}次)`;
+                        if (paymentNotice) {
+                            paymentNotice.style.display = 'none';
+                        }
+                    }
+                    
+                    console.log(`✅ 当前游玩机会: ${tickets}次`);
+                }
+            } catch (error) {
+                console.error('加载游玩机会失败:', error);
+            }
         }
         
         // 支付失败处理
@@ -3022,6 +3101,9 @@
             
             // 加载可抽奖次数
             await loadAvailableSpins();
+            
+            // 加载游玩机会数量
+            await loadPlayTickets();
             
             // 检查是否有待支付订单（用户可能支付后关闭了小程序）
             await checkPendingPayment();

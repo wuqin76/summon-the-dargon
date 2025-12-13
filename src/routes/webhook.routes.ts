@@ -120,12 +120,24 @@ router.post('/fendpay', async (req: Request, res: Response) => {
             UPDATE game_sessions
             SET 
                 payment_id = $1,
-                payment_status = 'paid',
+                payment_status = 'confirmed',
                 updated_at = NOW()
             WHERE external_order_id = $2
         `, [paymentId, outTradeNo]);
 
-        // 8. 记录审计日志
+        // 8. 给用户增加1次付费游玩机会
+        await client.query(`
+            UPDATE users
+            SET 
+                paid_play_tickets = paid_play_tickets + 1,
+                total_paid_plays = total_paid_plays + 1,
+                updated_at = NOW()
+            WHERE id = $1
+        `, [userId]);
+
+        logger.info('[FendPay Webhook] 已为用户增加1次游玩机会', { userId, outTradeNo });
+
+        // 9. 记录审计日志
         await client.query(`
             INSERT INTO audit_logs (
                 actor_id, actor_type, action, target_type, target_id,
@@ -142,7 +154,7 @@ router.post('/fendpay', async (req: Request, res: Response) => {
             true
         ]);
 
-        // 7. 提交事务
+        // 10. 提交事务
         await client.query('COMMIT');
 
         logger.info('[FendPay Webhook] 支付处理成功', { paymentId, outTradeNo });
