@@ -81,7 +81,7 @@ app.get('/health', async (_req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/payment', paymentRoutes);
+app.use('/api/payment/v2', paymentRoutes);  // V2支付（FendPay第三方）
 app.use('/api/spin', spinRoutes);
 app.use('/api/payout', payoutRoutes);
 app.use('/api/user', userRoutes);
