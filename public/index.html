@@ -729,19 +729,24 @@
         }
 
         .mode-features li {
-            padding: 6px 0;
-            padding-left: 22px;
+            padding: 8px 0;
+            padding-left: 28px;
             position: relative;
-            font-size: 13px;
-            opacity: 0.9;
+            font-size: 15px;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 1);
+            line-height: 1.6;
         }
 
         .mode-features li:before {
             content: "✓";
             position: absolute;
             left: 0;
-            color: #4ade80;
-            font-weight: bold;
+            color: #FFD700;
+            font-weight: 900;
+            font-size: 18px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
 
         .mode-features li.disabled-feature:before {
@@ -796,23 +801,31 @@
         }
 
         .info-box p {
-            font-size: 14px;
-            opacity: 0.8;
-            line-height: 1.6;
+            font-size: 15px;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 1);
+            line-height: 1.8;
         }
 
         .payment-notice {
-            background: rgba(255, 193, 7, 0.2);
-            border: 2px solid rgba(255, 193, 7, 0.5);
+            background: linear-gradient(135deg, rgba(255, 153, 51, 0.3), rgba(255, 215, 0, 0.25));
+            border: 2px solid rgba(255, 215, 0, 0.6);
             border-radius: 15px;
-            padding: 15px;
+            padding: 18px;
             margin-top: 15px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);
         }
 
         .payment-notice p {
-            margin: 5px 0;
-            font-size: 14px;
+            margin: 8px 0;
+            font-size: 15px;
+            color: #FFFFFF;
+            font-weight: 600;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 1);
+            line-height: 1.6;
         }
 
 
@@ -1630,11 +1643,11 @@
                 </div>
             </div>
 
-                <div class="info-box">
-                    <h3>📋 游戏规则</h3>
+                <div class="info-box" style="background: linear-gradient(135deg, rgba(19, 136, 8, 0.25), rgba(255, 153, 51, 0.2)); border: 2px solid rgba(255, 215, 0, 0.5); backdrop-filter: blur(15px); box-shadow: 0 4px 15px rgba(255, 153, 51, 0.3);">
+                    <h3 style="color: #FFD700; font-size: 20px; font-weight: 900; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);">📋 游戏规则</h3>
                     <p>
-                        <strong>🎁 首次免费：</strong>新用户首次游玩完全免费，游戏结束后立即获得一次抽奖机会！<br><br>
-                        <strong>💰 后续游玩：</strong>支付 ₹1000 卢比即可继续游玩，每次通关都能获得抽奖机会，
+                        <strong style="color: #FFD700;">🎁 首次免费：</strong>新用户首次游玩完全免费，游戏结束后立即获得一次抽奖机会！<br><br>
+                        <strong style="color: #FFD700;">💰 后续游玩：</strong>支付 ₹1000 卢比即可继续游玩，每次通关都能获得抽奖机会，
                         有机会赢取高达 ₹8.88 Crore (8.88亿卢比) 超级大奖，还有多档奖金等你拿，快来试试手气！
                     </p>
                 </div>
