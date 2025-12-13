@@ -1826,18 +1826,20 @@ window.__require = function e(t, a, i) {
                 this.node.runAction(cc.sequence(cc.delayTime(.5), cc.callFunc(this.gameEnd1.bind(this))))
             },
             gameEnd1: function() {
-                // 标记游戏已完成
+                // 标记游戏已完成并立即跳转
                 try {
                     var gameScore = a.gameScore || 0;
                     var isFirstPlay = localStorage.getItem('isFirstPlay') === 'true';
-                    console.log("🎮 游戏结束弹窗显示，保存游戏状态 - 分数:", gameScore, "首次游玩:", isFirstPlay);
+                    console.log("🎮 游戏结束，保存状态并跳转 - 分数:", gameScore, "首次游玩:", isFirstPlay);
                     localStorage.setItem('gameCompleted', 'true');
                     localStorage.setItem('gameScore', gameScore.toString());
-                    console.log("✅ localStorage已保存:", {
-                        gameCompleted: localStorage.getItem('gameCompleted'),
-                        gameScore: localStorage.getItem('gameScore'),
-                        isFirstPlay: localStorage.getItem('isFirstPlay')
-                    });
+                    console.log("✅ localStorage已保存，立即跳转到抽奖页面");
+                    
+                    // 立即跳转，不显示游戏结束弹窗
+                    setTimeout(function() {
+                        window.location.href = '/?page=spin';
+                    }, 500);
+                    return; // 不再继续执行后续弹窗逻辑
                 } catch (err) {
                     console.error("❌ 保存游戏状态失败:", err);
                 }
