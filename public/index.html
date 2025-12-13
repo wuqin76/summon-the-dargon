@@ -2248,7 +2248,7 @@
                 ],
                 nearWithdraw: [
                     '💪 加油！马上就能提现了！',
-                    '🎯 还差一点点就到100卢比了！',
+                    '🎯 还差一点点就到10000卢比了！',
                     '⭐ 坚持住！提现在望！',
                     '🚀 再来几次就能提现了！'
                 ],
@@ -2965,6 +2965,7 @@
                     localStorage.setItem('gameMode', 'first-time-free');
                     localStorage.setItem('isFirstPlay', 'true');
                     localStorage.removeItem('gameCompleted');
+                    localStorage.removeItem('gameScore');
                     window.location.href = '/game/index.html';
                 }
             } catch (error) {
@@ -2996,6 +2997,8 @@
                     localStorage.setItem('gameMode', 'paid');
                     localStorage.setItem('gameSessionId', data.data.session_id);
                     localStorage.removeItem('gameCompleted');
+                    localStorage.removeItem('gameScore');
+                    localStorage.removeItem('isFirstPlay');
                     
                     // 进入游戏
                     window.location.href = '/game/index.html';
@@ -3624,14 +3627,25 @@
             console.log('🔍 检查游戏完成状态...');
             const gameCompleted = localStorage.getItem('gameCompleted');
             const gameScore = localStorage.getItem('gameScore');
+            const rewardProcessed = localStorage.getItem('rewardProcessed');
             
-            console.log('📊 游戏状态:', { gameCompleted, gameScore });
+            console.log('📊 游戏状态:', { gameCompleted, gameScore, rewardProcessed });
+            
+            // 如果奖励已经处理过，跳过
+            if (rewardProcessed === 'true') {
+                console.log('⚠️ 游戏奖励已处理，跳过重复发放');
+                localStorage.removeItem('rewardProcessed');
+                return;
+            }
             
             if (gameCompleted === 'true') {
                 console.log('🎮 检测到游戏完成，发放奖励');
                 // ⚠️ 立即清除标记，避免重复发放
                 localStorage.removeItem('gameCompleted');
                 localStorage.removeItem('gameScore');
+                localStorage.removeItem('gameMode');
+                localStorage.removeItem('isFirstPlay');
+                localStorage.removeItem('gameSessionId');
                 
                 // 每次游戏完成都赠送抽奖机会
                 if (!authToken) {
@@ -3673,6 +3687,8 @@
                                 buttons: [{type: 'ok', text: '立即抽奖'}]
                             }, function() {
                                 console.log('🎯 用户关闭弹窗，确保在抽奖页面');
+                                // 标记游戏奖励已处理，防止重复触发
+                                localStorage.setItem('rewardProcessed', 'true');
                                 // 清除URL中的page参数，避免刷新后再次触发跳转
                                 if (window.location.search.includes('page=')) {
                                     window.history.replaceState({}, '', window.location.pathname);
