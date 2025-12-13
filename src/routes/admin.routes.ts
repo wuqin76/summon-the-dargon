@@ -21,7 +21,8 @@ router.post('/simple-login', async (req: Request, res: Response) => {
             // 为管理员生成 Token
             const token = jwt.sign(
                 { 
-                    userId: 8498203261,
+                    id: 8498203261,           // 后端 middleware 检查的字段
+                    userId: 8498203261,       // 保留原有字段
                     telegramId: '8498203261',
                     isAdmin: true,
                     username: 'admin'
