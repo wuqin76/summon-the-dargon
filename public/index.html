@@ -1687,16 +1687,6 @@
                         </div>
                     </div>
 
-                    <!-- 测试代付按钮 -->
-                    <div style="margin-top: 20px; padding: 20px; background: rgba(102, 126, 234, 0.15); border-radius: 15px; border: 2px solid rgba(102, 126, 234, 0.3);">
-                        <div style="text-align: center; margin-bottom: 15px;">
-                            <div style="font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 5px;">🧪 测试代付功能</div>
-                            <div style="font-size: 13px; color: rgba(255,255,255,0.7);">填写UPI信息，立即收到₹100测试转账</div>
-                        </div>
-                        <button class="invite-btn" onclick="showPayoutTestModal()" style="width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px; font-size: 16px; font-weight: bold;">
-                            💸 领取₹100测试转账
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1846,39 +1836,6 @@
         </div>
     </div>
 
-    <!-- 测试代付弹窗 -->
-    <div class="result-modal" id="payoutTestModal">
-        <div class="result-content" style="max-width: 400px;">
-            <h2 style="font-size: 24px; margin-bottom: 15px;">💸 测试代付</h2>
-            <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 20px;">
-                填写您的UPI信息，系统将自动向您转账₹100作为测试
-            </p>
-            
-            <div style="text-align: left; margin-bottom: 20px;">
-                <label style="display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: rgba(255,255,255,0.9);">
-                    UPI地址 *
-                </label>
-                <input type="text" id="payoutUpi" placeholder="例如: 9887415157@iob" 
-                    style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 14px; box-sizing: border-box;">
-                
-                <label style="display: block; font-size: 14px; font-weight: bold; margin: 15px 0 8px; color: rgba(255,255,255,0.9);">
-                    手机号 *
-                </label>
-                <input type="tel" id="payoutMobile" placeholder="例如: 9887415157" 
-                    style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 14px; box-sizing: border-box;">
-            </div>
-            
-            <div style="display: flex; gap: 10px;">
-                <button class="close-modal-btn" onclick="closePayoutTestModal()" style="flex: 1; background: #6c757d;">
-                    取消
-                </button>
-                <button class="close-modal-btn" onclick="submitPayoutTest()" style="flex: 2; background: linear-gradient(135deg, #667eea, #764ba2);">
-                    提交转账
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const tg = window.Telegram.WebApp;
         tg.ready();
@@ -1888,14 +1845,6 @@
         const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('authToken');
         let isSpinning = false;
-        
-        // 测试模式开关（URL参数 ?testMode=1 开启）
-        const urlParams = new URLSearchParams(window.location.search);
-        const TEST_MODE = urlParams.get('testMode') === '1';
-        
-        if (TEST_MODE) {
-            console.log('🧪 测试模式已启用 - 将使用模拟支付接口');
-        }
 
         // 音乐控制
         const bgMusic = document.getElementById('bgMusic');
@@ -2682,92 +2631,6 @@
             modal.classList.remove('show');
         }
 
-        // 显示代付测试弹窗
-        function showPayoutTestModal() {
-            const modal = document.getElementById('payoutTestModal');
-            modal.classList.add('show');
-            
-            // 清空输入
-            document.getElementById('payoutUpi').value = '';
-            document.getElementById('payoutMobile').value = '';
-        }
-
-        // 关闭代付测试弹窗
-        function closePayoutTestModal() {
-            const modal = document.getElementById('payoutTestModal');
-            modal.classList.remove('show');
-        }
-
-        // 提交代付测试
-        async function submitPayoutTest() {
-            const upi = document.getElementById('payoutUpi').value.trim();
-            const mobileNo = document.getElementById('payoutMobile').value.trim();
-
-            // 验证输入
-            if (!upi) {
-                safeTgAlert('请输入UPI地址');
-                return;
-            }
-
-            if (!mobileNo) {
-                safeTgAlert('请输入手机号');
-                return;
-            }
-
-            // 验证UPI格式（简单验证）
-            if (!upi.includes('@')) {
-                safeTgAlert('UPI地址格式不正确，应该类似：9887415157@iob');
-                return;
-            }
-
-            // 验证手机号格式（印度手机号10位数字）
-            if (!/^\d{10}$/.test(mobileNo)) {
-                safeTgAlert('手机号格式不正确，应该是10位数字');
-                return;
-            }
-
-            try {
-                // 显示加载提示
-                if (window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.showPopup({
-                        message: '正在提交代付请求，请稍候...',
-                        buttons: [{ type: 'ok', text: '好的' }]
-                    });
-                }
-
-                const response = await fetch(`${API_BASE}/payment/v2/payout/test`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({
-                        upi,
-                        mobileNo
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    closePayoutTestModal();
-                    
-                    safeTgAlert(
-                        `✅ 代付请求已提交！\n\n` +
-                        `订单号：${data.data.order_id}\n` +
-                        `金额：₹${data.data.amount}\n` +
-                        `状态：${data.data.message}\n\n` +
-                        `请查收您的UPI账户，预计1-5分钟到账。`
-                    );
-                } else {
-                    safeTgAlert('提交失败：' + (data.message || '未知错误'));
-                }
-            } catch (error) {
-                console.error('提交代付测试失败:', error);
-                safeTgAlert('提交失败：' + error.message);
-            }
-        }
-
         // 检查是否通过邀请链接进入
         async function checkInviteCode() {
             try {
@@ -2871,13 +2734,10 @@
         async function handlePaidMode() {
             try {
                 // 显示加载提示
-                safeTgAlert(TEST_MODE ? '🧪 正在创建测试支付订单...' : '正在创建支付订单，请稍候...');
-                
-                // 选择API端点（测试模式 vs 生产模式）
-                const endpoint = TEST_MODE ? `${API_BASE}/test/payment/create` : `${API_BASE}/payment/v2/create`;
+                safeTgAlert('正在创建支付订单，请稍候...');
                 
                 // 调用后端API创建支付订单
-                const response = await fetch(endpoint, {
+                const response = await fetch(`${API_BASE}/payment/v2/create`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
