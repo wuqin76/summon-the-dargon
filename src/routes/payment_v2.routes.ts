@@ -43,6 +43,16 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
     const client = await pool.connect();
 
     try {
+        // 检查FendPay配置
+        if (!process.env.FENDPAY_MERCHANT_NUMBER || !process.env.FENDPAY_SECRET) {
+            console.error('[Payment] FendPay配置缺失', {
+                hasMerchant: !!process.env.FENDPAY_MERCHANT_NUMBER,
+                hasSecret: !!process.env.FENDPAY_SECRET,
+                hasApiUrl: !!process.env.FENDPAY_API_BASE_URL
+            });
+            throw new Error('FendPay支付服务未配置，请联系管理员');
+        }
+
         // 默认支付金额: 1000印度卢比
         const { amount = 1000 } = req.body;
 
@@ -100,7 +110,13 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
 
         if (fendPayResult.code !== '200' || !fendPayResult.data) {
             await client.query('ROLLBACK');
-            throw new Error(fendPayResult.msg || '创建支付订单失败');
+            const errorMsg = fendPayResult.msg || '创建支付订单失败';
+            console.error('[Payment] FendPay订单创建失败', {
+                code: fendPayResult.code,
+                msg: fendPayResult.msg,
+                uuid: fendPayResult.uuid
+            });
+            throw new Error(`FendPay: ${errorMsg} (code: ${fendPayResult.code})`);
         }
 
         // 3. 更新会话记录
@@ -134,10 +150,21 @@ router.post('/create', authMiddleware, async (req: Request, res: Response) => {
 
     } catch (error: any) {
         await client.query('ROLLBACK');
-        console.error('[Payment] Create order error:', error);
+        console.error('[Payment] Create order error:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
+        
+        // 确保错误消息能传递到前端
+        const errorMessage = error.message || '创建支付订单失败';
         res.status(500).json({
             success: false,
-            message: '创建支付订单失败: ' + error.message
+            message: errorMessage,
+            error: {
+                type: error.name || 'PaymentError',
+                details: error.message
+            }
         });
     } finally {
         client.release();
