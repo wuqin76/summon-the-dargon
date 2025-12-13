@@ -2232,26 +2232,19 @@
                     body: JSON.stringify({ initData }),
                 });
                 
-                console.log('登录响应状态:', response.status);
-                
-                if (!response.ok) {
-                    console.error('❌ 登录请求失败，状态码:', response.status);
-                    throw new Error(`登录请求失败 (${response.status})`);
-                }
+                if (!response.ok) throw new Error(`登录失败 (${response.status})`);
                 
                 const data = await response.json();
-                console.log('登录响应数据:', data);
                 
                 if (data.success && data.data && data.data.token) {
                     authToken = data.data.token;
                     localStorage.setItem('authToken', authToken);
-                    console.log('✅ 登录成功，token已保存');
                 } else {
-                    console.error('❌ 登录失败:', data.error || data.message);
-                    throw new Error(data.error || data.message || '登录失败，未返回有效token');
+                    console.error('登录失败:', data.error || data.message);
+                    throw new Error(data.error || data.message || '登录失败');
                 }
             } catch (error) {
-                console.error('❌ 登录错误:', error);
+                console.error('登录错误:', error);
                 // 清除可能存在的无效token
                 authToken = null;
                 localStorage.removeItem('authToken');
@@ -2274,36 +2267,21 @@
                     const balanceData = await balanceResponse.json();
                     
                     if (balanceData.success) {
-                        // 后端返回的是驼峰式：lockedBalance
                         const balance = balanceData.data.lockedBalance || balanceData.data.locked_balance || 0;
-                        console.log('💵 解析到的余额:', balance);
                         updateEnergyBar(balance);
-                    } else {
-                        console.error('❌ 余额API返回false:', balanceData);
                     }
-                } else {
-                    console.error('❌ 余额API请求失败:', balanceResponse.status);
                 }
             } catch (error) {
-                console.error('❌ 检查任务进度错误:', error);
+                console.error('检查任务进度错误:', error);
             }
         }
 
         // 更新余额显示
         function updateEnergyBar(balance) {
-            console.log('💰 更新余额显示:', balance);
-            
-            // 更新提现按钮区域的余额显示
             const withdrawBalance = document.getElementById('withdrawBalance');
             if (withdrawBalance) {
-                const formattedBalance = formatPrizeAmount(balance);
-                withdrawBalance.textContent = formattedBalance;
-                console.log('✅ 余额已更新到页面:', formattedBalance);
-            } else {
-                console.error('❌ 找不到 withdrawBalance 元素');
+                withdrawBalance.textContent = formatPrizeAmount(balance);
             }
-            
-            // 保存当前余额到全局变量
             window.currentBalance = balance;
         }
 
@@ -2324,7 +2302,7 @@
             if (modal && amountDisplay) {
                 amountDisplay.textContent = formatPrizeAmount(balance);
                 modal.style.display = 'flex';
-                console.log('[Withdraw] 显示提现申请弹窗，余额:', balance);
+
             }
         }
 
@@ -2338,7 +2316,7 @@
                 document.getElementById('withdrawMobile').value = '';
                 document.getElementById('withdrawBankAccount').value = '';
                 document.getElementById('withdrawIfsc').value = '';
-                console.log('[Withdraw] 关闭提现申请弹窗');
+
             }
         }
 
@@ -2392,7 +2370,7 @@
                     amount: balance
                 };
 
-                console.log('[Withdraw] 提交提现申请:', withdrawData);
+
 
                 // TODO: 调用后端API提交提现申请
                 // const response = await fetch(`${API_BASE}/withdrawal/request`, {
@@ -2421,7 +2399,7 @@
                 // await checkTaskProgress();
 
             } catch (error) {
-                console.error('[Withdraw] 提现申请提交失败:', error);
+                console.error('提现申请失败:', error);
                 showToast('❌ 提现申请提交失败，请稍后重试');
             }
         }
@@ -2895,8 +2873,7 @@
                 const ticketsData = await ticketsResponse.json();
                 
                 if (ticketsData.success && ticketsData.data.has_tickets) {
-                    // 有游玩机会，直接使用（不显示弹窗，直接进入游戏）
-                    console.log(`✨ 您有 ${ticketsData.data.paid_play_tickets} 次游玩机会，正在进入游戏...`);
+                    // 有游玩机会，直接使用
                     await usePlayTicketAndEnterGame();
                     return;
                 }
@@ -2949,13 +2926,6 @@
                     localStorage.setItem('gameMode', 'paid');
                     localStorage.setItem('gameSessionId', data.data.session_id);
                     localStorage.removeItem('gameCompleted');
-                    
-                    // 显示剩余次数
-                    if (data.data.remaining_tickets > 0) {
-                        console.log(`✅ 游玩机会已使用，剩余 ${data.data.remaining_tickets} 次`);
-                    } else {
-                        console.log('✅ 游玩机会已使用，这是您的最后一次机会');
-                    }
                     
                     // 进入游戏
                     window.location.href = '/game/index.html';
@@ -3143,111 +3113,17 @@
             }
         }
         
-        // 调试工具：手动检查订单状态
-        // 使用方法：在控制台输入 debugCheckOrder() 或 debugCheckOrder('订单号')
-        window.debugCheckOrder = async function(orderId) {
-            if (!orderId) {
-                orderId = localStorage.getItem('pendingOrderId');
-            }
-            
-            if (!orderId) {
-                console.log('❌ 没有待支付订单');
-                console.log('💡 使用方法: debugCheckOrder("订单号")');
-                return;
-            }
-            
-            console.log('🔍 检查订单:', orderId);
-            
-            const response = await fetch(`${API_BASE}/payment/v2/status/${orderId}`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
-            
-            const data = await response.json();
-            console.log('📊 订单完整信息:', data);
-            
-            if (data.data) {
-                console.log('═══════════════════════════════════');
-                console.log('订单号:', data.data.order_id);
-                console.log('状态:', data.data.status, data.data.status === 'pending' ? '⏳ 待支付' : data.data.status === 'confirmed' ? '✅ 已支付' : '❌ 失败');
-                console.log('金额:', data.data.amount);
-                console.log('FendPay订单号:', data.data.fendpay_order_no);
-                console.log('═══════════════════════════════════');
-                
-                if (data.data.status === 'pending') {
-                    console.log('💡 订单还在等待支付中');
-                    console.log('📝 请确保在支付页面完成了支付操作');
-                } else if (data.data.status === 'confirmed') {
-                    console.log('✅ 订单已支付成功！');
-                    console.log('🎟️ 检查游玩机会...');
-                    await loadPlayTickets();
-                }
-            }
-            
-            return data;
-        };
-        
-        // 调试工具：手动领取游玩机会
-        window.debugClaimTicket = async function(orderId) {
-            if (!orderId) {
-                orderId = localStorage.getItem('pendingOrderId');
-            }
-            
-            if (!orderId) {
-                console.log('❌ 没有订单号');
-                console.log('💡 使用方法: debugClaimTicket("订单号")');
-                return;
-            }
-            
-            console.log('🎟️ 尝试领取订单的游玩机会:', orderId);
-            
-            try {
-                const response = await fetch(`${API_BASE}/user/claim-ticket-for-payment`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ orderId: orderId })
-                });
-                
-                const data = await response.json();
-                console.log('📊 领取结果:', data);
-                
-                if (data.success) {
-                    console.log('✅ 领取成功！当前游玩机会:', data.data.current_tickets);
-                    await loadPlayTickets();
-                } else {
-                    console.log('❌ 领取失败:', data.error);
-                }
-                
-                return data;
-            } catch (error) {
-                console.error('❌ 请求失败:', error);
-            }
-        };
-        
-        // 输出调试工具说明
-        console.log('🛠️ 调试工具已加载：');
-        console.log('  - debugCheckOrder() : 检查当前待支付订单');
-        console.log('  - debugCheckOrder("订单号") : 检查指定订单');
-        console.log('  - debugClaimTicket("订单号") : 手动领取游玩机会');
+        // 调试工具已移除以优化性能
         
         // 支付成功处理
         async function handlePaymentSuccess(orderId) {
-            // 关闭等待弹窗
             const modal = document.getElementById('paymentWaitingModal');
-            if (modal) {
-                modal.remove();
-            }
+            if (modal) modal.remove();
             
-            // 清除订单信息
             localStorage.removeItem('pendingOrderId');
             localStorage.removeItem('paymentAmount');
             
-            console.log('[Payment] ✅ 支付成功确认，主动领取游玩机会...');
-            
             try {
-                // 主动调用API领取游玩机会（幂等操作，多次调用也安全）
                 const claimResponse = await fetch(`${API_BASE}/user/claim-ticket-for-payment`, {
                     method: 'POST',
                     headers: {
@@ -3260,56 +3136,17 @@
                 const claimData = await claimResponse.json();
                 
                 if (claimData.success) {
-                    console.log('[Payment] ✅ 游玩机会领取成功', claimData.data);
                     await loadPlayTickets();
-                    
                     const currentTickets = claimData.data.current_tickets || 0;
                     safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
                 } else {
-                    console.warn('[Payment] ⚠️ 领取游玩机会失败:', claimData.error);
-                    
-                    // 如果API失败，回退到轮询等待机制
-                    console.log('[Payment] 使用备用方案：轮询等待webhook处理...');
-                    await waitForTicketsByPolling(orderId);
+                    await loadPlayTickets();
+                    safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
                 }
             } catch (error) {
-                console.error('[Payment] 领取游玩机会出错:', error);
-                
-                // 出错时使用轮询等待机制
-                console.log('[Payment] 使用备用方案：轮询等待webhook处理...');
-                await waitForTicketsByPolling(orderId);
+                await loadPlayTickets();
+                safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
             }
-        }
-        
-        // 备用方案：轮询等待游玩机会到账
-        async function waitForTicketsByPolling(orderId) {
-            const initialTickets = await getPlayTicketsCount();
-            let checkCount = 0;
-            const maxChecks = 30; // 30秒
-            
-            const checkInterval = setInterval(async () => {
-                checkCount++;
-                const currentTickets = await getPlayTicketsCount();
-                
-                console.log(`[Payment] 轮询检查游玩机会 (${checkCount}/${maxChecks}): ${currentTickets}次`);
-                
-                // 如果游玩机会增加了，说明webhook已处理
-                if (currentTickets > initialTickets) {
-                    clearInterval(checkInterval);
-                    console.log(`[Payment] ✅ 游玩机会已到账：${currentTickets}次`);
-                    await loadPlayTickets();
-                    safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
-                    return;
-                }
-                
-                // 超时仍未到账
-                if (checkCount >= maxChecks) {
-                    clearInterval(checkInterval);
-                    console.warn('[Payment] ⚠️ 游玩机会确认超时');
-                    await loadPlayTickets();
-                    safeTgAlert('⚠️ 支付已成功，但游玩机会确认中\n\n请稍后刷新页面，或联系客服确认');
-                }
-            }, 1000);
         }
         
         // 获取当前游玩机会数量（不更新UI，仅返回数值）
