@@ -89,9 +89,10 @@ export class FendPayService {
         const filteredParams: Record<string, string> = {};
         Object.keys(params).forEach(key => {
             if (key !== 'sign' && params[key] !== null && params[key] !== undefined && params[key] !== '') {
-                // 金额类参数格式化为两位小数
-                if (key === 'amount' && typeof params[key] === 'number') {
-                    filteredParams[key] = params[key].toFixed(2);
+                // 金额类参数必须格式化为两位小数字符串（如 "1000.00"）
+                if (key === 'amount') {
+                    const numValue = typeof params[key] === 'string' ? parseFloat(params[key]) : params[key];
+                    filteredParams[key] = numValue.toFixed(2);
                 } else {
                     filteredParams[key] = String(params[key]);
                 }
