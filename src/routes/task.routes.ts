@@ -192,8 +192,9 @@ export async function updateTaskProgressV2(
 
         // 检查完成方式是否符合任务要求
         let canComplete = false;
-        if (currentTask.type === TaskType.INITIAL_SPIN && completionMethod === 'spin') {
-            canComplete = true;
+        if (currentTask.type === TaskType.INITIAL_SPIN) {
+            // 任务1：首次游玩 - 只要抽奖就算完成（不管是通过什么方式获得的抽奖机会）
+            canComplete = (completionMethod === 'spin' || completionMethod === 'paid_game');
         } else if (currentTask.type === TaskType.PAID_GAME && completionMethod === 'paid_game') {
             canComplete = true;
         } else if (currentTask.type === TaskType.INVITE_OR_GAME && 
