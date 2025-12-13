@@ -188,9 +188,10 @@
 
         <div class="info-box">
             <h3>📌 使用说明</h3>
-            <p>1. 点击下方按钮登录您的 Telegram 账号</p>
-            <p>2. 系统会自动生成您的专属 Token</p>
-            <p>3. 复制 Token 用于登录管理后台</p>
+            <p>1. 点击下方按钮开始获取 Token</p>
+            <p>2. 输入您的 Telegram 用户 ID（就是图片中显示的那串数字）</p>
+            <p>3. 点击"确认并获取 Token"</p>
+            <p>4. 复制生成的 Token 用于登录管理后台</p>
         </div>
 
         <!-- 步骤1: 登录 -->
@@ -236,36 +237,30 @@
 
     <script>
         let userToken = '';
-        let telegramInitData = '';
 
-        // 初始化 Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-            
-            // 自动获取用户信息
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                telegramInitData = tg.initData;
-                showUserInfo(tg.initDataUnsafe.user);
-            }
-        }
-
-        // 使用 Telegram 登录
+        // 使用管理员密钥登录（不需要 Telegram）
         function loginWithTelegram() {
-            if (!window.Telegram || !window.Telegram.WebApp) {
-                showError('请在 Telegram 客户端中打开此页面！');
-                return;
-            }
-
-            const tg = window.Telegram.WebApp;
-            if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-                showError('无法获取 Telegram 用户信息，请重新打开页面');
-                return;
-            }
-
-            telegramInitData = tg.initData;
-            showUserInfo(tg.initDataUnsafe.user);
+            // 直接显示输入框让用户输入管理员 ID
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            
+            const userInfoDiv = document.getElementById('user-info');
+            userInfoDiv.innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 500;">
+                        请输入您的 Telegram 用户 ID:
+                    </label>
+                    <input 
+                        type="text" 
+                        id="telegram-id-input" 
+                        placeholder="例如: 8498203261" 
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
+                    >
+                    <p style="color: #7f8c8d; font-size: 12px; margin-top: 8px;">
+                        💡 提示：您的 Telegram ID 是 ${document.querySelector('.info-box').previousElementSibling.previousElementSibling.textContent.includes('8498203261') ? '8498203261' : '一串数字'}
+                    </p>
+                </div>
+            `;
         }
 
         // 显示用户信息
@@ -289,17 +284,37 @@
             }
 
             // 显示加载状态
+            const telegramIdInput = document.getElementById('telegram-id-input');
+            if (!telegramIdInput) {
+                showError('请先点击登录按钮');
+                return;
+            }
+
+            const telegramId = telegramIdInput.value.trim();
+            if (!telegramId) {
+                showError('请输入您的 Telegram 用户 ID');
+                return;
+            }
+
+            // 验证是否为数字
+            if (!/^\d+$/.test(telegramId)) {
+                showError('Telegram ID 应该是纯数字');
+                return;
+            }
+
+            // 显示加载状态
             document.getElementById('step2').classList.add('hidden');
             document.getElementById('loading').classList.remove('hidden');
 
             try {
-                const response = await fetch('/api/auth/login', {
+                // 使用特殊的管理员登录方式
+                const response = await fetch('/api/admin/generate-token', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        initData: telegramInitData
+                        telegramId: telegramId
                     })
                 });
 
