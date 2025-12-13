@@ -457,7 +457,7 @@ router.post('/payout/test', authMiddleware, async (req: Request, res: Response) 
 
         const fendPayResult = await fendPayService.createPayout({
             outTradeNo,
-            amount: '10.00',  // 测试金额：10卢比
+            amount: '100.00',  // 测试金额：100卢比（FendPay最小限额）
             notifyUrl,
             upi,
             mobileNo,
@@ -493,7 +493,7 @@ router.post('/payout/test', authMiddleware, async (req: Request, res: Response) 
             data: {
                 order_id: outTradeNo,
                 fendpay_order_no: fendPayResult.data.orderNo,
-                amount: '10.00',
+                amount: '100.00',
                 currency: 'INR',
                 status: fendPayResult.data.status === '0' ? 'processing' : 'failed',
                 message: fendPayResult.data.status === '0' ? '代付订单已提交，处理中' : '代付订单提交失败'
