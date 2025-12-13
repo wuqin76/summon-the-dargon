@@ -3,174 +3,161 @@
  */
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
-import crypto from 'crypto';
+import { fendPayService } from '../services/fendpay.service';
+import { logger } from '../utils/logger';
 
 const router = Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 /**
- * 验证第三方支付签名
- * @param payload 回调数据
- * @param signature 签名
- * @param secret 密钥
+ * FendPay 支付回调接口（幂等）
+ * POST /api/webhook/fendpay
+ * 
+ * 回调参数：
+ * {
+ *   "outTradeNo": "商户订单号",
+ *   "orderNo": "平台订单号",
+ *   "amount": "金额",
+ *   "status": "1",  // 1=成功，其他=失败
+ *   "utr": "流水号",  // 可选
+ *   "sign": "签名"
+ * }
  */
-function verifySignature(payload: any, signature: string, secret: string): boolean {
-    try {
-        // 根据实际第三方支付的签名算法调整
-        const expectedSignature = crypto
-            .createHmac('sha256', secret)
-            .update(JSON.stringify(payload))
-            .digest('hex');
-        
-        return signature === expectedSignature;
-    } catch (error) {
-        console.error('[Webhook] Signature verification error:', error);
-        return false;
-    }
-}
-
-/**
- * 第三方支付回调接口（幂等）
- * POST /api/webhook/payment
- */
-router.post('/payment', async (req: Request, res: Response) => {
+router.post('/fendpay', async (req: Request, res: Response) => {
     const client = await pool.connect();
     
     try {
         const {
-            transaction_id,   // 第三方交易ID（唯一）
-            order_id,         // 订单ID
-            user_id,          // 用户ID
-            amount,           // 金额
-            currency,         // 货币
-            status,           // 支付状态：success, failed
-            timestamp,        // 时间戳
-            signature         // 签名
+            outTradeNo,   // 商户订单号
+            orderNo,      // 平台订单号
+            amount,       // 金额
+            status,       // 1=成功，其他=失败
+            utr,          // 流水号（可选）
+            sign          // 签名
         } = req.body;
 
-        console.log('[Webhook] Payment callback received:', {
-            transaction_id,
-            order_id,
-            user_id,
+        logger.info('[FendPay Webhook] 收到支付回调', {
+            outTradeNo,
+            orderNo,
             amount,
-            status
+            status,
+            utr,
         });
 
         // 1. 验证签名
-        const secret = process.env.PAYMENT_WEBHOOK_SECRET || 'your_webhook_secret';
-        const isValid = verifySignature(
-            { transaction_id, order_id, user_id, amount, currency, status, timestamp },
-            signature,
-            secret
-        );
+        const isValid = fendPayService.verifySign(req.body);
 
         if (!isValid) {
-            console.error('[Webhook] Invalid signature');
-            return res.status(401).json({
-                success: false,
-                error: 'INVALID_SIGNATURE',
-                message: '签名验证失败'
-            });
+            logger.error('[FendPay Webhook] 签名验证失败');
+            // FendPay要求返回success，即使验证失败也返回，但记录错误
+            return res.send('success');
         }
 
-        // 2. 幂等性检查：查询是否已处理过此交易
+        // 2. 幂等性检查：查询是否已处理过此订单
         const existingPayment = await client.query(
-            'SELECT id, status, used FROM payments WHERE provider_tx_id = $1',
-            [transaction_id]
+            'SELECT id, status, used FROM payments WHERE provider_order_id = $1',
+            [outTradeNo]
         );
 
         if (existingPayment.rows.length > 0) {
-            console.log('[Webhook] Payment already processed:', transaction_id);
-            return res.status(200).json({
-                success: true,
-                message: 'Already processed',
-                payment_id: existingPayment.rows[0].id
-            });
+            logger.info('[FendPay Webhook] 订单已处理', { outTradeNo });
+            // FendPay要求返回success
+            return res.send('success');
         }
 
-        // 3. 开始事务
+        // 3. 查询订单信息，获取user_id
+        const orderInfo = await client.query(
+            'SELECT user_id FROM game_sessions WHERE external_order_id = $1 OR id::text = $1',
+            [outTradeNo]
+        );
+
+        if (orderInfo.rows.length === 0) {
+            logger.error('[FendPay Webhook] 未找到订单信息', { outTradeNo });
+            // 仍然返回success，避免重复回调
+            return res.send('success');
+        }
+
+        const userId = orderInfo.rows[0].user_id;
+
+        // 4. 判断支付是否成功（status = 1）
+        const paymentStatus = parseInt(status) === 1 ? 'confirmed' : 'failed';
+
+        if (paymentStatus !== 'confirmed') {
+            logger.warn('[FendPay Webhook] 支付失败', { outTradeNo, status });
+            return res.send('success');
+        }
+
+        // 5. 开始事务
         await client.query('BEGIN');
 
-        // 4. 插入支付记录
+        // 6. 插入支付记录
         const paymentResult = await client.query(`
             INSERT INTO payments (
                 user_id, provider_name, provider_tx_id, provider_order_id,
                 amount, currency, status, signature_verified, callback_payload,
-                user_ip, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+                created_at, updated_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
             RETURNING id
         `, [
-            user_id,
-            'external_api',
-            transaction_id,
-            order_id,
-            amount,
-            currency || 'USDT',
-            status,
+            userId,
+            'FendPay',
+            orderNo,
+            outTradeNo,
+            parseFloat(amount),
+            'INR',
+            paymentStatus,
             true,
-            JSON.stringify(req.body),
-            req.ip || req.headers['x-forwarded-for'] || 'unknown'
+            JSON.stringify(req.body)
         ]);
 
         const paymentId = paymentResult.rows[0].id;
 
-        // 5. 如果支付成功，发放抽奖资格
-        if (status === 'success') {
-            // 发放一次抽奖资格
-            await client.query(`
-                INSERT INTO spin_entitlements (
-                    user_id, source_type, source_id, consumed, created_at
-                ) VALUES ($1, 'paid_game', $2, false, NOW())
-            `, [user_id, paymentId]);
+        logger.info('[FendPay Webhook] 支付记录已创建', { paymentId, outTradeNo });
 
-            // 更新用户可用抽奖次数
-            await client.query(`
-                UPDATE users 
-                SET available_spins = available_spins + 1,
-                    updated_at = NOW()
-                WHERE id = $1
-            `, [user_id]);
+        // 7. 更新订单状态为已支付
+        await client.query(`
+            UPDATE game_sessions
+            SET 
+                payment_id = $1,
+                payment_status = 'paid',
+                updated_at = NOW()
+            WHERE external_order_id = $2
+        `, [paymentId, outTradeNo]);
 
-            console.log('[Webhook] Spin entitlement granted to user:', user_id);
-        }
-
-        // 6. 记录审计日志
+        // 8. 记录审计日志
         await client.query(`
             INSERT INTO audit_logs (
                 actor_id, actor_type, action, target_type, target_id,
                 ip_address, details, success, created_at
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
         `, [
-            user_id,
+            userId,
             'system',
-            'payment_webhook_received',
+            'fendpay_webhook_received',
             'payment',
             paymentId,
             req.ip || 'unknown',
-            JSON.stringify({ transaction_id, status, amount }),
+            JSON.stringify({ outTradeNo, orderNo, amount, status, utr }),
             true
         ]);
 
         // 7. 提交事务
         await client.query('COMMIT');
 
-        console.log('[Webhook] Payment processed successfully:', paymentId);
+        logger.info('[FendPay Webhook] 支付处理成功', { paymentId, outTradeNo });
 
-        res.json({
-            success: true,
-            message: 'Payment processed',
-            payment_id: paymentId
-        });
+        // FendPay要求返回 "success" 字符串
+        res.send('success');
 
     } catch (error: any) {
         await client.query('ROLLBACK');
-        console.error('[Webhook] Payment processing error:', error);
-
-        res.status(500).json({
-            success: false,
-            error: 'PROCESSING_ERROR',
-            message: '支付处理失败'
+        logger.error('[FendPay Webhook] 支付处理失败', {
+            error: error.message,
+            stack: error.stack,
         });
+
+        // 即使出错也返回success，避免重复回调
+        res.send('success');
     } finally {
         client.release();
     }

@@ -35,41 +35,91 @@ router.get('/info', authMiddleware, async (_req: Request, res: Response) => {
 });
 
 /**
- * 创建支付订单（可选，如果需要先创建订单再跳转支付）
- * POST /api/payment/create
+ * 创建支付订单（FendPay代收）
+ * POST /api/payment/v2/create
  */
 router.post('/create', authMiddleware, async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
+    const client = await pool.connect();
 
     try {
         const { amount = 10 } = req.body;
 
-        // 生成订单ID
-        const order_id = `ORDER_${Date.now()}_${userId.substring(0, 8)}`;
+        // 生成商户订单号（唯一）
+        const outTradeNo = `GAME_${Date.now()}_${userId.substring(0, 8)}`;
 
-        // 这里应该调用第三方支付API创建订单
-        // const paymentUrl = await thirdPartyAPI.createOrder({ order_id, amount, user_id: userId, return_url });
+        console.log('[Payment] 创建FendPay订单', { userId, outTradeNo, amount });
 
-        // 临时返回模拟数据
-        const paymentUrl = `${process.env.PAYMENT_URL}?order_id=${order_id}&amount=${amount}&user_id=${userId}`;
+        // 开始事务
+        await client.query('BEGIN');
+
+        // 1. 创建游戏会话记录（用于关联订单和用户）
+        const sessionResult = await client.query(`
+            INSERT INTO game_sessions (
+                user_id, game_mode, payment_status, external_order_id, created_at
+            ) VALUES ($1, 'paid', 'pending', $2, NOW())
+            RETURNING id
+        `, [userId, outTradeNo]);
+
+        const sessionId = sessionResult.rows[0].id;
+
+        // 2. 调用FendPay API创建订单
+        const { fendPayService } = await import('../services/fendpay.service');
+        
+        const baseUrl = process.env.BASE_URL || 'https://dragon-spin-game-production.up.railway.app';
+        const notifyUrl = `${baseUrl}/api/webhook/fendpay`;
+        const callbackUrl = `${baseUrl}/`;
+
+        const fendPayResult = await fendPayService.createOrder({
+            outTradeNo,
+            amount: fendPayService.formatAmount(amount),
+            notifyUrl,
+            callbackUrl,
+        });
+
+        if (fendPayResult.code !== '200' || !fendPayResult.data) {
+            await client.query('ROLLBACK');
+            throw new Error(fendPayResult.msg || '创建支付订单失败');
+        }
+
+        // 3. 更新会话记录
+        await client.query(`
+            UPDATE game_sessions
+            SET 
+                fendpay_order_no = $1,
+                updated_at = NOW()
+            WHERE id = $2
+        `, [fendPayResult.data.orderNo, sessionId]);
+
+        await client.query('COMMIT');
+
+        console.log('[Payment] FendPay订单创建成功', {
+            outTradeNo,
+            orderNo: fendPayResult.data.orderNo,
+            payUrl: fendPayResult.data.payUrl,
+        });
 
         res.json({
             success: true,
             data: {
-                order_id,
-                payment_url: paymentUrl,
+                order_id: outTradeNo,
+                fendpay_order_no: fendPayResult.data.orderNo,
+                payment_url: fendPayResult.data.payUrl,
                 amount,
-                currency: 'USDT',
+                currency: 'INR',
                 expires_in: 1800  // 30分钟
             }
         });
 
     } catch (error: any) {
+        await client.query('ROLLBACK');
         console.error('[Payment] Create order error:', error);
         res.status(500).json({
             success: false,
-            message: '创建支付订单失败'
+            message: '创建支付订单失败: ' + error.message
         });
+    } finally {
+        client.release();
     }
 });
 
@@ -239,47 +289,94 @@ router.post('/use', authMiddleware, async (req: Request, res: Response) => {
 });
 
 /**
- * 查询支付状态（通过订单ID）
- * GET /api/payment/status/:orderId
+ * 查询支付状态（通过商户订单ID）
+ * GET /api/payment/v2/status/:orderId
  */
 router.get('/status/:orderId', authMiddleware, async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
     const { orderId } = req.params;
 
     try {
-        const result = await pool.query(`
+        // 1. 先查询本地数据库
+        const localResult = await pool.query(`
             SELECT 
-                id,
-                provider_tx_id,
-                provider_order_id,
-                amount,
-                currency,
-                status,
-                used,
-                created_at
-            FROM payments
-            WHERE user_id = $1 
-                AND (provider_order_id = $2 OR provider_tx_id = $2)
+                p.id,
+                p.provider_tx_id,
+                p.provider_order_id,
+                p.amount,
+                p.currency,
+                p.status,
+                p.used,
+                p.created_at,
+                gs.payment_status,
+                gs.fendpay_order_no
+            FROM payments p
+            LEFT JOIN game_sessions gs ON p.id = gs.payment_id
+            WHERE p.user_id = $1 
+                AND (p.provider_order_id = $2 OR gs.external_order_id = $2)
             LIMIT 1
         `, [userId, orderId]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: '支付记录不存在'
+        // 如果本地已经有支付成功的记录，直接返回
+        if (localResult.rows.length > 0 && localResult.rows[0].status === 'confirmed') {
+            console.log('[Payment] 本地查询：支付已成功', { orderId });
+            return res.json({
+                success: true,
+                data: localResult.rows[0]
             });
         }
 
-        res.json({
+        // 2. 如果本地没有或状态pending，调用FendPay查询接口
+        console.log('[Payment] 调用FendPay查询订单状态', { orderId });
+        
+        const { fendPayService } = await import('../services/fendpay.service');
+        const fendPayResult = await fendPayService.queryOrder({
+            outTradeNo: orderId
+        });
+
+        if (fendPayResult.code === '200' && fendPayResult.data) {
+            const paymentData = fendPayResult.data;
+            
+            // 如果FendPay显示支付成功但本地还没记录，更新本地状态
+            if (paymentData.status === 1 && localResult.rows.length === 0) {
+                console.log('[Payment] FendPay显示成功但本地无记录，可能webhook延迟');
+                // 可以选择在这里触发webhook处理逻辑，或等待webhook到达
+            }
+
+            return res.json({
+                success: true,
+                data: {
+                    order_id: orderId,
+                    fendpay_order_no: paymentData.orderNo,
+                    amount: paymentData.amount,
+                    status: paymentData.status === 1 ? 'confirmed' : 'pending',
+                    utr: paymentData.utr,
+                }
+            });
+        }
+
+        // 3. 如果FendPay查询失败，返回本地状态或pending
+        if (localResult.rows.length > 0) {
+            return res.json({
+                success: true,
+                data: localResult.rows[0]
+            });
+        }
+
+        return res.json({
             success: true,
-            data: result.rows[0]
+            data: {
+                order_id: orderId,
+                status: 'pending',
+                message: '订单处理中'
+            }
         });
 
     } catch (error: any) {
         console.error('[Payment] Get status error:', error);
         res.status(500).json({
             success: false,
-            message: '查询支付状态失败'
+            message: '查询支付状态失败: ' + error.message
         });
     }
 });
