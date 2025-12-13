@@ -2487,12 +2487,12 @@
             // 立即检查一次
             checkInviteUpdates();
             
-            // 每10秒检查一次
+            // 每20秒检查一次
             invitePollingInterval = setInterval(() => {
                 checkInviteUpdates();
-            }, 10000);
+            }, 20000);
             
-            console.log('✅ 邀请轮询已启动，每10秒检查一次');
+            console.log('✅ 邀请轮询已启动，每20秒检查一次');
         }
 
         // 检查邀请更新
@@ -2552,9 +2552,6 @@
         // 显示邀请链接
         async function showInviteLink() {
             console.log('🔔 showInviteLink() 函数被调用');
-            
-            // 立即检查邀请更新
-            await checkInviteUpdates();
             
             const modal = document.getElementById('inviteModal');
             const inviteLinkInput = document.getElementById('inviteLink');
@@ -3109,7 +3106,7 @@
         }
 
         // 页面切换函数
-        async function switchPage(pageId, event) {
+        function switchPage(pageId, event) {
             console.log('切换到页面:', pageId);
             
             // 隐藏所有页面
@@ -3159,7 +3156,7 @@
             // 如果切换到邀请页面，立即检查邀请更新
             if (pageId === 'invitePage') {
                 console.log('🔄 切换到邀请页面，立即检查邀请更新');
-                await checkInviteUpdates();
+                checkInviteUpdates(); // 非阻塞调用
             }
         }
 
@@ -3423,24 +3420,6 @@
             // 初始化提现通知
             updateWithdrawalNotice();
         });
-
-        // 监听页面可见性变化（用户返回应用时立即检查邀请更新）
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && authToken && authToken !== 'dev-token') {
-                console.log('📱 用户返回应用，立即检查邀请更新');
-                checkInviteUpdates();
-            }
-        });
-
-        // 监听Telegram WebApp的焦点事件
-        if (window.Telegram?.WebApp) {
-            window.Telegram.WebApp.onEvent('viewportChanged', () => {
-                if (window.Telegram.WebApp.isExpanded && authToken && authToken !== 'dev-token') {
-                    console.log('📱 应用展开，检查邀请更新');
-                    checkInviteUpdates();
-                }
-            });
-        }
 
         init();
     </script>
