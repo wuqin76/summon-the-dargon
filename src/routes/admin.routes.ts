@@ -4,8 +4,52 @@ import { spinService } from '../services/spin.service';
 import { userService } from '../services/user.service';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 import { logger } from '../utils/logger';
+import jwt from 'jsonwebtoken';
+import { pool } from '../database';
 
 const router = Router();
+
+/**
+ * POST /api/admin/simple-login
+ * 简单的用户名密码登录
+ */
+router.post('/simple-login', async (req: Request, res: Response) => {
+    try {
+        const { username, password } = req.body;
+
+        // 简单的管理员账号验证
+        if (username === 'admin' && password === 'DragonAdmin2024') {
+            // 为管理员生成 Token
+            const token = jwt.sign(
+                { 
+                    userId: 8498203261,
+                    telegramId: '8498203261',
+                    isAdmin: true,
+                    username: 'admin'
+                },
+                process.env.JWT_SECRET || 'dragon-spin-secret-key-2024',
+                { expiresIn: '365d' }
+            );
+
+            return res.json({
+                success: true,
+                token,
+                message: '登录成功'
+            });
+        } else {
+            return res.status(401).json({
+                success: false,
+                message: '用户名或密码错误'
+            });
+        }
+    } catch (error) {
+        logger.error('Simple login error:', error);
+        return res.status(500).json({
+            success: false,
+            message: '登录失败，服务器错误'
+        });
+    }
+});
 
 /**
  * POST /api/admin/generate-token
