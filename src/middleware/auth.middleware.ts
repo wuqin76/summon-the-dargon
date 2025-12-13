@@ -180,8 +180,16 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
             return;
         }
 
-        // 检查是否是管理员
-        if (!config.telegram.adminIds.includes(user.telegramId)) {
+        // 检查是否是管理员（兼容字符串和数字）
+        const telegramId = typeof user.telegramId === 'string' 
+            ? parseInt(user.telegramId, 10) 
+            : user.telegramId;
+        
+        if (!config.telegram.adminIds.includes(telegramId)) {
+            logger.warn('Access denied for non-admin user', { 
+                telegramId: user.telegramId,
+                adminIds: config.telegram.adminIds 
+            });
             res.status(403).json({ error: 'Access denied' });
             return;
         }
