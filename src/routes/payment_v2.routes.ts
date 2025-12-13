@@ -353,7 +353,7 @@ router.get('/status/:orderId', authMiddleware, async (req: Request, res: Respons
                     order_id: orderId,
                     fendpay_order_no: paymentData.orderNo,
                     amount: paymentData.amount,
-                    status: paymentData.status === 1 ? 'confirmed' : 'pending',
+                    status: Number(paymentData.status) === 1 ? 'confirmed' : 'pending',
                     utr: paymentData.utr,
                 }
             });

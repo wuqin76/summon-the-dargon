@@ -80,8 +80,8 @@ router.post('/fendpay', async (req: Request, res: Response) => {
 
         const userId = orderInfo.rows[0].user_id;
 
-        // 4. 判断支付是否成功（status = 1）
-        const paymentStatus = parseInt(status) === 1 ? 'confirmed' : 'failed';
+        // 4. 判断支付是否成功（status = "1" 字符串）
+        const paymentStatus = String(status) === '1' ? 'confirmed' : 'failed';
 
         if (paymentStatus !== 'confirmed') {
             logger.warn('[FendPay Webhook] 支付失败', { outTradeNo, status });

@@ -214,6 +214,17 @@ export class FendPayService {
                 status: result.data?.status,
             });
 
+            // 验证返回的签名（如果有data）
+            if (result.code === '200' && result.data) {
+                const isValid = this.verifySign(result.data);
+                if (!isValid) {
+                    logger.error('FendPay查询订单响应签名验证失败', {
+                        outTradeNo: params.outTradeNo,
+                    });
+                    throw new Error('查询订单响应签名验证失败');
+                }
+            }
+
             return result;
 
         } catch (error: any) {
