@@ -233,6 +233,16 @@ router.post('/execute', authMiddleware, async (req: Request, res: Response) => {
             true
         ]);
 
+        // 8. 更新任务进度（抽奖计为一次任务进展）
+        const { updateTaskProgressV2 } = await import('./task.routes');
+        try {
+            console.log('🎯 抽奖完成，更新任务进度...');
+            await updateTaskProgressV2(userId, 'spin', client);
+            console.log('✅ 任务进度已更新');
+        } catch (taskError) {
+            console.error('⚠️ 更新任务进度失败（不影响抽奖）:', taskError);
+        }
+
         await client.query('COMMIT');
 
         res.json({

@@ -78,7 +78,24 @@ router.get('/balance', authMiddleware, async (req: Request, res: Response) => {
 router.get('/play-status', authMiddleware, async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
+        
+        if (!userId) {
+            logger.error('Play status: userId is null');
+            return res.status(401).json({
+                success: false,
+                error: 'User ID not found'
+            });
+        }
+        
         const user = await userService.getUserById(userId);
+        
+        if (!user) {
+            logger.error('Play status: user not found', { userId });
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
         
         // 检查用户是否已经玩过（total_free_plays + total_paid_plays > 0）
         const hasPlayed = (user.total_free_plays || 0) + (user.total_paid_plays || 0) > 0;
@@ -90,7 +107,7 @@ router.get('/play-status', authMiddleware, async (req: Request, res: Response) =
         });
 
     } catch (error: any) {
-        logger.error('Check play status error', { error: error.message });
+        logger.error('Check play status error', { error: error.message, stack: error.stack });
         res.status(500).json({
             success: false,
             error: error.message,

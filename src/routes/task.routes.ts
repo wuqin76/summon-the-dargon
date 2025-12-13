@@ -3,6 +3,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -74,7 +75,7 @@ const TASK_CONFIG = [
  * 获取当前任务
  * GET /api/task/current
  */
-router.get('/current', async (req: Request, res: Response) => {
+router.get('/current', authMiddleware, async (req: Request, res: Response) => {
     const userId = (req as any).user?.id;
 
     if (!userId) {
