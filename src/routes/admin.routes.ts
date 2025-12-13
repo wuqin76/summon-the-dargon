@@ -18,12 +18,24 @@ router.post('/simple-login', async (req: Request, res: Response) => {
 
         // 简单的管理员账号验证
         if (username === 'admin' && password === '1234') {
-            // 为管理员生成 Token
+            const telegramId = '8498203261';
+            
+            // 从数据库查找或创建管理员用户，获取真实的 user.id
+            let user = await userService.findByTelegramId(telegramId);
+            if (!user) {
+                user = await userService.createUser({
+                    telegramId,
+                    username: 'admin',
+                    firstName: 'Admin',
+                });
+            }
+
+            // 使用数据库中的真实 user.id 生成 Token
             const token = jwt.sign(
                 { 
-                    id: 8498203261,           // 后端 middleware 检查的字段
-                    userId: 8498203261,       // 保留原有字段
-                    telegramId: '8498203261',
+                    id: user.id,              // 使用 DB 真实 id
+                    userId: user.id,
+                    telegramId: telegramId,
                     isAdmin: true,
                     username: 'admin'
                 },
