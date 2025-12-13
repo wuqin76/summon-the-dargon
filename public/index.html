@@ -2954,17 +2954,9 @@
 
         // 处理付费模式
         async function handlePaidMode() {
-            // 防重复点击
+            // 简单的防抖：2秒内只能创建一次订单
             if (isCreatingPayment) {
-                console.log('[Payment] 正在创建订单中，请勿重复点击');
-                return;
-            }
-            
-            // 检查是否已有待支付订单
-            const pendingOrderId = localStorage.getItem('pendingOrderId');
-            if (pendingOrderId) {
-                console.log('[Payment] 检测到待支付订单，请先完成或取消', pendingOrderId);
-                safeTgAlert('❌ 您有一个待完成的支付订单\n\n请先完成支付或等待订单过期');
+                console.log('[Payment] 正在创建订单中，请稍候...');
                 return;
             }
             
@@ -3017,7 +3009,10 @@
                 console.error('创建支付订单失败:', error);
                 safeTgAlert('创建支付订单失败：' + error.message);
             } finally {
-                isCreatingPayment = false; // 无论成功失败都重置标志
+                // 2秒后重置标志，防止快速连续点击
+                setTimeout(() => {
+                    isCreatingPayment = false;
+                }, 2000);
             }
         }
         
@@ -3042,12 +3037,12 @@
                 
                 if (data.success && data.data) {
                     if (data.data.status === 'confirmed') {
-                        // 支付已完成
-                        console.log('✅ 检测到支付已完成，自动跳转游戏');
+                        // 支付已完成，静默处理
+                        console.log('✅ 检测到支付已完成，静默处理');
                         handlePaymentSuccess(pendingOrderId);
                     } else if (data.data.status === 'pending') {
                         // 仍在等待支付，静默恢复轮询
-                        console.log('⏳ 支付仍在等待中，恢复轮询（后台检测）');
+                        console.log('⏳ 支付仍在等待中，后台静默检测');
                         startPaymentStatusPolling(pendingOrderId);
                     } else {
                         // 支付失败或过期，清除记录
@@ -3055,9 +3050,17 @@
                         localStorage.removeItem('pendingOrderId');
                         localStorage.removeItem('paymentAmount');
                     }
+                } else {
+                    // 查询失败，可能订单已过期，清除记录
+                    console.log('⚠️ 无法查询订单状态，清除待支付记录');
+                    localStorage.removeItem('pendingOrderId');
+                    localStorage.removeItem('paymentAmount');
                 }
             } catch (error) {
                 console.error('检查待支付订单失败:', error);
+                // 查询失败，清除待支付记录，允许用户创建新订单
+                localStorage.removeItem('pendingOrderId');
+                localStorage.removeItem('paymentAmount');
             }
         }
         
