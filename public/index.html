@@ -2961,6 +2961,48 @@
             localStorage.removeItem('paymentAmount');
         }
         
+        // 检查待支付订单（启动时调用）
+        async function checkPendingPayment() {
+            const pendingOrderId = localStorage.getItem('pendingOrderId');
+            
+            if (!pendingOrderId || !authToken) {
+                return;
+            }
+            
+            console.log('检测到待支付订单:', pendingOrderId);
+            
+            try {
+                const response = await fetch(`${API_BASE}/payment/v2/status/${pendingOrderId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    if (data.data.status === 'confirmed') {
+                        // 支付已完成
+                        console.log('✅ 检测到支付已完成，自动跳转游戏');
+                        handlePaymentSuccess(pendingOrderId);
+                    } else if (data.data.status === 'pending') {
+                        // 仍在等待支付
+                        console.log('⏳ 支付仍在等待中，恢复轮询');
+                        const paymentAmount = localStorage.getItem('paymentAmount');
+                        startPaymentStatusPolling(pendingOrderId);
+                        showPaymentWaitingModal(pendingOrderId, paymentAmount);
+                    } else {
+                        // 支付失败或过期，清除记录
+                        console.log('❌ 支付已失败或过期，清除记录');
+                        localStorage.removeItem('pendingOrderId');
+                        localStorage.removeItem('paymentAmount');
+                    }
+                }
+            } catch (error) {
+                console.error('检查待支付订单失败:', error);
+            }
+        }
+        
         // 支付状态轮询
         let paymentPollingInterval = null;
         
@@ -3109,6 +3151,9 @@
             
             // 加载可抽奖次数
             await loadAvailableSpins();
+            
+            // 检查是否有待支付订单（用户可能支付后关闭了小程序）
+            await checkPendingPayment();
             
             // 处理游戏完成奖励（必须在登录后）
             await handleGameCompletedReward();
