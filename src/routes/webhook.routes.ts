@@ -3,6 +3,7 @@
  */
 import { Router, Request, Response } from 'express';
 import { Pool } from 'pg';
+import crypto from 'crypto';
 import { fendPayService } from '../services/fendpay.service';
 import { logger } from '../utils/logger';
 
@@ -32,8 +33,8 @@ router.post('/fendpay', async (req: Request, res: Response) => {
             orderNo,      // 平台订单号
             amount,       // 金额
             status,       // 1=成功，其他=失败
-            utr,          // 流水号（可选）
-            sign          // 签名
+            utr           // 流水号（可选）
+            // sign 签名已在verifySign中处理
         } = req.body;
 
         logger.info('[FendPay Webhook] 收到支付回调', {
