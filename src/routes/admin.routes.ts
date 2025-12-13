@@ -5,7 +5,6 @@ import { userService } from '../services/user.service';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';
-import { pool } from '../database';
 
 const router = Router();
 
