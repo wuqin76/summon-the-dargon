@@ -1888,6 +1888,14 @@
         const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('authToken');
         let isSpinning = false;
+        
+        // 测试模式开关（URL参数 ?testMode=1 开启）
+        const urlParams = new URLSearchParams(window.location.search);
+        const TEST_MODE = urlParams.get('testMode') === '1';
+        
+        if (TEST_MODE) {
+            console.log('🧪 测试模式已启用 - 将使用模拟支付接口');
+        }
 
         // 音乐控制
         const bgMusic = document.getElementById('bgMusic');
@@ -2863,10 +2871,13 @@
         async function handlePaidMode() {
             try {
                 // 显示加载提示
-                safeTgAlert('正在创建支付订单，请稍候...');
+                safeTgAlert(TEST_MODE ? '🧪 正在创建测试支付订单...' : '正在创建支付订单，请稍候...');
+                
+                // 选择API端点（测试模式 vs 生产模式）
+                const endpoint = TEST_MODE ? `${API_BASE}/test/payment/create` : `${API_BASE}/payment/v2/create`;
                 
                 // 调用后端API创建支付订单
-                const response = await fetch(`${API_BASE}/payment/v2/create`, {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
