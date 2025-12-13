@@ -1597,12 +1597,22 @@
                         </div>
                     </div>
                     
-                    <button class="play-btn" id="paidPlayBtn" onclick="event.stopPropagation(); handleFirstPlay();" style="background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 18px; font-weight: bold;">
-                        🎮 <span id="playBtnText">立即免费游玩</span>
-                    </button>
+                    <!-- 按钮组：分开游玩和购买 -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- 游玩按钮（首次免费或使用门票） -->
+                        <button class="play-btn" id="playGameBtn" onclick="event.stopPropagation(); handlePlayGame();" style="background: linear-gradient(135deg, #667eea, #764ba2); font-size: 18px; font-weight: bold;">
+                            🎮 <span id="playGameBtnText">立即免费游玩</span>
+                        </button>
+                        
+                        <!-- 购买门票按钮 -->
+                        <button class="play-btn" id="buyTicketBtn" onclick="event.stopPropagation(); handleBuyTicket();" style="background: linear-gradient(135deg, #FFD700, #FFA500); font-size: 16px; font-weight: bold; display: none;">
+                            💳 购买游玩机会 (₹1000)
+                        </button>
+                    </div>
+                    
                     <div class="payment-notice" id="paymentNotice" style="display: none;">
-                        <p>⚠️ 后续游玩需要支付 10 USDT</p>
-                        <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">点击按钮后将跳转到第三方支付页面</p>
+                        <p>💡 提示：首次游玩完全免费！</p>
+                        <p style="margin-top: 10px; font-size: 12px; opacity: 0.8;">后续游玩需购买游玩机会</p>
                     </div>
                 </div>
             </div>
@@ -2872,7 +2882,8 @@
         }
 
         // 处理首次游玩（免费）或后续付费游玩
-        async function handleFirstPlay() {
+        // 处理游玩游戏（检查首次免费或使用门票）
+        async function handlePlayGame() {
             try {
                 // 1. 先检查是否有可用的游玩机会
                 const ticketsResponse = await fetch(`${API_BASE}/user/play-tickets`, {
@@ -2900,8 +2911,8 @@
                 const statusData = await statusResponse.json();
                 
                 if (statusData.hasPlayed) {
-                    // 已经玩过，需要付费购买游玩机会
-                    handlePaidMode();
+                    // 已经玩过，提示购买游玩机会
+                    safeTgAlert('❌ 您没有游玩机会\n\n请先购买游玩机会才能继续游戏');
                 } else {
                     // 首次游玩，免费
                     localStorage.setItem('gameMode', 'first-time-free');
@@ -2913,6 +2924,11 @@
                 console.error('检查游玩状态失败:', error);
                 safeTgAlert('检查游玩状态失败，请重试');
             }
+        }
+        
+        // 处理购买门票
+        async function handleBuyTicket() {
+            await handlePaidMode();
         }
         
         // 使用游玩机会并进入游戏
@@ -3338,7 +3354,8 @@
                     // 更新游玩机会显示区域
                     const playTicketsDisplay = document.getElementById('playTicketsDisplay');
                     const playTicketsCount = document.getElementById('playTicketsCount');
-                    const playBtnText = document.getElementById('playBtnText');
+                    const playGameBtnText = document.getElementById('playGameBtnText');
+                    const buyTicketBtn = document.getElementById('buyTicketBtn');
                     const paymentNotice = document.getElementById('paymentNotice');
                     
                     // 始终显示游玩机会数量（包括0次）
@@ -3358,17 +3375,31 @@
                         }
                     }
                     
-                    // 更新按钮文本
-                    if (tickets > 0) {
-                        playBtnText.textContent = `🎟️ 使用游玩机会 (剩余${tickets}次)`;
-                        if (paymentNotice) {
-                            paymentNotice.style.display = 'none';
+                    // 检查是否首次游玩
+                    const statusResponse = await fetch(`${API_BASE}/user/play-status`, {
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`
                         }
+                    });
+                    const statusData = await statusResponse.json();
+                    const hasPlayed = statusData.hasPlayed;
+                    
+                    // 更新按钮显示
+                    if (tickets > 0) {
+                        // 有游玩机会
+                        playGameBtnText.textContent = `使用游玩机会 (剩余${tickets}次)`;
+                        if (buyTicketBtn) buyTicketBtn.style.display = 'block'; // 显示购买按钮
+                    } else if (!hasPlayed) {
+                        // 首次游玩免费
+                        playGameBtnText.textContent = '立即免费游玩';
+                        if (buyTicketBtn) buyTicketBtn.style.display = 'none'; // 隐藏购买按钮
                     } else {
-                        playBtnText.textContent = '立即免费游玩';
+                        // 没有机会且已玩过
+                        playGameBtnText.textContent = '需要购买游玩机会';
+                        if (buyTicketBtn) buyTicketBtn.style.display = 'block'; // 显示购买按钮
                     }
                     
-                    console.log(`✅ 当前游玩机会: ${tickets}次`);
+                    console.log(`✅ 当前游玩机会: ${tickets}次, 是否已玩过: ${hasPlayed}`);
                 }
             } catch (error) {
                 console.error('加载游玩机会失败:', error);

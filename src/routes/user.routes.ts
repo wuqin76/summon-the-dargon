@@ -325,7 +325,20 @@ router.post('/claim-ticket-for-payment', authMiddleware, async (req: Request, re
         try {
             await client.query('BEGIN');
             
-            // 1. 检查订单是否存在且已支付
+            // 1. 先从payments表查询支付记录
+            const paymentResult = await client.query(`
+                SELECT p.id, p.status, p.user_id
+                FROM payments p
+                WHERE p.provider_order_id = $1 AND p.user_id = $2
+            `, [orderId, userId]);
+            
+            let paymentConfirmed = false;
+            
+            if (paymentResult.rows.length > 0 && paymentResult.rows[0].status === 'confirmed') {
+                paymentConfirmed = true;
+            }
+            
+            // 2. 然后查询game_sessions
             const sessionResult = await client.query(`
                 SELECT gs.id, gs.user_id, gs.payment_status, gs.ticket_claimed
                 FROM game_sessions gs
@@ -342,12 +355,14 @@ router.post('/claim-ticket-for-payment', authMiddleware, async (req: Request, re
             
             const session = sessionResult.rows[0];
             
-            if (session.payment_status !== 'confirmed') {
+            // 3. 检查支付状态（优先payments表，其次game_sessions表）
+            if (!paymentConfirmed && session.payment_status !== 'confirmed') {
                 await client.query('ROLLBACK');
                 return res.status(400).json({
                     success: false,
                     error: '订单尚未支付成功',
-                    payment_status: session.payment_status
+                    payment_status: session.payment_status,
+                    has_payment_record: paymentResult.rows.length > 0
                 });
             }
             
