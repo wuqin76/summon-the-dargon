@@ -5,7 +5,7 @@ import { userService } from '../services/user.service';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';
-import { pool } from '../database';
+import { db } from '../database';
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.post('/stats-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const stats = await pool.query(`
+        const stats = await db.query(`
             SELECT 
                 (SELECT COUNT(*) FROM users) as total_users,
                 (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success') as total_revenue,
@@ -49,7 +49,7 @@ router.post('/users-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT id, telegram_id, username, first_name, balance, 
                    available_spins, created_at
             FROM users ORDER BY created_at DESC LIMIT 100
@@ -71,7 +71,7 @@ router.post('/payments-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT p.id, p.amount, p.status, p.created_at,
                    u.username, u.telegram_id, u.first_name
             FROM payments p
@@ -95,7 +95,7 @@ router.post('/games-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT g.id, g.game_mode, g.completed, g.created_at,
                    u.username, u.telegram_id, u.first_name
             FROM game_sessions g
@@ -119,7 +119,7 @@ router.post('/spins-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT s.id, s.prize_amount, s.status, s.created_at,
                    u.username, u.telegram_id, u.first_name
             FROM spins s
@@ -143,7 +143,7 @@ router.post('/payouts-simple', async (req: Request, res: Response) => {
     }
 
     try {
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT pr.id, pr.amount, pr.status, pr.created_at,
                    u.username, u.telegram_id, u.first_name
             FROM payout_requests pr
