@@ -5,8 +5,157 @@ import { userService } from '../services/user.service';
 import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 import { logger } from '../utils/logger';
 import jwt from 'jsonwebtoken';
+import { pool } from '../database';
 
 const router = Router();
+
+// 简单密码验证函数
+function checkPassword(req: Request): boolean {
+    const { password } = req.body;
+    return password === '1234';
+}
+
+/**
+ * POST /api/admin/stats-simple
+ * 获取统计数据（密码验证）
+ */
+router.post('/stats-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const stats = await pool.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM users) as total_users,
+                (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'success') as total_revenue,
+                (SELECT COUNT(*) FROM game_sessions WHERE completed = true) as total_games,
+                (SELECT COUNT(*) FROM spins) as total_spins
+        `);
+        res.json(stats.rows[0]);
+    } catch (error: any) {
+        logger.error('Stats error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/users-simple
+ * 获取用户列表（密码验证）
+ */
+router.post('/users-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT id, telegram_id, username, first_name, balance, 
+                   available_spins, created_at
+            FROM users ORDER BY created_at DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (error: any) {
+        logger.error('Users error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/payments-simple
+ * 获取支付记录（密码验证）
+ */
+router.post('/payments-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT p.id, p.amount, p.status, p.created_at,
+                   u.username, u.telegram_id, u.first_name
+            FROM payments p
+            LEFT JOIN users u ON p.user_id = u.id
+            ORDER BY p.created_at DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (error: any) {
+        logger.error('Payments error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/games-simple
+ * 获取游戏记录（密码验证）
+ */
+router.post('/games-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT g.id, g.game_mode, g.completed, g.created_at,
+                   u.username, u.telegram_id, u.first_name
+            FROM game_sessions g
+            LEFT JOIN users u ON g.user_id = u.id
+            ORDER BY g.created_at DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (error: any) {
+        logger.error('Games error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/spins-simple
+ * 获取抽奖记录（密码验证）
+ */
+router.post('/spins-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT s.id, s.prize_amount, s.status, s.created_at,
+                   u.username, u.telegram_id, u.first_name
+            FROM spins s
+            LEFT JOIN users u ON s.user_id = u.id
+            ORDER BY s.created_at DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (error: any) {
+        logger.error('Spins error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
+ * POST /api/admin/payouts-simple
+ * 获取提现记录（密码验证）
+ */
+router.post('/payouts-simple', async (req: Request, res: Response) => {
+    if (!checkPassword(req)) {
+        return res.status(401).json({ error: '密码错误' });
+    }
+
+    try {
+        const result = await pool.query(`
+            SELECT pr.id, pr.amount, pr.status, pr.created_at,
+                   u.username, u.telegram_id, u.first_name
+            FROM payout_requests pr
+            LEFT JOIN users u ON pr.user_id = u.id
+            ORDER BY pr.created_at DESC LIMIT 100
+        `);
+        res.json(result.rows);
+    } catch (error: any) {
+        logger.error('Payouts error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 /**
  * POST /api/admin/simple-login
