@@ -1576,18 +1576,6 @@
                     <p>选择游戏模式开始你的冒险</p>
                 </div>
 
-                <!-- 成功提现通知滚动框 - 主页 -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); overflow: hidden;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="font-size: 24px;">🎉</div>
-                        <div style="flex: 1; overflow: hidden;">
-                            <div data-withdrawal-notice style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 12s linear infinite;">
-                                加载中...
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="modes-container">
                 <!-- 付费模式（首次免费）-->
                 <div class="mode-card" id="paidModeCard">
@@ -1666,7 +1654,7 @@
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="font-size: 20px;">🎉</div>
                             <div style="flex: 1; overflow: hidden;">
-                                <div data-withdrawal-notice style="color: white; font-size: 13px; white-space: nowrap; animation: scrollText 12s linear infinite;">
+                                <div data-withdrawal-notice style="color: white; font-size: 13px; white-space: nowrap; animation: scrollText 6s linear infinite;">
                                     加载中...
                                 </div>
                             </div>
@@ -1717,7 +1705,7 @@
                             👥 邀请好友
                         </button>
                         <button class="invite-btn" onclick="showTaskModal()" style="flex: 1; min-width: 140px; max-width: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-                            📋 查看任务
+                            📋 获取抽奖
                         </button>
                     </div>
 
@@ -1751,7 +1739,7 @@
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div style="font-size: 24px;">🎉</div>
                         <div style="flex: 1; overflow: hidden;">
-                            <div data-withdrawal-notice style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 12s linear infinite;">
+                            <div data-withdrawal-notice style="color: white; font-size: 14px; white-space: nowrap; animation: scrollText 6s linear infinite;">
                                 加载中...
                             </div>
                         </div>
@@ -1920,11 +1908,6 @@
     <!-- 任务弹窗 -->
     <div class="task-modal" id="taskModal">
         <div class="task-modal-content">
-            <div class="task-modal-header">
-                <h2>📋 当前任务</h2>
-                <p>完成任务获得抽奖机会</p>
-            </div>
-
             <div class="current-task-card" id="currentTaskCard">
                 <div class="task-type-badge" id="taskTypeBadge">初始任务</div>
                 <div class="task-name" id="taskName">完成首次抽奖</div>
