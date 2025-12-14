@@ -48,9 +48,9 @@ const TASK_CONFIG = [
     { index: 0, type: TaskType.INITIAL_SPIN, required: 1, mandatory: false },    // 任务1: 首次游玩
     { index: 1, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务2: 邀请或付费
     { index: 2, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务3: 必须付费
-    { index: 3, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务4
-    { index: 4, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务5
-    { index: 5, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务6
+    { index: 3, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务4: 邀请或付费
+    { index: 4, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务5: 必须付费
+    { index: 5, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务6: 邀请或付费
     { index: 6, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务7: 必须付费
     { index: 7, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务8
     { index: 8, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务9
