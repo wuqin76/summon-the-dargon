@@ -12,9 +12,9 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const TASK_REWARDS = [
     9900,    // 任务1: 进入游戏玩一把 (首次必中9900)
     99,      // 任务2: 邀请好友 或 付费游玩一局
-    0.5,     // 任务3: 必须付费游玩一局
+    0.5,     // 任务3: 邀请好友 或 付费游玩一局
     0.4,     // 任务4: 邀请好友 或 付费游玩一局
-    0.05,    // 任务5: 邀请好友 或 付费游玩一局
+    0.05,    // 任务5: 必须付费游玩一局
     0.04,    // 任务6: 邀请好友 或 付费游玩一局
     0.001,   // 任务7: 必须付费游玩一局
     0.001,   // 任务8: 邀请好友 或 付费游玩一局
@@ -47,7 +47,7 @@ enum TaskType {
 const TASK_CONFIG = [
     { index: 0, type: TaskType.INITIAL_SPIN, required: 1, mandatory: false },    // 任务1: 首次游玩
     { index: 1, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务2: 邀请或付费
-    { index: 2, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务3: 必须付费
+    { index: 2, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务3: 邀请或付费
     { index: 3, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务4: 邀请或付费
     { index: 4, type: TaskType.PAID_GAME, required: 1, mandatory: true },        // 任务5: 必须付费
     { index: 5, type: TaskType.INVITE_OR_GAME, required: 1, mandatory: false },  // 任务6: 邀请或付费
