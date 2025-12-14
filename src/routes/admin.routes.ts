@@ -29,7 +29,7 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
         const totalRevenueResult = await pool.query(`
             SELECT COALESCE(SUM(amount), 0) as total 
             FROM payments 
-            WHERE payment_status = 'paid'
+            WHERE status = 'success'
         `);
         const totalRevenue = parseFloat(totalRevenueResult.rows[0].total);
 
@@ -37,7 +37,7 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
         const todayRevenueResult = await pool.query(`
             SELECT COALESCE(SUM(amount), 0) as total 
             FROM payments 
-            WHERE payment_status = 'paid' AND DATE(created_at) = CURRENT_DATE
+            WHERE status = 'success' AND DATE(created_at) = CURRENT_DATE
         `);
         const todayRevenue = parseFloat(todayRevenueResult.rows[0].total);
 
@@ -99,17 +99,17 @@ router.get('/users/list', async (req: Request, res: Response) => {
         const usersResult = await pool.query(`
             SELECT 
                 u.id as user_id,
-                u.telegram_username,
+                u.username as telegram_username,
                 u.balance,
-                u.total_deposited,
-                u.games_played,
+                u.total_invited,
+                u.total_paid_plays as games_played,
                 u.invite_code,
                 u.invited_by,
                 u.created_at,
                 (SELECT COUNT(*) FROM invitations WHERE inviter_id = u.id AND registered = true) as invited_count,
                 (SELECT COALESCE(SUM(p.amount), 0) FROM payments p 
-                 JOIN invitations i ON p.user_id = i.invited_user_id 
-                 WHERE i.inviter_id = u.id AND p.payment_status = 'paid') as invited_users_revenue
+                 JOIN invitations i ON p.user_id = i.invitee_id 
+                 WHERE i.inviter_id = u.id AND p.status = 'success') as invited_users_revenue
             FROM users u
             ORDER BY u.created_at DESC
             LIMIT $1 OFFSET $2
@@ -142,12 +142,12 @@ router.get('/payments/list', async (req: Request, res: Response) => {
 
         const paymentsResult = await pool.query(`
             SELECT 
-                p.order_id,
+                p.id as order_id,
                 p.user_id,
                 p.amount,
-                p.payment_status,
+                p.status as payment_status,
                 p.created_at,
-                u.telegram_username
+                u.username as telegram_username
             FROM payments p
             LEFT JOIN users u ON p.user_id = u.id
             ORDER BY p.created_at DESC
@@ -181,12 +181,12 @@ router.get('/games/list', async (req: Request, res: Response) => {
 
         const gamesResult = await pool.query(`
             SELECT 
-                g.game_session_id,
+                g.id as game_session_id,
                 g.user_id,
-                g.score,
-                g.reward_amount,
+                g.final_score as score,
+                COALESCE(g.bonus_amount, 0) as reward_amount,
                 g.created_at,
-                u.telegram_username
+                u.username as telegram_username
             FROM game_sessions g
             LEFT JOIN users u ON g.user_id = u.id
             ORDER BY g.created_at DESC
@@ -215,17 +215,17 @@ router.get('/spins/list', async (req: Request, res: Response) => {
         const pageSize = parseInt(req.query.pageSize as string) || 20;
         const offset = (page - 1) * pageSize;
 
-        const countResult = await pool.query('SELECT COUNT(*) as count FROM spin_history');
+        const countResult = await pool.query('SELECT COUNT(*) as count FROM spins');
         const total = parseInt(countResult.rows[0].count);
 
         const spinsResult = await pool.query(`
             SELECT 
-                s.spin_id,
+                s.id as spin_id,
                 s.user_id,
-                s.reward_amount,
+                s.prize_amount as reward_amount,
                 s.created_at,
-                u.telegram_username
-            FROM spin_history s
+                u.username as telegram_username
+            FROM spins s
             LEFT JOIN users u ON s.user_id = u.id
             ORDER BY s.created_at DESC
             LIMIT $1 OFFSET $2
@@ -251,29 +251,11 @@ router.get('/payouts/list', async (req: Request, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const pageSize = parseInt(req.query.pageSize as string) || 20;
-        const offset = (page - 1) * pageSize;
 
-        const countResult = await pool.query('SELECT COUNT(*) as count FROM payouts');
-        const total = parseInt(countResult.rows[0].count);
-
-        const payoutsResult = await pool.query(`
-            SELECT 
-                p.payout_id,
-                p.user_id,
-                p.amount,
-                p.payout_status,
-                p.wallet_address,
-                p.created_at,
-                u.telegram_username
-            FROM payouts p
-            LEFT JOIN users u ON p.user_id = u.id
-            ORDER BY p.created_at DESC
-            LIMIT $1 OFFSET $2
-        `, [pageSize, offset]);
-
+        // 数据库中暂无payouts表，返回空数据
         res.json({
-            payouts: payoutsResult.rows,
-            total,
+            payouts: [],
+            total: 0,
             page,
             pageSize
         });
@@ -294,15 +276,15 @@ router.get('/invites/top', async (req: Request, res: Response) => {
         const result = await pool.query(`
             SELECT 
                 u.id as user_id,
-                u.telegram_username,
+                u.username as telegram_username,
                 u.invite_code,
                 COUNT(i.id) as invited_count,
                 COALESCE(SUM(p.amount), 0) as invited_users_total_revenue,
-                COUNT(DISTINCT CASE WHEN p.payment_status = 'paid' THEN i.invited_user_id END) as paying_invitees
+                COUNT(DISTINCT CASE WHEN p.status = 'success' THEN i.invitee_id END) as paying_invitees
             FROM users u
             LEFT JOIN invitations i ON u.id = i.inviter_id AND i.registered = true
-            LEFT JOIN payments p ON i.invited_user_id = p.user_id AND p.payment_status = 'paid'
-            GROUP BY u.id, u.telegram_username, u.invite_code
+            LEFT JOIN payments p ON i.invitee_id = p.user_id AND p.status = 'success'
+            GROUP BY u.id, u.username, u.invite_code
             HAVING COUNT(i.id) > 0
             ORDER BY invited_count DESC, invited_users_total_revenue DESC
             LIMIT $1
@@ -329,18 +311,18 @@ router.get('/invites/details/:userId', async (req: Request, res: Response) => {
         const inviteesResult = await pool.query(`
             SELECT 
                 u.id as user_id,
-                u.telegram_username,
+                u.username as telegram_username,
                 u.balance,
-                u.total_deposited,
-                u.games_played,
+                u.balance as total_deposited,
+                u.total_paid_plays as games_played,
                 u.created_at as registered_at,
                 COALESCE(SUM(p.amount), 0) as total_spent,
-                COUNT(DISTINCT p.order_id) as payment_count
+                COUNT(DISTINCT p.id) as payment_count
             FROM invitations i
-            JOIN users u ON i.invited_user_id = u.id
-            LEFT JOIN payments p ON u.id = p.user_id AND p.payment_status = 'paid'
+            JOIN users u ON i.invitee_id = u.id
+            LEFT JOIN payments p ON u.id = p.user_id AND p.status = 'success'
             WHERE i.inviter_id = $1 AND i.registered = true
-            GROUP BY u.id, u.telegram_username, u.balance, u.total_deposited, u.games_played, u.created_at
+            GROUP BY u.id, u.username, u.balance, u.total_paid_plays, u.created_at
             ORDER BY u.created_at DESC
         `, [userId]);
 
@@ -348,7 +330,7 @@ router.get('/invites/details/:userId', async (req: Request, res: Response) => {
         const inviterResult = await pool.query(`
             SELECT 
                 id,
-                telegram_username,
+                username as telegram_username,
                 invite_code,
                 created_at
             FROM users
