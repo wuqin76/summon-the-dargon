@@ -210,7 +210,9 @@
             }
 
             try {
-                const response = await fetch('/api/admin/simple-login', {
+                showMessage('🔄 登录中...', 'success');
+                
+                const response = await fetch('https://dragon-spin-game-production.up.railway.app/api/admin/simple-login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -220,18 +222,18 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    showMessage('✅ 登录成功！正在跳转...', 'success');
+                if (response.ok && data.token) {
                     localStorage.setItem('authToken', data.token);
+                    showMessage('✅ 登录成功！正在跳转...', 'success');
                     setTimeout(() => {
                         window.location.href = '/admin/index.html';
-                    }, 1000);
+                    }, 500);
                 } else {
-                    showMessage(`❌ ${data.message || '登录失败'}`, 'error');
+                    showMessage(`❌ ${data.message || '密码错误'}`, 'error');
                 }
             } catch (error) {
                 console.error('登录错误:', error);
-                showMessage('❌ 登录失败，请稍后重试', 'error');
+                showMessage('❌ 服务器连接失败，请检查网络', 'error');
             }
         });
     </script>
