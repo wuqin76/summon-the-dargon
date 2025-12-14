@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后台管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        /* 登录页面 */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-box button:hover {
+            background: #5568d3;
+        }
+
+        .error-msg {
+            color: #ff4444;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* 管理后台 */
+        .admin-container {
+            display: none;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #cc0000;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .pagination button:hover {
+            background: #f0f0f0;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-failed { background: #f8d7da; color: #721c24; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginPage">
+        <div class="login-box">
+            <h1>🔐 后台管理系统</h1>
+            <input type="password" id="passwordInput" placeholder="请输入密码" />
+            <button onclick="login()">登录</button>
+            <div class="error-msg" id="errorMsg">密码错误，请重试</div>
+        </div>
+    </div>
+
+    <!-- 管理后台 -->
+    <div class="admin-container" id="adminPage">
+        <div class="header">
+            <h1>📊 后台管理系统</h1>
+            <button class="logout-btn" onclick="logout()">退出登录</button>
+        </div>
+
+        <div class="main-content">
+            <!-- 统计卡片 -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <h3>总用户数</h3>
+                    <div class="number" id="totalUsers">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日新增用户</h3>
+                    <div class="number" id="todayUsers">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>总充值金额 (₹)</h3>
+                    <div class="number" id="totalRevenue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日充值 (₹)</h3>
+                    <div class="number" id="todayRevenue">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>总游戏次数</h3>
+                    <div class="number" id="totalGames">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日游戏次数</h3>
+                    <div class="number" id="todayGames">-</div>
+                </div>
+            </div>
+
+            <!-- 标签页 -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('users')">👥 用户列表</button>
+                <button class="tab-btn" onclick="switchTab('payments')">💳 充值记录</button>
+                <button class="tab-btn" onclick="switchTab('games')">🎮 游戏记录</button>
+                <button class="tab-btn" onclick="switchTab('spins')">🎰 抽奖记录</button>
+                <button class="tab-btn" onclick="switchTab('payouts')">💰 提现记录</button>
+            </div>
+
+            <!-- 用户列表 -->
+            <div class="tab-content active" id="users-content">
+                <h2>用户列表</h2>
+                <div class="loading">加载中...</div>
+                <table id="usersTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>用户ID</th>
+                            <th>Telegram用户名</th>
+                            <th>余额 (₹)</th>
+                            <th>游戏次数</th>
+                            <th>充值总额 (₹)</th>
+                            <th>注册时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+                <div class="pagination" id="usersPagination"></div>
+            </div>
+
+            <!-- 充值记录 -->
+            <div class="tab-content" id="payments-content">
+                <h2>充值记录</h2>
+                <div class="loading">加载中...</div>
+                <table id="paymentsTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>订单ID</th>
+                            <th>用户ID</th>
+                            <th>金额 (₹)</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody"></tbody>
+                </table>
+                <div class="pagination" id="paymentsPagination"></div>
+            </div>
+
+            <!-- 游戏记录 -->
+            <div class="tab-content" id="games-content">
+                <h2>游戏记录</h2>
+                <div class="loading">加载中...</div>
+                <table id="gamesTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>游戏ID</th>
+                            <th>用户ID</th>
+                            <th>得分</th>
+                            <th>奖励 (₹)</th>
+                            <th>游戏时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gamesTableBody"></tbody>
+                </table>
+                <div class="pagination" id="gamesPagination"></div>
+            </div>
+
+            <!-- 抽奖记录 -->
+            <div class="tab-content" id="spins-content">
+                <h2>抽奖记录</h2>
+                <div class="loading">加载中...</div>
+                <table id="spinsTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>抽奖ID</th>
+                            <th>用户ID</th>
+                            <th>中奖金额 (₹)</th>
+                            <th>抽奖时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="spinsTableBody"></tbody>
+                </table>
+                <div class="pagination" id="spinsPagination"></div>
+            </div>
+
+            <!-- 提现记录 -->
+            <div class="tab-content" id="payouts-content">
+                <h2>提现记录</h2>
+                <div class="loading">加载中...</div>
+                <table id="payoutsTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>提现ID</th>
+                            <th>用户ID</th>
+                            <th>金额 (₹)</th>
+                            <th>状态</th>
+                            <th>钱包地址</th>
+                            <th>申请时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payoutsTableBody"></tbody>
+                </table>
+                <div class="pagination" id="payoutsPagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 简单的密码验证
+        const ADMIN_PASSWORD = '1234';
+        let currentPage = 1;
+        const pageSize = 20;
+
+        // 检查登录状态
+        function checkLogin() {
+            const isLoggedIn = sessionStorage.getItem('adminLoggedIn');
+            if (isLoggedIn === 'true') {
+                showAdminPage();
+            }
+        }
+
+        // 登录
+        function login() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                showAdminPage();
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('errorMsg').style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            sessionStorage.removeItem('adminLoggedIn');
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('adminPage').style.display = 'none';
+        }
+
+        // 显示管理后台
+        function showAdminPage() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminPage').style.display = 'block';
+            loadDashboardStats();
+            loadUsers(1);
+        }
+
+        // 加载仪表盘统计
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/admin/dashboard/stats');
+                const data = await response.json();
+                
+                document.getElementById('totalUsers').textContent = data.total_users || 0;
+                document.getElementById('todayUsers').textContent = data.today_new_users || 0;
+                document.getElementById('totalRevenue').textContent = parseFloat(data.total_revenue || 0).toFixed(2);
+                document.getElementById('todayRevenue').textContent = parseFloat(data.today_revenue || 0).toFixed(2);
+                document.getElementById('totalGames').textContent = data.total_games || 0;
+                document.getElementById('todayGames').textContent = data.today_games || 0;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+            }
+        }
+
+        // 切换标签页
+        function switchTab(tabName) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 更新内容显示
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-content`).classList.add('active');
+
+            // 加载对应数据
+            currentPage = 1;
+            switch(tabName) {
+                case 'users':
+                    loadUsers(1);
+                    break;
+                case 'payments':
+                    loadPayments(1);
+                    break;
+                case 'games':
+                    loadGames(1);
+                    break;
+                case 'spins':
+                    loadSpins(1);
+                    break;
+                case 'payouts':
+                    loadPayouts(1);
+                    break;
+            }
+        }
+
+        // 加载用户列表
+        async function loadUsers(page) {
+            try {
+                const response = await fetch(`/api/admin/users/list?page=${page}&pageSize=${pageSize}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+                
+                data.users.forEach(user => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${user.user_id}</td>
+                        <td>${user.telegram_username || '-'}</td>
+                        <td>₹${parseFloat(user.balance || 0).toFixed(2)}</td>
+                        <td>${user.games_played || 0}</td>
+                        <td>₹${parseFloat(user.total_deposited || 0).toFixed(2)}</td>
+                        <td>${new Date(user.created_at).toLocaleString('zh-CN')}</td>
+                    `;
+                });
+
+                document.querySelector('#users-content .loading').style.display = 'none';
+                document.getElementById('usersTable').style.display = 'table';
+                
+                updatePagination('users', page, data.total);
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+            }
+        }
+
+        // 加载充值记录
+        async function loadPayments(page) {
+            try {
+                const response = await fetch(`/api/admin/payments/list?page=${page}&pageSize=${pageSize}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('paymentsTableBody');
+                tbody.innerHTML = '';
+                
+                data.payments.forEach(payment => {
+                    const row = tbody.insertRow();
+                    const statusClass = `status-${payment.payment_status}`;
+                    row.innerHTML = `
+                        <td>${payment.order_id}</td>
+                        <td>${payment.user_id}</td>
+                        <td>₹${parseFloat(payment.amount).toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${payment.payment_status}</span></td>
+                        <td>${new Date(payment.created_at).toLocaleString('zh-CN')}</td>
+                    `;
+                });
+
+                document.querySelector('#payments-content .loading').style.display = 'none';
+                document.getElementById('paymentsTable').style.display = 'table';
+                
+                updatePagination('payments', page, data.total);
+            } catch (error) {
+                console.error('加载充值记录失败:', error);
+            }
+        }
+
+        // 加载游戏记录
+        async function loadGames(page) {
+            try {
+                const response = await fetch(`/api/admin/games/list?page=${page}&pageSize=${pageSize}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('gamesTableBody');
+                tbody.innerHTML = '';
+                
+                data.games.forEach(game => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${game.game_session_id}</td>
+                        <td>${game.user_id}</td>
+                        <td>${game.score || 0}</td>
+                        <td>₹${parseFloat(game.reward_amount || 0).toFixed(2)}</td>
+                        <td>${new Date(game.created_at).toLocaleString('zh-CN')}</td>
+                    `;
+                });
+
+                document.querySelector('#games-content .loading').style.display = 'none';
+                document.getElementById('gamesTable').style.display = 'table';
+                
+                updatePagination('games', page, data.total);
+            } catch (error) {
+                console.error('加载游戏记录失败:', error);
+            }
+        }
+
+        // 加载抽奖记录
+        async function loadSpins(page) {
+            try {
+                const response = await fetch(`/api/admin/spins/list?page=${page}&pageSize=${pageSize}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('spinsTableBody');
+                tbody.innerHTML = '';
+                
+                data.spins.forEach(spin => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${spin.spin_id}</td>
+                        <td>${spin.user_id}</td>
+                        <td>₹${parseFloat(spin.reward_amount || 0).toFixed(2)}</td>
+                        <td>${new Date(spin.created_at).toLocaleString('zh-CN')}</td>
+                    `;
+                });
+
+                document.querySelector('#spins-content .loading').style.display = 'none';
+                document.getElementById('spinsTable').style.display = 'table';
+                
+                updatePagination('spins', page, data.total);
+            } catch (error) {
+                console.error('加载抽奖记录失败:', error);
+            }
+        }
+
+        // 加载提现记录
+        async function loadPayouts(page) {
+            try {
+                const response = await fetch(`/api/admin/payouts/list?page=${page}&pageSize=${pageSize}`);
+                const data = await response.json();
+                
+                const tbody = document.getElementById('payoutsTableBody');
+                tbody.innerHTML = '';
+                
+                data.payouts.forEach(payout => {
+                    const row = tbody.insertRow();
+                    const statusClass = `status-${payout.payout_status}`;
+                    row.innerHTML = `
+                        <td>${payout.payout_id}</td>
+                        <td>${payout.user_id}</td>
+                        <td>₹${parseFloat(payout.amount).toFixed(2)}</td>
+                        <td><span class="status-badge ${statusClass}">${payout.payout_status}</span></td>
+                        <td>${payout.wallet_address ? payout.wallet_address.substring(0, 20) + '...' : '-'}</td>
+                        <td>${new Date(payout.created_at).toLocaleString('zh-CN')}</td>
+                    `;
+                });
+
+                document.querySelector('#payouts-content .loading').style.display = 'none';
+                document.getElementById('payoutsTable').style.display = 'table';
+                
+                updatePagination('payouts', page, data.total);
+            } catch (error) {
+                console.error('加载提现记录失败:', error);
+            }
+        }
+
+        // 更新分页
+        function updatePagination(type, currentPage, total) {
+            const totalPages = Math.ceil(total / pageSize);
+            const paginationDiv = document.getElementById(`${type}Pagination`);
+            paginationDiv.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // 上一页按钮
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = '上一页';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                const loadFunc = {
+                    'users': loadUsers,
+                    'payments': loadPayments,
+                    'games': loadGames,
+                    'spins': loadSpins,
+                    'payouts': loadPayouts
+                }[type];
+                loadFunc(currentPage - 1);
+            };
+            paginationDiv.appendChild(prevBtn);
+
+            // 页码显示
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = ` 第 ${currentPage} / ${totalPages} 页 `;
+            pageInfo.style.padding = '0 10px';
+            paginationDiv.appendChild(pageInfo);
+
+            // 下一页按钮
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = '下一页';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                const loadFunc = {
+                    'users': loadUsers,
+                    'payments': loadPayments,
+                    'games': loadGames,
+                    'spins': loadSpins,
+                    'payouts': loadPayouts
+                }[type];
+                loadFunc(currentPage + 1);
+            };
+            paginationDiv.appendChild(nextBtn);
+        }
+
+        // 回车登录
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLogin();
+            
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
