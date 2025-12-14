@@ -759,23 +759,46 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             border: none;
             color: white;
-            padding: 14px 25px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 20px 35px;
+            border-radius: 25px;
+            font-size: 20px;
+            font-weight: 900;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             margin-top: 20px;
-            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+            box-shadow: 0 8px 25px rgba(245, 87, 108, 0.5), 0 0 40px rgba(245, 87, 108, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .play-btn:hover::before {
+            left: 100%;
         }
 
         .play-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.5);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(245, 87, 108, 0.6), 0 0 50px rgba(245, 87, 108, 0.4);
+        }
+
+        .play-btn:active {
+            transform: translateY(-1px) scale(0.98);
         }
 
         .play-btn.free-btn {
@@ -2609,7 +2632,7 @@
                 taskTypeBadge.className = 'task-type-badge';
                 taskTypeBadge.textContent = '💎 必做任务';
                 taskName.textContent = `任务：付费游玩`;
-                taskDescription.innerHTML = `完成一次付费游玩获得抽奖机会<br><span style="color: #ff6b6b;">⚠️ 此任务必须完成才能继续</span>`;
+                taskDescription.innerHTML = `完成一次付费游玩获得抽奖机会<br><span style="color: #FFD700; font-weight: bold; font-size: 16px;">✨ 完成一局游戏直接提现！</span><br><span style="color: #ff6b6b;">⚠️ 此任务必须完成才能继续</span>`;
                 
                 taskActionButtons.innerHTML = `
                     <button class="task-action-btn primary" onclick="closeTaskModal(); scrollToGameModes();">
@@ -3207,14 +3230,14 @@
                 if (claimData.success) {
                     await loadPlayTickets();
                     const currentTickets = claimData.data.current_tickets || 0;
-                    safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
+                    safeTgAlert(`🎉 恭喜您获得提现资格\n\n抽奖次数➕１\n\n当前剩余：${currentTickets}次`);
                 } else {
                     await loadPlayTickets();
-                    safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
+                    safeTgAlert('🎉 恭喜您获得提现资格\n\n抽奖次数➕１');
                 }
             } catch (error) {
                 await loadPlayTickets();
-                safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
+                safeTgAlert('🎉 恭喜您获得提现资格\n\n抽奖次数➕１');
             }
         }
         
