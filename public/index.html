@@ -2632,7 +2632,7 @@
                 taskTypeBadge.className = 'task-type-badge';
                 taskTypeBadge.textContent = '💎 必做任务';
                 taskName.textContent = `任务：付费游玩`;
-                taskDescription.innerHTML = `完成一次付费游玩获得抽奖机会<br><span style="color: #FFD700; font-weight: bold; font-size: 16px;">✨ 完成一局游戏直接提现！</span><br><span style="color: #ff6b6b;">⚠️ 此任务必须完成才能继续</span>`;
+                taskDescription.innerHTML = `<span style="color: #FFD700; font-weight: bold; font-size: 18px;">✨ 完成一局游戏直接提现！</span>`;
                 
                 taskActionButtons.innerHTML = `
                     <button class="task-action-btn primary" onclick="closeTaskModal(); scrollToGameModes();">
@@ -3230,14 +3230,14 @@
                 if (claimData.success) {
                     await loadPlayTickets();
                     const currentTickets = claimData.data.current_tickets || 0;
-                    safeTgAlert(`🎉 恭喜您获得提现资格\n\n抽奖次数➕１\n\n当前剩余：${currentTickets}次`);
+                    safeTgAlert(`🎉 支付成功！已获得游玩机会\n\n当前剩余：${currentTickets}次`);
                 } else {
                     await loadPlayTickets();
-                    safeTgAlert('🎉 恭喜您获得提现资格\n\n抽奖次数➕１');
+                    safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
                 }
             } catch (error) {
                 await loadPlayTickets();
-                safeTgAlert('🎉 恭喜您获得提现资格\n\n抽奖次数➕１');
+                safeTgAlert('🎉 支付成功！\n\n游玩机会已发放，请刷新查看');
             }
         }
         
