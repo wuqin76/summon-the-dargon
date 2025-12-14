@@ -9,7 +9,7 @@ import { db } from '../database';
 
 const router = Router();
 
-// 简单密码验证函数
+// 简单密码验证函�?
 function checkPassword(req: Request): boolean {
     const { password } = req.body;
     return password === '1234';
@@ -159,13 +159,13 @@ router.post('/payouts-simple', async (req: Request, res: Response) => {
 
 /**
  * POST /api/admin/simple-login
- * 简单的用户名密码登录
+ * 简单的用户名密码登�?
  */
 router.post('/simple-login', async (req: Request, res: Response) => {
     try {
         const { username, password } = req.body;
 
-        // 简单的管理员账号验证
+        // 简单的管理员账号验�?
         if (username === 'admin' && password === '1234') {
             const telegramId = 8498203261;
             
@@ -176,7 +176,7 @@ router.post('/simple-login', async (req: Request, res: Response) => {
                 first_name: 'Admin'
             });
 
-            // 使用数据库中的真实 user.id 生成 Token
+            // 使用数据库中的真�?user.id 生成 Token
             const token = jwt.sign(
                 { 
                     id: user.id,              // 使用 DB 真实 id
@@ -211,7 +211,7 @@ router.post('/simple-login', async (req: Request, res: Response) => {
 
 /**
  * POST /api/admin/generate-token
- * 为管理员生成登录 Token（无需认证）
+ * 为管理员生成登录 Token（无需认证�?
  * 如果用户不存在会自动创建
  */
 router.post('/generate-token', async (req: Request, res: Response) => {
@@ -225,26 +225,26 @@ router.post('/generate-token', async (req: Request, res: Response) => {
             });
         }
 
-        // 检查是否为管理员
+        // 检查是否为管理�?
         const adminIds = process.env.ADMIN_TELEGRAM_IDS?.split(',') || [];
         if (!adminIds.includes(telegramId.toString())) {
             return res.status(403).json({ 
                 success: false,
-                error: '您不是管理员，无权访问管理后台' 
+                error: '您不是管理员，无权访问管理后�? 
             });
         }
 
         const jwt = require('jsonwebtoken');
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
 
-        // 查找或创建用户
-        let userResult = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+        // 查找或创建用�?
+        let userResult = await db.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
         
         let userData;
         if (userResult.rows.length === 0) {
-            // 自动创建管理员账号
-            const createResult = await pool.query(`
+            // 自动创建管理员账�?
+            const createResult = await db.query(`
                 INSERT INTO users (telegram_id, username, first_name, invite_code)
                 VALUES ($1, $2, $3, $4)
                 RETURNING *
@@ -401,7 +401,7 @@ router.post('/payouts/create-batch', async (req: Request, res: Response) => {
 
 /**
  * POST /api/admin/payouts/mark-paid
- * 标记提现已完成
+ * 标记提现已完�?
  */
 router.post('/payouts/mark-paid', async (req: Request, res: Response) => {
     try {
@@ -548,14 +548,14 @@ router.post('/users/ban', async (req: Request, res: Response) => {
 
 /**
  * GET /api/admin/dashboard/stats
- * 获取仪表板统计数据  
+ * 获取仪表板统计数�? 
  */
 router.get('/dashboard/stats', async (_req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
 
-        const stats = await pool.query(`
+        const stats = await db.query(`
             SELECT 
                 (SELECT COUNT(*) FROM users) as total_users,
                 (SELECT COUNT(*) FROM users WHERE created_at > NOW() - INTERVAL '7 days') as users_last_7d,
@@ -589,13 +589,13 @@ router.get('/dashboard/stats', async (_req: Request, res: Response) => {
 router.get('/users/list', async (req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
         
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 50;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT 
                 u.id,
                 u.telegram_id,
@@ -617,7 +617,7 @@ router.get('/users/list', async (req: Request, res: Response) => {
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
 
-        const countResult = await pool.query('SELECT COUNT(*) FROM users');
+        const countResult = await db.query('SELECT COUNT(*) FROM users');
         const totalUsers = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -649,13 +649,13 @@ router.get('/users/list', async (req: Request, res: Response) => {
 router.get('/payments/list', async (req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
         
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 50;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT 
                 p.id,
                 p.provider_tx_id,
@@ -673,7 +673,7 @@ router.get('/payments/list', async (req: Request, res: Response) => {
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
 
-        const countResult = await pool.query('SELECT COUNT(*) FROM payments');
+        const countResult = await db.query('SELECT COUNT(*) FROM payments');
         const totalPayments = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -705,13 +705,13 @@ router.get('/payments/list', async (req: Request, res: Response) => {
 router.get('/games/list', async (req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
         
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 50;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT 
                 g.id,
                 g.game_mode,
@@ -728,7 +728,7 @@ router.get('/games/list', async (req: Request, res: Response) => {
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
 
-        const countResult = await pool.query('SELECT COUNT(*) FROM game_sessions');
+        const countResult = await db.query('SELECT COUNT(*) FROM game_sessions');
         const totalGames = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -760,13 +760,13 @@ router.get('/games/list', async (req: Request, res: Response) => {
 router.get('/spins/list', async (req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
         
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 50;
         const offset = (page - 1) * limit;
 
-        const result = await pool.query(`
+        const result = await db.query(`
             SELECT 
                 s.id,
                 s.prize_amount,
@@ -784,7 +784,7 @@ router.get('/spins/list', async (req: Request, res: Response) => {
             LIMIT $1 OFFSET $2
         `, [limit, offset]);
 
-        const countResult = await pool.query('SELECT COUNT(*) FROM spins');
+        const countResult = await db.query('SELECT COUNT(*) FROM spins');
         const totalSpins = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -816,7 +816,7 @@ router.get('/spins/list', async (req: Request, res: Response) => {
 router.get('/payouts/list', async (req: Request, res: Response) => {
     try {
         const { Pool } = require('pg');
-        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        
         
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 50;
@@ -850,13 +850,13 @@ router.get('/payouts/list', async (req: Request, res: Response) => {
 
         query += ` ORDER BY pr.created_at DESC LIMIT $1 OFFSET $2`;
 
-        const result = await pool.query(query, params);
+        const result = await db.query(query, params);
 
         const countQuery = status 
             ? 'SELECT COUNT(*) FROM payout_requests WHERE status = $1' 
             : 'SELECT COUNT(*) FROM payout_requests';
         const countParams = status ? [status] : [];
-        const countResult = await pool.query(countQuery, countParams);
+        const countResult = await db.query(countQuery, countParams);
         const totalPayouts = parseInt(countResult.rows[0].count);
 
         res.json({
@@ -882,3 +882,4 @@ router.get('/payouts/list', async (req: Request, res: Response) => {
 });
 
 export default router;
+
