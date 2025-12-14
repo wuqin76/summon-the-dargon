@@ -279,11 +279,20 @@
                     <h3>今日游戏次数</h3>
                     <div class="number" id="todayGames">-</div>
                 </div>
+                <div class="stat-card">
+                    <h3>总邀请数</h3>
+                    <div class="number" id="totalInvites">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日邀请数</h3>
+                    <div class="number" id="todayInvites">-</div>
+                </div>
             </div>
 
             <!-- 标签页 -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="switchTab('users')">👥 用户列表</button>
+                <button class="tab-btn" onclick="switchTab('invites')">🎁 邀请排行</button>
                 <button class="tab-btn" onclick="switchTab('payments')">💳 充值记录</button>
                 <button class="tab-btn" onclick="switchTab('games')">🎮 游戏记录</button>
                 <button class="tab-btn" onclick="switchTab('spins')">🎰 抽奖记录</button>
@@ -302,12 +311,35 @@
                             <th>余额 (₹)</th>
                             <th>游戏次数</th>
                             <th>充值总额 (₹)</th>
+                            <th>邀请人数</th>
+                            <th>邀请收益 (₹)</th>
                             <th>注册时间</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
                 <div class="pagination" id="usersPagination"></div>
+            </div>
+
+            <!-- 邀请排行 -->
+            <div class="tab-content" id="invites-content">
+                <h2>邀请排行榜 (Top 50)</h2>
+                <div class="loading">加载中...</div>
+                <table id="invitesTable" style="display:none;">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>用户ID</th>
+                            <th>Telegram用户名</th>
+                            <th>邀请码</th>
+                            <th>邀请人数</th>
+                            <th>付费用户数</th>
+                            <th>邀请总收益 (₹)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invitesTableBody"></tbody>
+                </table>
             </div>
 
             <!-- 充值记录 -->
@@ -443,6 +475,8 @@
                 document.getElementById('todayRevenue').textContent = parseFloat(data.today_revenue || 0).toFixed(2);
                 document.getElementById('totalGames').textContent = data.total_games || 0;
                 document.getElementById('todayGames').textContent = data.today_games || 0;
+                document.getElementById('totalInvites').textContent = data.total_invites || 0;
+                document.getElementById('todayInvites').textContent = data.today_invites || 0;
             } catch (error) {
                 console.error('加载统计数据失败:', error);
             }
@@ -463,6 +497,9 @@
             switch(tabName) {
                 case 'users':
                     loadUsers(1);
+                    break;
+                case 'invites':
+                    loadTopInviters();
                     break;
                 case 'payments':
                     loadPayments(1);
@@ -496,6 +533,8 @@
                         <td>₹${parseFloat(user.balance || 0).toFixed(2)}</td>
                         <td>${user.games_played || 0}</td>
                         <td>₹${parseFloat(user.total_deposited || 0).toFixed(2)}</td>
+                        <td>${user.invited_count || 0}</td>
+                        <td>₹${parseFloat(user.invited_users_revenue || 0).toFixed(2)}</td>
                         <td>${new Date(user.created_at).toLocaleString('zh-CN')}</td>
                     `;
                 });
@@ -596,6 +635,65 @@
             }
         }
 
+        // 加载邀请排行
+        async function loadTopInviters() {
+            try {
+                const response = await fetch('/api/admin/invites/top?limit=50');
+                const data = await response.json();
+                
+                const tbody = document.getElementById('invitesTableBody');
+                tbody.innerHTML = '';
+                
+                data.top_inviters.forEach((inviter, index) => {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td><strong>#${index + 1}</strong></td>
+                        <td>${inviter.user_id}</td>
+                        <td>${inviter.telegram_username || '-'}</td>
+                        <td>${inviter.invite_code}</td>
+                        <td><strong>${inviter.invited_count}</strong></td>
+                        <td>${inviter.paying_invitees || 0}</td>
+                        <td>₹${parseFloat(inviter.invited_users_total_revenue || 0).toFixed(2)}</td>
+                        <td><button onclick="showInviteDetails(${inviter.user_id})" style="padding:5px 10px;cursor:pointer;">查看详情</button></td>
+                    `;
+                });
+
+                document.querySelector('#invites-content .loading').style.display = 'none';
+                document.getElementById('invitesTable').style.display = 'table';
+            } catch (error) {
+                console.error('加载邀请排行失败:', error);
+            }
+        }
+
+        // 显示邀请详情
+        async function showInviteDetails(userId) {
+            try {
+                const response = await fetch(`/api/admin/invites/details/${userId}`);
+                const data = await response.json();
+                
+                let details = `邀请者: ${data.inviter.telegram_username} (ID: ${data.inviter.id})\n`;
+                details += `邀请码: ${data.inviter.invite_code}\n`;
+                details += `总邀请人数: ${data.total_invites}\n\n`;
+                details += `被邀请用户详情:\n`;
+                details += `${'='.repeat(60)}\n`;
+                
+                data.invitees.forEach((invitee, i) => {
+                    details += `\n${i + 1}. ${invitee.telegram_username || '未知'} (ID: ${invitee.user_id})\n`;
+                    details += `   注册时间: ${new Date(invitee.registered_at).toLocaleString('zh-CN')}\n`;
+                    details += `   余额: ₹${parseFloat(invitee.balance || 0).toFixed(2)}\n`;
+                    details += `   累计充值: ₹${parseFloat(invitee.total_deposited || 0).toFixed(2)}\n`;
+                    details += `   消费金额: ₹${parseFloat(invitee.total_spent || 0).toFixed(2)}\n`;
+                    details += `   游戏次数: ${invitee.games_played || 0}\n`;
+                    details += `   充值次数: ${invitee.payment_count || 0}\n`;
+                });
+                
+                alert(details);
+            } catch (error) {
+                console.error('加载邀请详情失败:', error);
+                alert('加载详情失败');
+            }
+        }
+
         // 加载提现记录
         async function loadPayouts(page) {
             try {
@@ -642,6 +740,7 @@
             prevBtn.onclick = () => {
                 const loadFunc = {
                     'users': loadUsers,
+                    'invites': loadTopInviters,
                     'payments': loadPayments,
                     'games': loadGames,
                     'spins': loadSpins,
@@ -664,6 +763,7 @@
             nextBtn.onclick = () => {
                 const loadFunc = {
                     'users': loadUsers,
+                    'invites': loadTopInviters,
                     'payments': loadPayments,
                     'games': loadGames,
                     'spins': loadSpins,
